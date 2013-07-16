@@ -19,7 +19,7 @@
     <file path="/docstore--1.0.0.sql" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373911408648" ignored="false" />
     <file path="/Attribute.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373913463214" ignored="false" />
     <file path="/json_get.c" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373915391483" ignored="false" />
-    <file path="/doc_insert.c" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373989890302" ignored="false" />
+    <file path="/doc_insert.c" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373992608327" ignored="false" />
     <file path="/Dummy.txt" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373984397530" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -98,19 +98,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="JsonLoader.java" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="JsonLoader.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/com/hadapt/handler/loader/JsonLoader.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="23" column="0" selection-start="824" selection-end="824" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="doc_insert.c" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/com/hadapt/handler/sql/ext/docstore/doc_insert.c">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="257" column="0" selection-start="6482" selection-end="6482" vertical-scroll-proportion="0.9717608">
+            <state line="23" column="0" selection-start="824" selection-end="824" vertical-scroll-proportion="0.025466893">
               <folding />
             </state>
           </provider>
@@ -475,7 +466,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="24" width="1215" height="776" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -610,7 +601,9 @@
     </entry>
     <entry file="jar:///usr/lib/jvm/default-java/src.zip!/java/sql/PreparedStatement.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="210" column="9" selection-start="9678" selection-end="9678" vertical-scroll-proportion="0.0" />
+        <state line="210" column="9" selection-start="9678" selection-end="9678" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
       </provider>
     </entry>
     <entry file="jar:///usr/lib/jvm/default-java/src.zip!/java/sql/Statement.java">
@@ -621,13 +614,6 @@
     <entry file="file://$PROJECT_DIR$/src/com/hadapt/handler/PostgresWorker.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="13" column="28" selection-start="363" selection-end="363" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/hadapt/handler/loader/JsonLoader.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="23" column="0" selection-start="824" selection-end="824" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -669,7 +655,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/hadapt/handler/sql/ext/docstore/doc_insert.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="257" column="0" selection-start="6482" selection-end="6482" vertical-scroll-proportion="0.9717608">
+        <state line="230" column="0" selection-start="5684" selection-end="5684" vertical-scroll-proportion="0.9717608">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/hadapt/handler/loader/JsonLoader.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="23" column="0" selection-start="824" selection-end="824" vertical-scroll-proportion="0.025466893">
           <folding />
         </state>
       </provider>

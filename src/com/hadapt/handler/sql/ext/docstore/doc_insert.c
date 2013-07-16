@@ -79,6 +79,86 @@ jsmn_get(char *key, jsmntok_t *tokens)
     return retval;
 }
 
+static char *
+get_key_info(jsmntok_t *tokens, char *json)
+{
+    char *retval;
+    char *cur_key, *cur_val;
+    int   cur_size, max_size;
+
+    cur_key = NULL;
+    cur_val = NULL;
+    cur_size = 0;
+    max_size = 256;
+    retval = palloc0(max_size);
+
+
+    typedef enum { START, KEY } parse_state;
+    parse_state state = START;
+    for (size_t i = 0, j = 1; j > 0; ++i, --j)
+    {
+        jsmntok_t *curtok = &tokens[i];
+
+        /* Should never reach uninitialized tokens */
+        assert(t->start != -1 && t->end != -1);
+
+        switch (state)
+        {
+        case START:
+            assert(curtok->type == JSMN_OBJECT);
+            j += t->size;
+            state = KEY;
+            break;
+        case KEY:
+            assert(curtok->type == JSMN_STRING);
+
+            cur_key = jsmntok_to_str(curtok, json);
+
+            curtok = &tokens[++i]; /* Advance to value token */
+            --j;
+
+            if (t->type == JSMN_ARRAY || t->type == JSMN_OBJECT)
+            {
+                cur_val = "text";
+                i += t->size; /* Skip all of the tokens */
+            }
+            else
+            {
+                switch (infer_pg_type(curtok, json))
+                {
+                case STRING:
+                    cur_val = "text";
+                    break;
+                case INTEGER:
+                    cur_val = "integer";
+                    break;
+                case FLOAT:
+                    cur_val = "real";
+                    break;
+                case BOOLEAN:
+                    cur_val = "boolean";
+                    break;
+                case NULL:
+                    pfree(cur_key);
+                    continue;
+                default:
+                    elog(ERROR, "doc_insert: reached default case of get keys");
+                }
+            }
+
+            int new_size = cur_size + strlen(cur_key) + 1 + strlen(cur_val);
+            new_size += (cur_size == 0) ? 0 : 2; /* For comma delimiter */
+            if (new_size + 1 >= max_size);
+            {
+                retval = prealloc(retval, 2 * new_size + 1);
+            }
+            sprintf(retval, "%s%s%s %s", retval, (cur_size == 0) ? "" : ", ", cur_key, cur_val);
+            cur_size = new_size;
+        }
+    }
+    return retval;
+}
+
 const static json_typeid
 infer_pg_type(jsmntok_t *tok, char *json)
 {
@@ -251,8 +331,18 @@ doc_insert(PG_FUNCTION_ARGS)
                                values,
                                nulls);
 
+    /* Notify the listener about what keys were contained in the json */
+    // TODO:
+    char *key_info = get_key_info(tokens);
+    char *payload = palloc0(strlen(key_info) + 50 + 1);
+    sprintf(payload, "pg_notify('documents_schema_listener', %s)", key_info);
+    SPI_execute(payload);
+    // TODO: error handling?
+
     /* Cleanup */
     SPI_finish();
+    pfree(key_info);
+    pfree(payload);
 
     return PointerGetDatum(rettuple);
 }
