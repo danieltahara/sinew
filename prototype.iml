@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$USER_HOME$/workspace/research/schemaless_sql/prototype">
+      <sourceFolder url="file://$USER_HOME$/workspace/research/schemaless_sql/prototype/src" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="postgresql:postgresql:9.2-1002.jdbc4" level="project" />
+    <orderEntry type="library" name="com.googlecode.json-simple:json-simple:1.1.1" level="project" />
+    <orderEntry type="library" name="net.sf.jsqlparser:jsqlparser:0.8.0" level="project" />
+    <orderEntry type="library" name="org.apache.hadoop:hadoop-common:2.0.0-alpha" level="project" />
+    <orderEntry type="library" name="org.apache.hadoop:hadoop-hdfs:2.0.0-alpha" level="project" />
+    <orderEntry type="library" name="org.apache.hadoop:hadoop-mapreduce-client-jobclient:2.0.0-alpha" level="project" />
+  </component>
+</module>
+
