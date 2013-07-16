@@ -1,4 +1,4 @@
-package com.hadapt.handler.loader;
+package com.hadapt.handler.upgrader;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

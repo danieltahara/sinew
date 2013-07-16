@@ -31,6 +31,7 @@ jsmntok_to_str(jsmntok_t *tok, char *json)
 }
 
 // TODO: JSMN_example license
+// http://alisdair.mcdiarmid.org/2012/08/14/jsmn-example.html
 static jsmntok_t *
 jsmn_get(char *key, jsmntok_t *tokens)
 {
