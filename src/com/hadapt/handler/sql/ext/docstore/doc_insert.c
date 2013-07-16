@@ -5,6 +5,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "lib/jsmn.h"
 
@@ -12,73 +13,156 @@
 PG_MODULE_MAGIC;
 #endif
 
-#define NULLOID (-1); /* Mock, invalid postgres object id for NULL; used in
-                         infer_type */
+typedef enum { STRING = 1, INTEGER, FLOAT, BOOLEAN, NULL } json_typeid;
 
 extern Datum doc_insert(PG_FUNCTION_ARGS);
 
-static int
-infer_type(char *value)
+static char *
+jsmntok_to_str(jsmntok_t *tok, char *json)
 {
-    assert(value);
+    char *retval;
+    int   len;
 
-    int len = strlen(value);
-    assert(len > 0); // Empty string has length 2, integer has length >= 1
+    len = tok->end - tok->start;
+    retval = palloc0(len + 1);
+    strncpy(retval, json, len);
 
-    char first_char = value[0];
-    if (first_char == '"')
+    return retval;
+}
+
+// TODO: JSMN_example license
+static jsmntok_t *
+jsmn_get(char *key, jsmntok_t *tokens)
+{
+    jsmntok_t *retval = NULL;
+
+    typedef enum { START, KEY, VALUE, STOP } parse_state;
+    parse_state state = START;
+    for (size_t i = 0, j = 1; j > 0; ++i, --j)
     {
-        return TEXTOID;
-    }
-    else if (isdigit(first_char))
-    {
-        if (strchr(value, '.'))
+        jsmntok_t *curtok = &tokens[i];
+
+        /* Should never reach uninitialized tokens */
+        assert(t->start != -1 && t->end != -1);
+
+        switch (state)
         {
-            return FLOAT8OID;
+        case START:
+            assert(curtok->type == JSMN_OBJECT);
+            j += t->size;
+            state = KEY;
+            break;
+        case KEY:
+            assert(curtok->type == JSMN_STRING);
+            if (!strcmp(key, string_for_tok(curtok, json)))
+            {
+                assert(j >= 1);
+                retval = curtok + 1;
+                state = STOP;
+            }
+            else
+            {
+                state = VALUE;
+            }
+            break;
+        case VALUE:
+            if (t->type == JSMN_ARRAY || t->type == JSMN_OBJECT)
+            {
+                i += t->size; /* Skip all of the tokens */
+            }
+            state = KEY;
+            break;
+        case STOP:
+            return retval;
         }
-        else
-        {
-            return INT8OID; // NOTE: Assumes max 8 bits
-        }
     }
-    else if (!strcmp(value, "true") || !strcmp(value, "false"))
+    return retval;
+}
+
+const static json_typeid
+infer_pg_type(jsmntok_t *tok, char *json)
+{
+    if (!tok)
     {
-        return BOOLOID;
+        return NULL;
     }
-    else if (!strcmp(value, "null"))
-    {
-        return NULLOID;
+
+    int start = tok->start;
+
+    if (tok->type == JSMN_STRING) {
+        return STRING;
     }
-    else if (first_char == '{')
+    else if (tok->type == JSMN_ARRAY || tok->type == JSMN_OBJECT) /* For now, treat a string */
     {
-        return JSONOID;
-    }
-    else if (first_char == '[')
-    {
-        // FIXME: find the first comma or close ]
-        int elemEnd = strchr(value, ",");
-        // return infer_type(char)
+        return STRING;
     }
     else
     {
-        elog(ERROR, "doc_insert: Got invalid json: %s", value);
+        switch(json[start]) {
+        case 't': case 'f':
+            return BOOLEAN;
+        case 'n':
+            return NULL;
+        case '-':
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
+            char *val = jsmntok_to_str(tok, json);
+            if (strchr(val, '.'))
+            {
+                pfree(val);
+                return FLOAT;
+            }
+            else
+            {
+                pfree(val);
+                return INTEGER;
+            }
+        default:
+            elog(ERROR, "doc_insert: Got invalid json: %s", value);
+        }
+    }
+}
+
+/* NOTE: This is kind of limited/brittle as it stands */
+static bool
+can_create_from(json_typeid type, int dbType)
+{
+    switch (type)
+    {
+    case STRING:
+        return (dbType == TEXTOID || dbType == CHAROID);
+    case INTEGER:
+        return (dbType == INT4OID || dbType == INT8OID);
+    case FLOAT:
+        return (dbType == FLOAT4OID || dbType == FLOAT8OID);
+    case BOOLEAN:
+        return (dbType == BOOLOID);
+    case NULL:
+        return false;
+    case default:
+        elog(ERROR, "doc_insert: reached default case of can_create_from");
     }
 }
 
 static Datum
-make_datum(char *value, int type)
+make_datum(char *value, json_typeid type)
 {
-    switch (type) {
-    case INT8OID:
-        return atoi(value);
-    case FLOAT8OID:
-        return atof(value);
-    case BOOLOID:
-        return DatumGetBool(!strcmp(value, "true"))
-    default:
-        return value;
+    assert(type != NULL);
+
+    /* NOTE: Type checking must have been done, else ato* functions will bug out */
+    switch (type)
+    {
+    case STRING:
+        return CStringGetDatum(value);
+    case INTEGER:
+        return Int64GetDatum(atol(value));
+    case FLOAT:
+        return Float8GetDatum(atof(value));
+    case BOOLEAN:
+        return BoolGetDatum(!strcmp(value, "true"));
+    case default:
+        elog(ERROR, "doc_insert: reached default case of make_datum");
     }
-    //FIXME:
 }
 
 PG_FUNCTION_INFO_V1(doc_insert);
@@ -114,9 +198,11 @@ doc_insert(PG_FUNCTION_ARGS)
     {
          if (SPI_gettypeid(tupdesc, i) == JSONOID)
          {
-            json = SPI_getvalue(trigdata->tg_trigtuple, tupdesc, i); break;
+            json = SPI_getvalue(trigdata->tg_trigtuple, tupdesc, i);
+            break;
          }
     }
+    jsmntok_t *tokens = json_tokenize(json);
 
     /* For each existing column, see if there exists a value in the json data */
     int ncols = 0;
@@ -131,25 +217,23 @@ doc_insert(PG_FUNCTION_ARGS)
         }
 
         char *name = SPI_fname(tupdesc, i);
-        char *command = fprintf("SELECT json_object_field('%s', '%s');", json, name);
-        SPI_execute(command, true, 0);
-        /* NOTE: for now, assume each key only appears once */
-        char *value = DatumGetCString(SPI_getvalue(SPI_tuptable->vals[0],
-                                                   SPI_tuptable->tupdesc,
-                                                   1));
+        jsmntok_t value = jsmn_get(name, tokens);
+
         if (value != NULL) {
-            int type = infer_type(value);
-            if (type != SPI_gettypeid(tupdesc, i))
+            const json_typeid tokType = infer_type(value);
+            const int dbType = SPI_gettypeid(tupdesc, i);
+            if (can_create_from(tokType, dbType))
             {
-                /* If type == -1, just a null, so skip it */
-                if (type > 0)
+                /* Nulls do not constitute exceptions */
+                if (tokType != NULLOID)
                 {
-                    /* TODO: insert that one into exceptions table */
+                    /* FIXME: insert that one into exceptions table */
+                    elog(WARNING, "doc_insert: reached type exception; did not add to table");
                 }
             }
             else
             {
-                Datum[ncols] = make_datum(value, type);
+                Datum[ncols] = make_datum(jsmntok_to_str(value, json), dbType);
                 ++ncols;
             }
         }
