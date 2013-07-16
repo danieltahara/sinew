@@ -1,4 +1,4 @@
-package com.hadapt.handler.catalog;
+package com.hadapt.catalog;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -47,7 +47,7 @@ public final class CatalogService {
         try {
             _conn.close();
         } catch (SQLException e) {
-            e.printStackTrace(); // TODO: more useful catch?
+            e.printStackTrace();
         }
     }
 
@@ -77,22 +77,39 @@ public final class CatalogService {
         }
     }
 
-    public ArrayList<String> getDocumentKeysForTable(String tableName) { // TODO: return a lisst of name, type pairs
-        ArrayList<String> docKeys = new ArrayList<String>();
+//     public ArrayList<String> getDocumentKeysForTable(String tableName) { // TODO: return a lisst of name, type pairs
+//         ArrayList<String> docKeys = new ArrayList<String>();
+//         return docKeys;
+//     }
+
+    public ArrayList<Attribute> getRelationSchema(String relname) {
+        return _getSchemaInternal(relname, GET_SCHEMA_STATEMENT_TEMPLATE);
+    }
+
+    public ArrayList<Attribute> getDocumentSchema(String relname) {
+        return _getSchemaInternal(relname, GET_DOCUMENT_KEYS_STATEMENT_TEMPLATE);
+    }
+
+    private ArrayList<Attribute> _getSchemaInternal(String relname, String stmtTemplate) {
+        ArrayList<Attribute> schema = new ArrayList<Attribute>();
         try {
-            PreparedStatement stmt = _conn.prepareStatement(GET_DOCUMENT_KEYS_STATEMENT_TEMPLATE);
-            stmt.setString(1, tableName);
-            if (stmt.execute()) {
-                ResultSet rs = stmt.getResultSet();
-                while (rs.next()) {
-                    docKeys.add(rs.getString(1));
-                }
-            } else {
-                System.err.println("get document keys returned improper value");
+            PreparedStatement stmt = _conn.prepareStatement(stmtTemplate);
+            stmt.setString(1, relname);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String name = rs.getString("key_name");
+                String type = rs.getString("column_type");
+                schema.add(new Attribute(name, type));
             }
+            return schema;
         } catch (SQLException e) {
             e.printStackTrace();
+            return new ArrayList<Attribute>();
         }
-        return docKeys;
+
+    }
+
+    public void getExceptions(String relname, String keyname) {
+
     }
 }

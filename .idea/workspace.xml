@@ -8,12 +8,12 @@
     <file path="/PostgresWorker.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373903549773" ignored="false" />
     <file path="/fragment.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373916969272" ignored="false" />
     <file path="/ParserWorker.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373585972829" ignored="false" />
-    <file path="/CatalogService.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373912492405" ignored="false" />
+    <file path="/CatalogService.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1374007039853" ignored="false" />
     <file path="/Parser.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373660958530" ignored="false" />
     <file path="/PostgresStatment.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373641215927" ignored="false" />
     <file path="/ColumnRefFinder.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373655929575" ignored="false" />
     <file path="/ColumnRefResolver.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373662032105" ignored="false" />
-    <file path="/JsonLoader.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373912297558" ignored="false" />
+    <file path="/JsonLoader.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1374006060936" ignored="false" />
     <file path="/a.dummy" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373916879553" ignored="false" />
     <file path="/json_get.ddl" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373901784434" ignored="false" />
     <file path="/docstore--1.0.0.sql" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373998220345" ignored="false" />
@@ -22,6 +22,8 @@
     <file path="/doc_insert.c" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373992608327" ignored="false" />
     <file path="/Dummy.txt" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373984397530" ignored="false" />
     <file path="/column_upgrade_bw.c" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1373997791311" ignored="false" />
+    <file path="/DocumentSchemaListener.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1374003543072" ignored="false" />
+    <file path="/UpgraderWorker.java" changelist="eaa66457-de6d-4b7a-90ae-46bcbc7a17b7" time="1374002493245" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,6 +75,23 @@
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
     </breakpoint_any>
+    <line_breakpoints>
+      <breakpoint url="file://$PROJECT_DIR$/src/com/hadapt/upgrader/JsonLoader.java" line="74" class="com.hadapt.handler.upgrader.JsonLoader" package="com.hadapt.handler.upgrader">
+        <option name="ENABLED" value="true" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="REMOVE_AFTER_HIT" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="SUSPEND" value="true" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="true" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+    </line_breakpoints>
     <breakpoint_rules />
     <ui_properties />
   </component>
@@ -82,10 +101,41 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="DocumentSchemaListener.java" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/com/hadapt/upgrader/DocumentSchemaListener.java">
+      <file leaf-file-name="JsonLoader.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/hadapt/upgrader/JsonLoader.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="1" column="0" selection-start="29" selection-end="29" vertical-scroll-proportion="0.024916943">
+            <state line="22" column="0" selection-start="585" selection-end="585" vertical-scroll-proportion="0.0">
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="CatalogService.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/com/hadapt/catalog/CatalogService.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="11" column="23" selection-start="287" selection-end="287" vertical-scroll-proportion="0.09966777">
+              <folding>
+                <element signature="e#3732#3743#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="HashMap.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="jar:///usr/lib/jvm/default-java/src.zip!/java/util/HashMap.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="296" column="13" selection-start="11737" selection-end="11737" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Attribute.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/hadapt/catalog/Attribute.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="2" column="13" selection-start="42" selection-end="42" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -106,14 +156,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/src/com/hadapt/handler/ColumnRefResolver.java" />
-        <option value="$PROJECT_DIR$/src/com/hadapt/loader/JsonLoader.java" />
-        <option value="$PROJECT_DIR$/src/com/hadapt/handler/sql/json_get.ddl" />
-        <option value="$PROJECT_DIR$/src/com/hadapt/handler/PostgresWorker.java" />
-        <option value="$PROJECT_DIR$/src/com/hadapt/handler/Main.java" />
-        <option value="$PROJECT_DIR$/src/com/hadapt/handler/loader/JsonLoader.java" />
-        <option value="$PROJECT_DIR$/src/com/hadapt/handler/catalog/CatalogService.java" />
-        <option value="$PROJECT_DIR$/src/com/hadapt/handler/catalog/Attribute.java" />
         <option value="$PROJECT_DIR$/src/com/hadapt/handler/sql/ext/json_get/json_get.c" />
         <option value="$PROJECT_DIR$/src/com/hadapt/handler/rewriter/ColumnRefResolver.java" />
         <option value="$PROJECT_DIR$/src/com/hadapt/handler/sql/ext/docstore/doc_insert.c" />
@@ -121,7 +163,15 @@
         <option value="$PROJECT_DIR$/src/com/hadapt/handler/sql/ext/docstore/docstore--1.0.0.sql" />
         <option value="$PROJECT_DIR$/src/com/hadapt/handler/sql/ext/column_upgrader/column_upgrade_bw.c" />
         <option value="$PROJECT_DIR$/src/com/hadapt/handler/upgrader/JsonLoader.java" />
+        <option value="$PROJECT_DIR$/src/com/hadapt/upgrader/UpgraderWorker.java" />
         <option value="$PROJECT_DIR$/src/com/hadapt/upgrader/DocumentSchemaListener.java" />
+        <option value="$PROJECT_DIR$/src/com/hadapt/catalog/Attribute.java" />
+        <option value="$PROJECT_DIR$/src/com/hadapt/rewriter/ColumnRefResolver.java" />
+        <option value="$PROJECT_DIR$/src/com/hadapt/rewriter/PostgresStatement.java" />
+        <option value="$PROJECT_DIR$/src/com/hadapt/rewriter/Parser.java" />
+        <option value="$PROJECT_DIR$/src/com/hadapt/schema_manager/DocumentSchemaListener.java" />
+        <option value="$PROJECT_DIR$/src/com/hadapt/upgrader/JsonLoader.java" />
+        <option value="$PROJECT_DIR$/src/com/hadapt/catalog/CatalogService.java" />
       </list>
     </option>
   </component>
@@ -213,50 +263,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="upgrader" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="prototype" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="prototype" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hadapt" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="ext" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="prototype" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="prototype" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hadapt" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="rewriter" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -520,7 +526,9 @@
     </entry>
     <entry file="jar:///usr/lib/jvm/default-java/src.zip!/java/sql/Statement.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="295" column="12" selection-start="13576" selection-end="13576" vertical-scroll-proportion="0.70598006" />
+        <state line="295" column="12" selection-start="13576" selection-end="13576" vertical-scroll-proportion="0.70598006">
+          <folding />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/prototype.iml">
@@ -530,17 +538,77 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/hadapt/catalog/Attribute.java">
+    <entry file="file://$PROJECT_DIR$/src/com/hadapt/rewriter/ColumnRefResolver.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="11" column="0" selection-start="226" selection-end="226" vertical-scroll-proportion="0.2740864">
+        <state line="0" column="25" selection-start="25" selection-end="25" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/hadapt/upgrader/DocumentSchemaListener.java">
+    <entry file="file://$PROJECT_DIR$/src/com/hadapt/rewriter/Parser.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="1" column="0" selection-start="29" selection-end="29" vertical-scroll-proportion="0.024916943">
+        <state line="39" column="43" selection-start="1375" selection-end="1375" vertical-scroll-proportion="0.67275745">
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/hadapt/rewriter/PostgresStatement.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="6" column="13" selection-start="204" selection-end="204" vertical-scroll-proportion="0.14950167">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$PROJECT_DIR$/lib/postgresql-9.2-1002.jdbc4-sources.jar!/org/postgresql/PGNotification.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="22" column="16" selection-start="576" selection-end="576" vertical-scroll-proportion="0.3986711">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/hadapt/catalog/Attribute.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="2" column="13" selection-start="42" selection-end="42" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/lib/jvm/default-java/src.zip!/java/util/HashMap.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="296" column="13" selection-start="11737" selection-end="11737" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/lib/jvm/default-java/src.zip!/java/io/File.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1838" column="4" selection-start="76758" selection-end="76758" vertical-scroll-proportion="0.43463498">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/lib/jvm/default-java/src.zip!/java/io/FileWriter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="88" column="11" selection-start="3482" selection-end="3482" vertical-scroll-proportion="1.9933555">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/hadapt/upgrader/JsonLoader.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="22" column="0" selection-start="585" selection-end="585" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/hadapt/catalog/CatalogService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="11" column="23" selection-start="287" selection-end="287" vertical-scroll-proportion="0.09966777">
+          <folding>
+            <element signature="e#3732#3743#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
