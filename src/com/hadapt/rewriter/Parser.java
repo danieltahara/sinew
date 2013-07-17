@@ -1,7 +1,8 @@
-package com.hadapt.handler.rewriter;
+package com.hadapt.rewriter;
 
 import java.io.StringReader;
 
+import com.hadapt.catalog.CatalogService;
 import com.hadapt.handler.catalog.CatalogService;
 
 import net.sf.jsqlparser.JSQLParserException;
@@ -15,13 +16,11 @@ import net.sf.jsqlparser.statement.update.Update;
 
 public class Parser {
     CCJSqlParserManager _jsqlParser;
-    CatalogService _catalog;
     ColumnRefResolver _resolver;
 
-    public Parser(CatalogService catalog) {
-        _catalog = catalog;
+    public Parser() {
         _jsqlParser = new CCJSqlParserManager();
-        _resolver = new ColumnRefResolver(_catalog);
+        _resolver = new ColumnRefResolver();
     }
 
     public PostgresStatement parse(String command) {

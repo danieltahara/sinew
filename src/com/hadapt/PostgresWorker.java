@@ -1,4 +1,4 @@
-package com.hadapt.handler;
+package com.hadapt;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,21 +8,31 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
-import com.hadapt.handler.rewriter.Parser;
-import com.hadapt.handler.rewriter.PostgresStatement;
+import com.hadapt.rewriter.PostgresStatement;
 
+// FIXME: Make a worker thread pool
 public class PostgresWorker {
+    static final String UPDATE_DOCUMENT_SCHEMA_STATEMENT_TEMPLATE =
+            "UPDATE information_schema.documents SET count = count + ?, dirty = ? WHERE key_name = '?'" +
+                    "AND table_name = '?' AND key_type = '?'";
+    static final String INSERT_DOCUMENT_SCHEMA_STATEMENT_TEMPLATE =
+            "INSERT INTO information_schema.documents VALUES('?', '?', '?', '?', '?', '?', '?')";
+    static final String GET_DOCUMENT_KEYS_STATEMENT_TEMPLATE =
+            "SELECT key_name, key_type FROM information_schema.documents WHERE table_name = '?'";
+    static final String GET_SCHEMA_STATEMENT_TEMPLATE =
+            "SELECT column_name, column_type FROM information_schema.columns WHERE table_name = '?'";
+    static final String DELIMITER = "|";
+    static final String LOAD_TABLE_STATEMENT_TEMPLATE =
+            "COPY ? FROM '?' WITH DELIMITER '" + DELIMITER +
+                    "' NULL '' CSV ESCAPE '\\'";
+
     private Connection _conn;
-    private Parser _parser;
 
     public PostgresWorker(String url, Properties props) throws SQLException {
         _conn = DriverManager.getConnection(url, props);
-        _parser = new Parser();
     }
 
-    public void execute(String statement) {
-        PostgresStatement pgStmt = _parser.parse(statement);
-
+    public void execute(PostgresStatement pgStmt) {
         // Use JDBC driver to perform statement
         try {
             Statement stmt = _conn.createStatement();
@@ -36,7 +46,7 @@ public class PostgresWorker {
         }
     }
 
-    public void print(ResultSet rs) {
+    private void print(ResultSet rs) {
         try {
             while (rs.next()) {
                 ResultSetMetaData rsmd = rs.getMetaData();
@@ -51,7 +61,7 @@ public class PostgresWorker {
         }
     }
 
-    public void print(int numUpdated) {
+    private void print(int numUpdated) {
         System.out.println("Updated " + numUpdated + " records");
     }
 }

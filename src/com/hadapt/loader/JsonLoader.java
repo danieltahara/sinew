@@ -1,4 +1,4 @@
-package com.hadapt.handler.upgrader;
+package com.hadapt.loader;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,13 +15,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.hadapt.PostgresWorker;
 import com.hadapt.catalog.Attribute;
-import com.hadapt.catalog.CatalogService;
 
 public class JsonLoader {
-    static final String DELIMITER = "|";
-    static final String LOAD_TABLE_STATEMENT_TEMPLATE = "COPY ? FROM '?' WITH DELIMITER '|' NULL '' CSV ESCAPE '\\'";
-
     String _relname;
     Connection _conn;
     String _dataPath;
@@ -41,33 +38,40 @@ public class JsonLoader {
         formatDataInput(rejects);
 
         // Execute load
-        synchronized(_conn) {
-            PreparedStatement stmt = null;
-            try {
-                stmt = _conn.prepareStatement(LOAD_TABLE_STATEMENT_TEMPLATE);
-                stmt.setString(1, _relname);
-                stmt.setString(2, _tmpDataPath);
-                if (stmt.execute()) {
-                    System.out.println(stmt.getUpdateCount() + " records inserted");
+        PostgresWorker worker = PostgresWorkerPool.getInstance.getWorker();
+        worker.startTransaction();
+
+        // NOTE: For now, assume column called "json_data"
+        try {
+            int count = worker.copyFrom(_relname, _tmpDataPath);
+            System.out.println(count + " records inserted");
+            ResultSet rsDocInfo = worker.select("*",
+                    "information_schema.documents",
+                    "WHERE table_name = " + _relname " AND count >= " + minCount);
+            while (rsDocInfo.next()) {
+                Attribute attr = new Attribute(rsDocInfo.getString("key_name"),
+                    rsDocInfo.getString("key_type"));
+                if (_keyCounts.containsKey(attr)) {
+                    int prevCount = rsDocInfo.getInt("count");
+                    rsDocInfo.updateInt("count", prevCount + _keyCounts.get(attr));
+                    rsDocInfo.updateBoolean("dirty", true);
+                    rsDocInfo.updateRow();
+                    _keyCounts.remove(attr);
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
+                // For previously non-existent attributes, add them to the document schema
+                for (Map.Entry<Attribute, Integer> entry : _keyCounts.entrySet()) {
+                    String[] values = { entry.getKey()._name,_relname,
+                        "json_data", entry.getKey()._type, "false", "true",
+                        entry.getValue().toString() };
+                    worker.insertValues("information_schema.documents", values);
+                }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
-        // Update document schema
-        CatalogService catalog = CatalogService.getCatalog();
-        HashMap<String, Object> baseData = new HashMap<String, Object>();
-        baseData.put("table_name", _relname);
-        baseData.put("column_name", _relname);
-        baseData.put("materialized", new Boolean(false));
-        baseData.put("dirty", new Boolean(false));
-        for (Map.Entry<Attribute, Integer> entry : _keyCounts.entrySet()) {
-            baseData.put("key_name", entry.getKey()._name);
-            baseData.put("type", entry.getKey()._type);
-            baseData.put("count", entry.getValue());
-            catalog.updateDocumentSchema(baseData);
-        }
+        worker.endTransaction();
+        PostgresWorkerPool.getInstance.returnWorker(worker);
     }
 
     private void formatDataInput(FileWriter rejects) {
@@ -87,7 +91,8 @@ public class JsonLoader {
                         Integer prevCount = 0;
                         Object value = json.get(key);
                         if (value != null) {
-                            Attribute attr = new Attribute((String)key, value.getClass().toString());
+                            Attribute attr = new Attribute((String)key,
+                                pgTypeForValue(value));
                             if ((prevCount = _keyCounts.get(attr)) != null) {
                                 _keyCounts.put(attr, prevCount + 1);
                             } else {
@@ -96,20 +101,7 @@ public class JsonLoader {
                         }
                     }
 
-                    String transformedRecord = "";
-                    for (Attribute attr : CatalogService.getCatalog().getRelationSchema(_relname)) {
-                        if (json.containsKey(attr._name)) {
-                            // TODO: and type is right
-                            transformedRecord += json.get(attr._name);
-                            transformedRecord += "|";
-                            // TODO: else
-                            // TODO: add exception to exceptions table
-                            json.remove(attr._name);
-                        }
-                    }
-                    transformedRecord += json.toJSONString();
-
-                    tmpDataFile.write(transformedRecord);
+                    tmpDataFile.write(record);
                     tmpDataFile.write("\n");
                 } catch (ParseException e) {
                     System.err.print(e.getMessage());
@@ -125,7 +117,7 @@ public class JsonLoader {
                     data.close();
                 }
             } catch (IOException e) {
-                System.err.print(e.getMessage());
+                e.printStackTrace();
             }
         }
 
