@@ -1,4 +1,4 @@
-package com.hadapt.handler.rewriter;
+package com.hadapt.rewriter;
 
 
 import net.sf.jsqlparser.statement.Statement;

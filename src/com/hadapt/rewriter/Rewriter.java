@@ -14,7 +14,7 @@ import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.update.Update;
 
-public class Parser {
+public class Rewriter {
     CCJSqlParserManager _jsqlParser;
     ColumnRefResolver _resolver;
 

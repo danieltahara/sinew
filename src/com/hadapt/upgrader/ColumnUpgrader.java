@@ -6,7 +6,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.hadapt.PostgresWorker;
+import com.hadapt.PostgresWorkerPool;
 import com.hadapt.catalog.Attribute;
+
+import sun.plugin.dom.exception.InvalidStateException;
 
 public class ColumnUpgrader {
     public static int MAX_NUM_COLUMNS = 1000;
@@ -18,11 +21,11 @@ public class ColumnUpgrader {
         _relname = relname;
     }
 
-    public void execute() {
+    public void execute() throws SQLException, InvalidStateException {
         execute(MIN_SPARSITY);
     }
 
-    public void execute(double minSparsity) {
+    public void execute(double minSparsity) throws SQLException, InvalidStateException {
         HashMap<String, Object> baseData = new HashMap<String, Object>();
         baseData.put("table_name", _relname);
         baseData.put("column_name", _relname);
@@ -39,8 +42,8 @@ public class ColumnUpgrader {
             int minCount = (int)(minSparsity * numRecords + 0.5);
             if (minCount != 0) {
                 ResultSet rsDocInfo = worker.select("*",
-                    "information_schema.documents",
-                    "WHERE table_name = " + _relname " AND count >= " + minCount);
+                    "document_schema." + _relname,
+                    "WHERE materialized = false AND count >= " + minCount);
                 ArrayList<Attribute> upgrades = new ArrayList<Attribute>();
                 // TODO: worker.startTransaction();
                 while (rsDocInfo.next()) {
@@ -48,7 +51,7 @@ public class ColumnUpgrader {
                         rsDocInfo.updateBoolean("materialized", true);
                         rsDocInfo.updateRow();
                         upgrades.add(new Attribute(rsDocInfo.getString("key_name"),
-                            rsDocInfo.getString("type")));
+                            rsDocInfo.getString("key_type")));
                     }
                 }
                 // TODO: worker.endTransaction();

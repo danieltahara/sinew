@@ -1,7 +1,12 @@
-package com.hadapt.handler.rewriter;
+package com.hadapt.rewriter;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
+
+import com.hadapt.PostgresWorker;
+import com.hadapt.PostgresWorkerPool;
 
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.Addition;
@@ -51,6 +56,12 @@ import net.sf.jsqlparser.statement.select.WithItem;
 public class ColumnRefResolver implements SelectVisitor, FromItemVisitor, ExpressionVisitor,
         ItemsListVisitor, OrderByVisitor, SelectItemVisitor {
 
+    String[] _tnames;
+
+    public ColumnRefResolver(String[] tnames) {
+        _tnames = tnames;
+    }
+
     public void resolveColumnRefs(Select select) {
         // TODO: use tablenamefinder from example to get subset of catalogs
         select.getSelectBody().accept(this);
@@ -71,14 +82,22 @@ public class ColumnRefResolver implements SelectVisitor, FromItemVisitor, Expres
 
     // Bread and butter
     public void visit(Column tableColumn) {
-        // FIXME:
-        // Look this up in my table
-        // get column references
-        // if table.hasColumn(cname), let be
-        // else if table.hasJSONKey(cname), replace with json_object_field(json_data, 'key_1')
-        // else remove it and fill with null -- fix this
-        // Just get tables from select?
-        // what about qualified column names?
+        // NOTE: Column has table as a separate attribute, so I don't need to worry about it
+        try {
+            for (String tname : _tnames) {
+                PostgresWorker worker = PostgresWorkerPool.getInstance().getWorker();
+                ResultSet rsDocSchema = worker.select("*", "document_schema." + tname);
+                while (rsDocSchema.next()) {
+
+                    // FIXME: taking a risk with type mismatches
+
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("ColumnRefResolver: DB error - Could not validate column references");
+            e.printStackTrace();
+        }
+        return;
     }
 
     public void visit(AllColumns allColumns) {

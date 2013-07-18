@@ -1,5 +1,7 @@
 package com.hadapt.catalog;
 
+import java.util.ArrayList;
+
 public class Attribute {
     public final String _name;
     public final String _type;

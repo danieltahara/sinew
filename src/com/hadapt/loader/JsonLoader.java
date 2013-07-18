@@ -8,6 +8,10 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,38 +20,53 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.hadapt.PostgresWorker;
+import com.hadapt.PostgresWorkerPool;
 import com.hadapt.catalog.Attribute;
 
 public class JsonLoader {
     String _relname;
-    Connection _conn;
     String _dataPath;
     String _tmpDataPath;
     JSONParser _parser;
     HashMap<Attribute, Integer> _keyCounts;
 
-    public JsonLoader(String relname, Connection conn, String dataPath) {
+    public static String pgTypeForValue(Object value) {
+        Class valueClass = value.getClass();
+        if (String.class.isAssignableFrom(valueClass)) {
+            return "text";
+        } else if (Integer.class.isAssignableFrom(valueClass)) {
+            return "integer";
+        } else if (Double.class.isAssignableFrom(valueClass)) {
+            return "double precision";
+        } else if (Boolean.class.isAssignableFrom(valueClass)) {
+            return "boolean";
+        } else {
+            return "text";
+        }
+    }
+
+    public JsonLoader(String relname, String dataPath) {
         _relname = relname;
-        _conn = conn;
         _dataPath = dataPath;
         _parser = new JSONParser();
         _keyCounts = new HashMap<Attribute, Integer>();
     }
 
-    public void loadTable(FileWriter rejects) {
+    public void loadTable(FileWriter rejects) throws SQLException, IllegalStateException {
         formatDataInput(rejects);
 
         // Execute load
-        PostgresWorker worker = PostgresWorkerPool.getInstance.getWorker();
+        PostgresWorker worker = PostgresWorkerPool.getInstance().getWorker();
         worker.startTransaction();
 
-        // NOTE: For now, assume column called "json_data"
         try {
             int count = worker.copyFrom(_relname, _tmpDataPath);
             System.out.println(count + " records inserted");
-            ResultSet rsDocInfo = worker.select("*",
-                    "information_schema.documents",
-                    "WHERE table_name = " + _relname " AND count >= " + minCount);
+            // Create document schema table if it doesn't exist
+            worker.createTableIfNotExists("document_schema." + _relname,
+                    "key_name text, key_type text, materialized boolean," +
+                            "clean boolean, count int, UNIQUE (key_name, key_type)");
+            ResultSet rsDocInfo = worker.select("*", "document_schema." + _relname);
             while (rsDocInfo.next()) {
                 Attribute attr = new Attribute(rsDocInfo.getString("key_name"),
                     rsDocInfo.getString("key_type"));
@@ -59,26 +78,28 @@ public class JsonLoader {
                     _keyCounts.remove(attr);
                 }
                 // For previously non-existent attributes, add them to the document schema
+                ArrayList<String> valuesArray = new ArrayList<String>();
                 for (Map.Entry<Attribute, Integer> entry : _keyCounts.entrySet()) {
-                    String[] values = { entry.getKey()._name,_relname,
-                        "json_data", entry.getKey()._type, "false", "true",
-                        entry.getValue().toString() };
-                    worker.insertValues("information_schema.documents", values);
+                    valuesArray.add("'" + entry.getKey()._name + "', '" + entry.getKey()._type + "', false, true, " +
+                        "'" + entry.getValue().toString() + "'"); // Single-quoting value is safe because PG will typecast
                 }
+                worker.insertValuesBatch("document_schema." + _relname, (String[])valuesArray.toArray());
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
         worker.endTransaction();
-        PostgresWorkerPool.getInstance.returnWorker(worker);
+        PostgresWorkerPool.getInstance().returnWorker(worker);
     }
 
     private void formatDataInput(FileWriter rejects) {
         BufferedReader data = null;
         try {
             data = new BufferedReader(new FileReader(_dataPath));
-            File filename = File.createTempFile("ss_", ".tmp");
+            DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+            Date date = new Date();
+            File filename = File.createTempFile("load_" + _relname + dateFormat.format(date), ".tmp");
             filename.deleteOnExit();
             _tmpDataPath = filename.getAbsolutePath();
             FileWriter tmpDataFile = new FileWriter(filename, true);
