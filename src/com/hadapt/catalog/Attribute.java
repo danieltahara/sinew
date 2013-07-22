@@ -13,8 +13,8 @@ public class Attribute {
 
     public boolean equals(Object other) {
         if (other instanceof Attribute) {
-            if (((Attribute) other)._name == this._name &&
-                ((Attribute) other)._type == this._type) {
+            if (((Attribute) other)._name.equalsIgnoreCase(this._name) &&
+                ((Attribute) other)._type.equalsIgnoreCase(this._type)) {
                 return true;
             }
         }
@@ -22,6 +22,6 @@ public class Attribute {
     }
 
     public int hashCode() {
-        return (_name + _type).hashCode();
+        return (_name + _type).toLowerCase().hashCode();
     }
 }

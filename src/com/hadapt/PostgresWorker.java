@@ -2,24 +2,30 @@ package com.hadapt;
 
 import java.sql.BatchUpdateException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.hadapt.catalog.Attribute;
 
 public class PostgresWorker {
     static final String DELIMITER = "|";
 
     // Query Templates
-    static final String SELECT_STMT_TEMPLATE = "SELECT ? FROM ??";
-    static final String INSERT_VALUES_STMT_TEMPLATE = "INSERT INTO ? VALUES (?)";
+    static final String SELECT_STMT_TEMPLATE = "SELECT %s FROM %s%s";
+    static final String INSERT_VALUES_STMT_TEMPLATE = "INSERT INTO %s VALUES (%s)";
     // DDL Templates
-    static final String CREATE_TABLE_TEMPLATE = "CREATE TABLE ? (?)";
-    static final String CREATE_TABLE_IF_NOT_EXISTS_TEMPLATE = "CREATE TABLE IF NOT EXISTS ? (?)";
-    static final String COPY_FROM_TEMPLATE =
-        "COPY ? FROM '?' WITH DELIMITER " + "'" + DELIMITER + "' " +
-        "NULL '' CSV ESCAPE '\\'";
+    static final String CREATE_TABLE_TEMPLATE = "CREATE TABLE %s (%s)";
+    static final String CREATE_TABLE_IF_NOT_EXISTS_TEMPLATE = "CREATE TABLE IF NOT EXISTS %s (%s)";
+    static final String COPY_FROM_TEMPLATE = "COPY %s (json_data) FROM '%s'";
+    static final String ADD_COLUMN_TEMPLATE = "ALTER TABLE %s ADD COLUMN %s %s";
 
     private Connection _conn;
+    final Logger _logger = LoggerFactory.getLogger(PostgresWorker.class);
 
     public PostgresWorker(Connection conn) {
         _conn = conn;
@@ -35,56 +41,67 @@ public class PostgresWorker {
     }
 
     public ResultSet select(String targetList, String rangeTables, String predicates) throws SQLException {
-        PreparedStatement stmt = _conn.prepareStatement(SELECT_STMT_TEMPLATE);
-        stmt.setString(1, targetList);
-        stmt.setString(2, rangeTables);
-        stmt.setString(3, " " + predicates);
-        return stmt.executeQuery();
+        Statement stmt = _conn.createStatement();
+        return stmt.executeQuery(String.format(SELECT_STMT_TEMPLATE, targetList, rangeTables, " " + predicates));
+    }
+
+    public ResultSet select(String targetList, String rangeTables, boolean updatable) throws SQLException {
+        return select(targetList, rangeTables, "", updatable);
+    }
+
+    public ResultSet select(String targetList, String rangeTables, String predicates, boolean updatable) throws SQLException {
+        Statement stmt = _conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,
+                                               updatable ? ResultSet.CONCUR_UPDATABLE : ResultSet.CONCUR_READ_ONLY);
+        return stmt.executeQuery(String.format(SELECT_STMT_TEMPLATE,
+                                               targetList,
+                                               rangeTables,
+                                               " " + predicates));
     }
 
     public int createTable(String relname, String columns) throws SQLException {
-        PreparedStatement stmt = _conn.prepareStatement(CREATE_TABLE_TEMPLATE);
-        stmt.setString(1, relname);
-        stmt.setString(2, columns);
-        return stmt.executeUpdate();
+        Statement stmt = _conn.createStatement();
+        return stmt.executeUpdate(String.format(CREATE_TABLE_TEMPLATE, relname, columns));
     }
 
     public int createTableIfNotExists(String relname, String columns) throws SQLException {
-        PreparedStatement stmt = _conn.prepareStatement(CREATE_TABLE_IF_NOT_EXISTS_TEMPLATE);
-        stmt.setString(1, relname);
-        stmt.setString(2, columns);
-        return stmt.executeUpdate();
+        Statement stmt = _conn.createStatement();
+        return stmt.executeUpdate(String.format(CREATE_TABLE_IF_NOT_EXISTS_TEMPLATE, relname, columns));
+    }
+
+    public int addColumn(String relname, Attribute attr) throws SQLException {
+        Statement stmt = _conn.createStatement();
+        return stmt.executeUpdate(String.format(ADD_COLUMN_TEMPLATE, relname, attr._name, attr._type));
     }
 
     public int copyFrom(String relname, String dataPath) throws SQLException {
-        PreparedStatement stmt = _conn.prepareStatement(COPY_FROM_TEMPLATE);
-        stmt.setString(1, relname);
-        stmt.setString(2, dataPath);
-        return stmt.executeUpdate();
+        _logger.debug(String.format(COPY_FROM_TEMPLATE, relname, dataPath));
+        Statement stmt = _conn.createStatement();
+        stmt.execute(String.format(COPY_FROM_TEMPLATE, relname, dataPath));
+        return 1;
     }
 
     public int insertValues(String relname, String values) throws SQLException {
-        PreparedStatement stmt = _conn.prepareStatement(INSERT_VALUES_STMT_TEMPLATE);
-        stmt.setString(1, relname);
-        stmt.setString(2, values);
-        return stmt.executeUpdate();
+        Statement stmt = _conn.createStatement();
+        return stmt.executeUpdate(String.format(INSERT_VALUES_STMT_TEMPLATE, relname, values));
     }
 
     // NOTE: In general, should execute stmt.close()
-    public int[] insertValuesBatch(String relname, String[] valuesList) throws SQLException {
+    public int[] insertValuesBatch(String relname, ArrayList<String> valuesList) throws SQLException {
         _conn.setAutoCommit(false);
 
-        PreparedStatement stmt = _conn.prepareStatement(INSERT_VALUES_STMT_TEMPLATE);
-        stmt.setString(1, relname);
+        Statement stmt = _conn.createStatement();
         for (String values : valuesList) {
-            stmt.setString(2, values);
-            stmt.addBatch();
+            stmt.addBatch(String.format(INSERT_VALUES_STMT_TEMPLATE, relname, values));
         }
 
         int[] results = null;
         try {
             results = stmt.executeBatch();
-        } catch(BatchUpdateException e) {
+        } catch(SQLException e) {
+            while(e.getNextException() != null) {
+                e.printStackTrace();
+                e = e.getNextException();
+            }
             e.printStackTrace();
         } finally {
             if (stmt != null) { stmt.close(); }

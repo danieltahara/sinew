@@ -43,7 +43,7 @@ public class ColumnUpgrader {
             if (minCount != 0) {
                 ResultSet rsDocInfo = worker.select("*",
                     "document_schema." + _relname,
-                    "WHERE materialized = false AND count >= " + minCount);
+                    "WHERE materialized = false AND count >= " + minCount, true);
                 ArrayList<Attribute> upgrades = new ArrayList<Attribute>();
                 // TODO: worker.startTransaction();
                 while (rsDocInfo.next()) {
@@ -53,6 +53,11 @@ public class ColumnUpgrader {
                         upgrades.add(new Attribute(rsDocInfo.getString("key_name"),
                             rsDocInfo.getString("key_type")));
                     }
+                }
+                rsDocInfo.close();
+
+                for (Attribute a : upgrades) {
+                    worker.addColumn(_relname, a);
                 }
                 // TODO: worker.endTransaction();
             }

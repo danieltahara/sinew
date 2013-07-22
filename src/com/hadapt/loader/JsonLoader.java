@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -32,14 +31,12 @@ public class JsonLoader {
 
     public static String pgTypeForValue(Object value) {
         Class valueClass = value.getClass();
-        if (String.class.isAssignableFrom(valueClass)) {
-            return "text";
-        } else if (Integer.class.isAssignableFrom(valueClass)) {
+        if (Boolean.class.isAssignableFrom(valueClass)) {
+            return "boolean";
+        } else if (Long.class.isAssignableFrom(valueClass)) {
             return "integer";
         } else if (Double.class.isAssignableFrom(valueClass)) {
             return "double precision";
-        } else if (Boolean.class.isAssignableFrom(valueClass)) {
-            return "boolean";
         } else {
             return "text";
         }
@@ -65,8 +62,8 @@ public class JsonLoader {
             // Create document schema table if it doesn't exist
             worker.createTableIfNotExists("document_schema." + _relname,
                     "key_name text, key_type text, materialized boolean," +
-                            "clean boolean, count int, UNIQUE (key_name, key_type)");
-            ResultSet rsDocInfo = worker.select("*", "document_schema." + _relname);
+                            "dirty boolean, count int, PRIMARY KEY (key_name, key_type)");
+            ResultSet rsDocInfo = worker.select("*", "document_schema." + _relname, true);
             while (rsDocInfo.next()) {
                 Attribute attr = new Attribute(rsDocInfo.getString("key_name"),
                     rsDocInfo.getString("key_type"));
@@ -77,14 +74,14 @@ public class JsonLoader {
                     rsDocInfo.updateRow();
                     _keyCounts.remove(attr);
                 }
-                // For previously non-existent attributes, add them to the document schema
-                ArrayList<String> valuesArray = new ArrayList<String>();
-                for (Map.Entry<Attribute, Integer> entry : _keyCounts.entrySet()) {
-                    valuesArray.add("'" + entry.getKey()._name + "', '" + entry.getKey()._type + "', false, true, " +
-                        "'" + entry.getValue().toString() + "'"); // Single-quoting value is safe because PG will typecast
-                }
-                worker.insertValuesBatch("document_schema." + _relname, (String[])valuesArray.toArray());
             }
+            // For previously non-existent attributes, add them to the document schema
+            ArrayList<String> valuesArray = new ArrayList<String>();
+            for (Map.Entry<Attribute, Integer> entry : _keyCounts.entrySet()) {
+                valuesArray.add("'" + entry.getKey()._name + "', '" + entry.getKey()._type + "', false, true, " +
+                        entry.getValue().toString());
+            }
+            worker.insertValuesBatch("document_schema." + _relname, valuesArray);
         } catch (SQLException e) {
             e.printStackTrace();
         }
