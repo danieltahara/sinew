@@ -411,7 +411,7 @@ bw_colupgrader_launch(PG_FUNCTION_ARGS)
 	sprintf(worker.bgw_function_name, "bw_colupgrader_main");
 	worker.bgw_sighup = NULL;	/* new worker might not have library loaded */
 	worker.bgw_sigterm = NULL;	/* new worker might not have library loaded */
-	snprintf(worker.bgw_name, BGW_MAXLEN, "worker %d", i);
+	worker.bgw_main_arg = PointerGetDatum(NULL);
 
 	PG_RETURN_BOOL(RegisterDynamicBackgroundWorker(&worker));
 }
