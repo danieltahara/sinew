@@ -20,34 +20,32 @@
  *
  * -------------------------------------------------------------------------
  */
-#include "postgres.h"
+#include <postgres.h> /* This must precede all other includes */
 
-/* These are always necessary for a bgworker */
-#include "miscadmin.h"
-#include "postmaster/bgworker.h"
-#include "storage/ipc.h"
-#include "storage/latch.h"
-#include "storage/lwlock.h"
-#include "storage/proc.h"
-#include "storage/shmem.h"
+#include <miscadmin.h>
+#include <postmaster/bgworker.h>
+#include <storage/ipc.h>
+#include <storage/latch.h>
+#include <storage/lwlock.h>
+#include <storage/proc.h>
+#include <storage/shmem.h>
 
-/* these headers are used by this particular worker's code */
-// FIXME:?
-#include "access/xact.h"
-#include "executor/spi.h"
-#include "fmgr.h"
-#include "lib/stringinfo.h"
-#include "pgstat.h"
-#include "utils/builtins.h"
-#include "utils/snapmgr.h"
-#include "tcop/utility.h"
+#include <executor/spi.h>
+#include <fmgr.h>
+#include <lib/stringinfo.h>
+#include <utils/snapmgr.h>
+// FIXME: Do i use these?
+#include <access/xact.h>
+#include <pgstat.h>
+#include <utils/builtins.h>
+#include <tcop/utility.h>
 
 PG_MODULE_MAGIC;
 PG_FUNCTION_INFO_V1(bw_colupgrader_launch);
 
-void		_PG_init(void);
-void		bw_colupgrader_main(Datum);
-Datum		bw_colupgrader_launch(PG_FUNCTION_ARGS);
+void    _PG_init(void);
+void    bw_colupgrader_main(Datum);
+Datum   bw_colupgrader_launch(PG_FUNCTION_ARGS);
 
 /* flags set by signal handlers */
 static volatile sig_atomic_t got_sighup = false;
@@ -57,9 +55,7 @@ static volatile sig_atomic_t got_sigterm = false;
 static int	bw_colupgrader_naptime = 180;
 static int	bw_colupgrader_total_workers = 1;
 
-#define SCHEMA_NAME "document_schema";
-
-/* TODO: struct to hold state */
+#define SCHEMA_NAME "document_schema"
 
 /*
  * Signal handler for SIGTERM
@@ -176,8 +172,9 @@ bw_colupgrader_main(Datum main_arg)
 	 */
 	while (!got_sigterm)
 	{
-		int			ret;
-		int			rc;
+		int	ret;
+		int	rc;
+    int num_tables;
 
 		/*
 		 * Background workers mustn't call usleep() or any direct equivalent:
@@ -199,8 +196,8 @@ bw_colupgrader_main(Datum main_arg)
 		 */
 		if (got_sighup)
 		{
-			got_sighup = false;
-			ProcessConfigFile(PGC_SIGHUP);
+        got_sighup = false;
+        ProcessConfigFile(PGC_SIGHUP);
 		}
 
 		/*
@@ -225,98 +222,103 @@ bw_colupgrader_main(Datum main_arg)
 		PushActiveSnapshot(GetTransactionSnapshot());
 		pgstat_report_activity(STATE_RUNNING, buf.data);
 
-        initStringInfo(&buf);
-        appendStringInfo(&buf, "SELECT tablename FROM pg_tables WHERE schemaname='%s'", SCHEMA_NAME);
+    initStringInfo(&buf);
+    appendStringInfo(&buf, "SELECT tablename FROM pg_tables WHERE schemaname='%s'", SCHEMA_NAME);
 
 		/* We can now execute queries via SPI */
 		ret = SPI_execute(buf.data, true, 0);
 
 		if (ret != SPI_OK_UPDATE_RETURNING)
 		{
-			elog(FATAL, "bw_colupgrade: cannot get table names in schema '%s'", SCEHMA_NAME);
-        }
+        elog(FATAL, "bw_colupgrade: cannot get table names in schema '%s'", SCHEMA_NAME);
+    }
 
-        int num_tables = SPI_processed;
+    num_tables = SPI_processed;
 		if (num_tables > 0)
 		{
-			bool		isnull;
-			int         i;
-			int32		val;
+        int     i;
+        char  **tnames;
 
-            char      **table_names;
-            tablenames = palloc0(num_tables * sizeof(char *));
-            for (i = 0; i < num_tables; i++) {
-                table_names[i] = SPI_getvalue(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 1);
+        tnames = palloc0(num_tables * sizeof(char*));
+        for (i = 0; i < num_tables; i++) {
+            tnames[i] = SPI_getvalue(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 1);
+        }
+
+        /* Need to do this separately so as not to overwrite the global SPI_tuptable */
+        for (i = 0; i < num_tables; i++) {
+            char *tname;
+
+            resetStringInfo(&buf);
+            tname = tnames[i];
+            if (!tname)
+            {
+                continue;
             }
 
-            /* Need to do this separately so as not to overwrite the global SPI_tuptable */
-            for (i = 0; i < num_tables; i++) {
+            /* Retrieve document schema for table */
+            appendStringInfo(&buf,
+                             "SELECT key_name, key_type FROM %s.%s WHERE"
+                             "materialized = true && dirty = true",
+                             SCHEMA_NAME,
+                             tname);
+            ret = SPI_execute(buf.data, true, 0);
+            if (ret != SPI_OK_UPDATE_RETURNING)
+            {
+                elog(FATAL, "bw_colupgrade: cannot get document schema for table '%s'", tname);
+            }
+            if (SPI_processed == 0) /* Go until we find a table with a column to upgrade, or we run out of tables */
+            {
+                continue;
+            }
+            else /* Materialize a column */
+            {
+                char *key_name;
+                char *key_type;
+                char *udf_suffix;
+
                 resetStringInfo(&buf);
-                char *tname = table_names[i];
-                if (!tname)
+                key_name = SPI_getvalue(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 1);
+                key_type = SPI_getvalue(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 2);
+                udf_suffix = "text";
+                if (!strcmp(key_type, "bigint"))
                 {
-                    continue;
+                    udf_suffix = "int";
                 }
-
-                /* Retrieve document schema for table */
+                else if (!strcmp(key_type, "double precision"))
+                {
+                    udf_suffix = "float";
+                }
+                else if (!strcmp(key_type, "boolean"))
+                {
+                    udf_suffix = "bool";
+                }
                 appendStringInfo(&buf,
-                                 "SELECT key_name, key_type FROM %s.%s WHERE"
-                                 "materialized = true && dirty = true",
+                                 "UPDATE %s SET %s = json_get_%s(json_data, '%s')",
+                                 tname,
+                                 key_name,
+                                 udf_suffix,
+                                 key_name);
+
+                /* Set dirty = false */
+                resetStringInfo(&buf);
+                appendStringInfo(&buf,
+                                 "UPDATE %s.%s SET dirty = false WHERE"
+                                 "key_name = '%s', key_type = '%s'",
                                  SCHEMA_NAME,
-                                 tname);
-                ret = SPI_execute(buf.data, true, 0);
-                if (ret != SPI_OK_UPDATE_RETURNING)
+                                 tname,
+                                 key_name,
+                                 key_type);
+                ret = SPI_execute(buf.data, false, 0);
+                if (ret != SPI_OK_UPDATE_RETURNING || SPI_processed != 1)
                 {
-                    elog(FATAL, "bw_colupgrade: cannot get document schema for table '%s'", tname);
+                    elog(FATAL, "bw_colupgrade: could not update schema properly");
                 }
-                if (SPI_processed == 0) /* Go until we find a table with a column to upgrade, or we run out of tables */
-                {
-                    continue;
-                }
-                else /* Materialize a column */
-                {
-                    resetStringInfo(&buf);
-                    char *key_name = SPI_getvalue(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 1);
-                    char *key_type = SPI_getvalue(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 2);
-                    char *type_string = "text";
-                    if (!strcmp(key_type, "bigint"))
-                    {
-                        type_string = "int";
-                    }
-                    else if (!strcmp(key_type, "double precision"))
-                    {
-                        type_string = "float";
-                    }
-                    else if (!strcmp(key_type, "boolean"))
-                    {
-                        type_string = "bool";
-                    }
-                    appendStringInfo(&buf,
-                                     "UPDATE %s SET %s = json_get_%s(json_data, '%s')",
-                                     tname,
-                                     type_string,
-                                     key_name);
+                // FIXME: is there a race condition with inserts?
+                // TODO: always ask for a lock on this table; if can't acquire, sleep
 
-                    /* Set dirty = false */
-                    resetStringInfo(&buf);
-                    appendStringInfo(&buf,
-                                     "UPDATE %s.%s SET dirty = false WHERE"
-                                     "key_name = '%s', key_type = '%s'",
-                                     SCHEMA_NAME,
-                                     tname,
-                                     key_name,
-                                     key_type);
-                    ret = SPI_execute(buf.data, false, 0);
-                    if (ret != SPI_OK_UPDATE_RETURNING || SPI_processed != 1)
-                    {
-                        elog(FATAL, "bw_colupgrade: could not update schema properly");
-                    }
-                    // FIXME: is there a race condition with inserts?
-                    // TODO: always ask for a lock on this table; if can't acquire, sleep
-
-                    break;
-                }
+                break;
             }
+        }
 		}
 
 		/*
@@ -340,78 +342,83 @@ bw_colupgrader_main(Datum main_arg)
 void
 _PG_init(void)
 {
-	BackgroundWorker worker;
-	unsigned int i;
+    BackgroundWorker worker;
+    unsigned int i;
 
-	/* get the configuration */
-	DefineCustomIntVariable("bw_colupgrader.naptime",
-							"Duration between each check (in seconds).",
-							NULL,
-							&bw_colupgrader_naptime,
-							180,
-							1,
-							INT_MAX,
-							PGC_SIGHUP,
-							0,
-							NULL,
-							NULL,
-							NULL);
+    /* get the configuration */
+    DefineCustomIntVariable("bw_colupgrader.naptime",
+                            "Duration between each check (in seconds).",
+                            NULL,
+                            &bw_colupgrader_naptime,
+                            180,
+                            1,
+                            INT_MAX,
+                            PGC_SIGHUP,
+                            0,
+                            NULL,
+                            NULL,
+                            NULL);
 
-	if (!process_shared_preload_libraries_in_progress)
-		return;
+    if (!process_shared_preload_libraries_in_progress)
+    {
+        return;
+    }
 
-	DefineCustomIntVariable("bw_colupgrader.total_workers",
-							"Number of workers.",
-							NULL,
-							&bw_colupgrader_total_workers,
-							1,
-							1,
-							100,
-							PGC_POSTMASTER,
-							0,
-							NULL,
-							NULL,
-							NULL);
+    DefineCustomIntVariable("bw_colupgrader.total_workers",
+                            "Number of workers.",
+                            NULL,
+                            &bw_colupgrader_total_workers,
+                            1,
+                            1,
+                            100,
+                            PGC_POSTMASTER,
+                            0,
+                            NULL,
+                            NULL,
+                            NULL);
 
-	/* set up common data for all our workers */
-	worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
-		BGWORKER_BACKEND_DATABASE_CONNECTION;
-	worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
-	worker.bgw_restart_time = BGW_NEVER_RESTART;
-	worker.bgw_main = bw_colupgrader_main;
-	worker.bgw_sighup = NULL;
-	worker.bgw_sigterm = NULL;
+    /* set up common data for all our workers */
+    worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
+      BGWORKER_BACKEND_DATABASE_CONNECTION;
+    worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
+    worker.bgw_restart_time = BGW_NEVER_RESTART;
+    worker.bgw_main = bw_colupgrader_main;
+    worker.bgw_sighup = NULL;
+    worker.bgw_sigterm = NULL;
 
-	/*
-	 * Now fill in worker-specific data, and do the actual registrations.
-	 */
-	for (i = 1; i <= bw_colupgrader_total_workers; i++)
-	{
-		snprintf(worker.bgw_name, BGW_MAXLEN, "worker %d", i);
-		worker.bgw_main_arg = Int32GetDatum(i);
+    /*
+     * Now fill in worker-specific data, and do the actual registrations.
+     */
+    for (i = 1; i <= bw_colupgrader_total_workers; i++)
+    {
+        snprintf(worker.bgw_name, BGW_MAXLEN, "worker %d", i);
+        worker.bgw_main_arg = Int32GetDatum(i);
 
-		RegisterBackgroundWorker(&worker);
-	}
+        RegisterBackgroundWorker(&worker);
+    }
 }
 
 /*
  * Dynamically launch an SPI worker.
+ * NOTE: Changes as of 7/16/13
+ * https://github.com/postgres/postgres/commit/7f7485a0cde92aa4ba235a1ffe4dda0ca0b6cc9a
  */
 Datum
 bw_colupgrader_launch(PG_FUNCTION_ARGS)
 {
-	BackgroundWorker worker;
+    BackgroundWorker worker;
 
-	worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
-		BGWORKER_BACKEND_DATABASE_CONNECTION;
-	worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
-	worker.bgw_restart_time = 300;
-	worker.bgw_main = NULL;		/* new worker might not have library loaded */
-	sprintf(worker.bgw_library_name, "bw_colupgrader");
-	sprintf(worker.bgw_function_name, "bw_colupgrader_main");
-	worker.bgw_sighup = NULL;	/* new worker might not have library loaded */
-	worker.bgw_sigterm = NULL;	/* new worker might not have library loaded */
-	worker.bgw_main_arg = PointerGetDatum(NULL);
+    worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
+      BGWORKER_BACKEND_DATABASE_CONNECTION;
+    worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
+    worker.bgw_restart_time = 300;
+    worker.bgw_main = NULL;		/* new worker might not have library loaded */
+    sprintf(worker.bgw_library_name, "bw_colupgrader");
+    sprintf(worker.bgw_function_name, "bw_colupgrader_main");
+    worker.bgw_sighup = NULL;	/* new worker might not have library loaded */
+    worker.bgw_sigterm = NULL;	/* new worker might not have library loaded */
+    worker.bgw_main_arg = PointerGetDatum(NULL);
 
-	PG_RETURN_BOOL(RegisterDynamicBackgroundWorker(&worker));
+    PG_RETURN_BOOL(RegisterDynamicBackgroundWorker(&worker));
 }
+// TODO: shared preload libraries
