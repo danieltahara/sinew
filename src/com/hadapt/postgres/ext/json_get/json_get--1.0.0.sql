@@ -5,25 +5,25 @@
 \echo Use "CREATE EXTENSION json_get" to load this file. \quit
 
 CREATE OR REPLACE FUNCTION
-json_get_int(cstring, cstring)
+json_get_int(text, cstring)
 RETURNS integer
-AS 'MODULE_PATHNAME','solr_get'
+AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION
-json_get_float(cstring, cstring)
+json_get_float(text, cstring)
 RETURNS double precision
-AS 'MODULE_PATHNAME','solr_get'
+AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION
-json_get_bool(cstring, cstring)
+json_get_bool(text, cstring)
 RETURNS boolean
-AS 'MODULE_PATHNAME','solr_get'
+AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION
-json_get_text(cstring, cstring)
+json_get_text(text, cstring)
 RETURNS text
-AS 'MODULE_PATHNAME','solr_get'
+AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;

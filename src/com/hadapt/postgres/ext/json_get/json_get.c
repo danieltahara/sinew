@@ -3,6 +3,7 @@
 #include <fmgr.h>
 #include <catalog/pg_type.h>
 #include <funcapi.h>
+#include <utils/builtins.h>
 
 #include <assert.h>
 #include <ctype.h>
@@ -18,14 +19,26 @@ PG_MODULE_MAGIC;
 typedef enum { STRING = 1, INTEGER, FLOAT, BOOLEAN, NONE } json_typeid;
 
 static char *
+pstrndup(char *str, int len)
+{
+    char *retval;
+
+    retval = palloc0(len + 1);
+    strncpy(retval, str, len);
+    retval[len] = '\0';
+    return retval;
+}
+
+static char *
 jsmntok_to_str(jsmntok_t *tok, char *json)
 {
     char *retval;
     int   len;
 
+    assert(tok && json);
+
     len = tok->end - tok->start;
-    retval = palloc0(len + 1);
-    strncpy(retval, json, len);
+    retval = pstrndup(&json[tok->start], len);
 
     return retval;
 }
@@ -39,7 +52,9 @@ jsmn_get(jsmntok_t *tokens, char *json, char *key)
     size_t i, j;
 
     typedef enum { START, KEY, VALUE, STOP } parse_state;
-    parse_state state = START;
+    parse_state state;
+
+    state = START;
     for (i = 0, j = 1; j > 0; ++i, --j)
     {
         jsmntok_t *curtok = &tokens[i];
@@ -130,9 +145,9 @@ jsmn_get_type(jsmntype_t tok_type, char *value_str)
     }
 }
 
-/********************************************************************************
+/*******************************************************************************
 * Main UDF Definitions
-********************************************************************************/
+*******************************************************************************/
 
 typedef struct {
     json_typeid type;
@@ -166,6 +181,13 @@ json_get_internal(char *json, char *key)
     tokens = palloc0(sizeof(jsmntok_t) * maxToks);
     assert(tokens);
 
+    if (json == NULL)
+    {
+        elog(DEBUG5, "Null json");
+        retval = palloc0(sizeof(json_value));
+        retval->type = NONE;
+        return retval;
+    }
     status = jsmn_parse(&parser, json, tokens, maxToks);
     while (status == JSMN_ERROR_NOMEM)
     {
@@ -185,13 +207,24 @@ json_get_internal(char *json, char *key)
         elog(ERROR, "json_get: jsmn: truncated JSON string");
 
     }
+    elog(DEBUG5, "Completed parse");
 
+    retval = palloc0(sizeof(json_value));
     /* Extract value from tokens */
     value_tok = jsmn_get(tokens, json, key);
-    value_str = jsmntok_to_str(value_tok, json);
-    retval = palloc0(sizeof(json_value));
-    retval->value = value_str;
-    retval->type = jsmn_get_type(value_tok->type, value_str);
+    if (value_tok == NULL)
+    {
+        elog(DEBUG5, "Could not find value for key");
+        retval->type = NONE;
+    }
+    else
+    {
+        elog(DEBUG5, "Got value token");
+        value_str = jsmntok_to_str(value_tok, json);
+        elog(DEBUG5, "Got value str: %s", value_str);
+        retval->value = value_str;
+        retval->type = jsmn_get_type(value_tok->type, value_str);
+    }
 
     /* Cleanup */
     pfree(tokens);
@@ -202,12 +235,13 @@ json_get_internal(char *json, char *key)
 Datum
 json_get_int(PG_FUNCTION_ARGS)
 {
-    char *json = PG_GETARG_CSTRING(0);
+    text *json_text = PG_GETARG_TEXT_P_COPY(0);
     char *key = PG_GETARG_CSTRING(1);
+    char *json;
     json_value *json_val;
 
-    json = pstrdup(json);
-    key = pstrdup(key);
+    json = text_to_cstring(json_text);
+    key = pstrndup(key, strlen(key));
 
     json_val = json_get_internal(json, key);
     if (json_val->type == INTEGER)
@@ -223,12 +257,13 @@ json_get_int(PG_FUNCTION_ARGS)
 Datum
 json_get_bool(PG_FUNCTION_ARGS)
 {
-    char *json = PG_GETARG_CSTRING(0);
+    text *json_text = PG_GETARG_TEXT_P_COPY(0);
     char *key = PG_GETARG_CSTRING(1);
+    char *json;
     json_value *json_val;
 
-    json = pstrdup(json);
-    key = pstrdup(key);
+    json = text_to_cstring(json_text);
+    key = pstrndup(key, strlen(key));
 
     json_val = json_get_internal(json, key);
     if (json_val->type == BOOLEAN)
@@ -244,12 +279,13 @@ json_get_bool(PG_FUNCTION_ARGS)
 Datum
 json_get_float(PG_FUNCTION_ARGS)
 {
-    char *json = PG_GETARG_CSTRING(0);
+    text *json_text = PG_GETARG_TEXT_P_COPY(0);
     char *key = PG_GETARG_CSTRING(1);
+    char *json;
     json_value *json_val;
 
-    json = pstrdup(json);
-    key = pstrdup(key);
+    json = text_to_cstring(json_text);
+    key = pstrndup(key, strlen(key));
 
     json_val = json_get_internal(json, key);
     if (json_val->type == FLOAT)
@@ -265,12 +301,13 @@ json_get_float(PG_FUNCTION_ARGS)
 Datum
 json_get_text(PG_FUNCTION_ARGS)
 {
-    char *json = PG_GETARG_CSTRING(0);
+    text *json_text = PG_GETARG_TEXT_P_COPY(0);
     char *key = PG_GETARG_CSTRING(1);
+    char *json;
     json_value *json_val;
 
-    json = pstrdup(json);
-    key = pstrdup(key);
+    json = text_to_cstring(json_text);
+    key = pstrndup(key, strlen(key));
 
     json_val = json_get_internal(json, key);
     if (json_val->type == STRING)
