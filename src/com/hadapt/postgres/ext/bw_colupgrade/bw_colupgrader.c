@@ -41,11 +41,8 @@
 #include <tcop/utility.h>
 
 PG_MODULE_MAGIC;
-PG_FUNCTION_INFO_V1(bw_colupgrader_launch);
 
 void    _PG_init(void);
-void    bw_colupgrader_main(Datum);
-Datum   bw_colupgrader_launch(PG_FUNCTION_ARGS);
 
 /* flags set by signal handlers */
 static volatile sig_atomic_t got_sighup = false;
@@ -56,6 +53,7 @@ static int	bw_colupgrader_naptime = 180;
 static int	bw_colupgrader_total_workers = 1;
 
 #define SCHEMA_NAME "document_schema"
+#define BGW_MAXLEN (64)
 
 /*
  * Signal handler for SIGTERM
@@ -151,13 +149,9 @@ initialize_bw_colupgrader()
 }
 
 void
-bw_colupgrader_main(Datum main_arg)
+bw_colupgrader_main(void *main_arg)
 {
 	StringInfoData buf;
-
-	/* Establish signal handlers before unblocking signals. */
-	pqsignal(SIGHUP, bw_colupgrader_sighup);
-	pqsignal(SIGTERM, bw_colupgrader_sigterm);
 
 	/* We're now ready to receive signals */
 	BackgroundWorkerUnblockSignals();
@@ -189,7 +183,9 @@ bw_colupgrader_main(Datum main_arg)
 
 		/* emergency bailout if postmaster has died */
 		if (rc & WL_POSTMASTER_DEATH)
-			proc_exit(1);
+    {
+        proc_exit(1);
+    }
 
 		/*
 		 * In case of a SIGHUP, just reload the configuration.
@@ -330,7 +326,7 @@ bw_colupgrader_main(Datum main_arg)
 		pgstat_report_activity(STATE_IDLE, NULL);
 	}
 
-	proc_exit(1);
+	proc_exit(0);
 }
 
 /*
@@ -383,16 +379,19 @@ _PG_init(void)
     worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
     worker.bgw_restart_time = BGW_NEVER_RESTART;
     worker.bgw_main = bw_colupgrader_main;
-    worker.bgw_sighup = NULL;
-    worker.bgw_sigterm = NULL;
+    worker.bgw_sighup = bw_colupgrader_sighup;
+    worker.bgw_sigterm = bw_colupgrader_sigterm;
+    worker.bgw_main_arg = NULL;
 
     /*
      * Now fill in worker-specific data, and do the actual registrations.
      */
     for (i = 1; i <= bw_colupgrader_total_workers; i++)
     {
-        snprintf(worker.bgw_name, BGW_MAXLEN, "worker %d", i);
-        worker.bgw_main_arg = Int32GetDatum(i);
+        char name[BGW_MAXLEN];
+
+        sprintf(name, "bw_colupgrader_%d", i);
+        worker.bgw_name = pstrdup(name);
 
         RegisterBackgroundWorker(&worker);
     }
@@ -402,23 +401,22 @@ _PG_init(void)
  * Dynamically launch an SPI worker.
  * NOTE: Changes as of 7/16/13
  * https://github.com/postgres/postgres/commit/7f7485a0cde92aa4ba235a1ffe4dda0ca0b6cc9a
+ * Datum
+ * bw_colupgrader_launch(PG_FUNCTION_ARGS)
+ * {
+ *     BackgroundWorker worker;
+ *
+ *     worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
+ *       BGWORKER_BACKEND_DATABASE_CONNECTION;
+ *     worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
+ *     worker.bgw_restart_time = 300;
+ *     worker.bgw_main = NULL;		// new worker might not have library loaded
+ *     sprintf(worker.bgw_library_name, "bw_colupgrader");
+ *     sprintf(worker.bgw_function_name, "bw_colupgrader_main");
+ *     worker.bgw_sighup = NULL;	// new worker might not have library loaded
+ *     worker.bgw_sigterm = NULL;	// new worker might not have library loaded
+ *     worker.bgw_main_arg = PointerGetDatum(NULL);
+ *
+ *     PG_RETURN_BOOL(RegisterDynamicBackgroundWorker(&worker));
+ * }
  */
-Datum
-bw_colupgrader_launch(PG_FUNCTION_ARGS)
-{
-    BackgroundWorker worker;
-
-    worker.bgw_flags = BGWORKER_SHMEM_ACCESS |
-      BGWORKER_BACKEND_DATABASE_CONNECTION;
-    worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
-    worker.bgw_restart_time = 300;
-    worker.bgw_main = NULL;		/* new worker might not have library loaded */
-    sprintf(worker.bgw_library_name, "bw_colupgrader");
-    sprintf(worker.bgw_function_name, "bw_colupgrader_main");
-    worker.bgw_sighup = NULL;	/* new worker might not have library loaded */
-    worker.bgw_sigterm = NULL;	/* new worker might not have library loaded */
-    worker.bgw_main_arg = PointerGetDatum(NULL);
-
-    PG_RETURN_BOOL(RegisterDynamicBackgroundWorker(&worker));
-}
-// TODO: shared preload libraries
