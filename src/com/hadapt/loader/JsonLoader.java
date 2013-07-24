@@ -34,7 +34,7 @@ public class JsonLoader {
         if (Boolean.class.isAssignableFrom(valueClass)) {
             return "boolean";
         } else if (Long.class.isAssignableFrom(valueClass)) {
-            return "integer";
+            return "bigint";
         } else if (Double.class.isAssignableFrom(valueClass)) {
             return "double precision";
         } else {

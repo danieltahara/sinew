@@ -49,7 +49,7 @@ static volatile sig_atomic_t got_sighup = false;
 static volatile sig_atomic_t got_sigterm = false;
 
 /* GUC variables */
-static int	bw_colupgrader_naptime = 180;
+static int	bw_colupgrader_naptime = 10;
 static int	bw_colupgrader_total_workers = 1;
 
 #define SCHEMA_NAME "document_schema"
@@ -114,12 +114,12 @@ initialize_bw_colupgrader()
 	ret = SPI_execute(buf.data, true, 0);
 	if (ret != SPI_OK_SELECT)
 	{
-		elog(FATAL, "bw_colupgrader: SPI_execute failed: error code %d", ret);
+		elog(ERROR, "bw_colupgrader: SPI_execute failed: error code %d", ret);
 	}
 
 	if (SPI_processed != 1)
 	{
-		elog(FATAL, "bw_colupgrader: not a singleton result");
+		elog(ERROR, "bw_colupgrader: not a singleton result");
     }
 
 	ntup = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[0],
@@ -127,7 +127,7 @@ initialize_bw_colupgrader()
 									   1, &isnull));
 	if (isnull)
 	{
-		elog(FATAL, "bw_colupgrader: null result");
+		elog(ERROR, "bw_colupgrader: null result");
     }
 
 	if (ntup == 0)
@@ -161,7 +161,7 @@ bw_colupgrader_main(void *main_arg)
 	BackgroundWorkerUnblockSignals();
 
 	/* Connect to our database */
-	BackgroundWorkerInitializeConnection("postgres", NULL);
+	BackgroundWorkerInitializeConnection("test", "postgres");
 
 	initialize_bw_colupgrader();
 
@@ -228,9 +228,9 @@ bw_colupgrader_main(void *main_arg)
 		/* We can now execute queries via SPI */
 		ret = SPI_execute(buf.data, true, 0);
 
-		if (ret != SPI_OK_UPDATE_RETURNING)
+		if (ret != SPI_OK_SELECT)
 		{
-            elog(FATAL, "bw_colupgrade: cannot get table names in schema '%s'", SCHEMA_NAME);
+            elog(ERROR, "bw_colupgrade: cannot get table names in schema '%s'", SCHEMA_NAME);
         }
 
         num_tables = SPI_processed;
@@ -257,17 +257,18 @@ bw_colupgrader_main(void *main_arg)
 
                 /* Retrieve document schema for table */
                 appendStringInfo(&buf,
-                                 "SELECT key_name, key_type FROM %s.%s WHERE"
-                                 "materialized = true && dirty = true",
+                                 "SELECT key_name, key_type FROM %s.%s WHERE "
+                                 "materialized = true AND dirty = true",
                                  SCHEMA_NAME,
                                  tname);
                 ret = SPI_execute(buf.data, true, 0);
-                if (ret != SPI_OK_UPDATE_RETURNING)
+                if (ret != SPI_OK_SELECT)
                 {
-                    elog(FATAL, "bw_colupgrade: cannot get document schema for table '%s'", tname);
+                    elog(ERROR, "bw_colupgrade: cannot get document schema for table '%s'", tname);
                 }
                 if (SPI_processed == 0) /* Go until we find a table with a column to upgrade, or we run out of tables */
                 {
+                    elog(DEBUG5, "bw_colupgrade: table '%s' has no upgradeable columns", tname);
                     continue;
                 }
                 else /* Materialize a column */
@@ -276,7 +277,6 @@ bw_colupgrader_main(void *main_arg)
                     char *key_type;
                     char *udf_suffix;
 
-                    resetStringInfo(&buf);
                     key_name = SPI_getvalue(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 1);
                     key_type = SPI_getvalue(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 2);
                     udf_suffix = "text";
@@ -292,29 +292,34 @@ bw_colupgrader_main(void *main_arg)
                     {
                         udf_suffix = "bool";
                     }
+                    resetStringInfo(&buf);
                     appendStringInfo(&buf,
                                      "UPDATE %s SET %s = json_get_%s(json_data, '%s')",
                                      tname,
                                      key_name,
                                      udf_suffix,
                                      key_name);
+                    ret = SPI_execute(buf.data, false, 0);
+                    if (ret != SPI_OK_UPDATE)
+                    {
+                        elog(ERROR, "bw_colupgrade: column upgrade for '%s.%s' failed", tname, key_name);
+                    }
 
                     /* Set dirty = false */
                     resetStringInfo(&buf);
                     appendStringInfo(&buf,
-                                     "UPDATE %s.%s SET dirty = false WHERE"
-                                     "key_name = '%s', key_type = '%s'",
+                                     "UPDATE %s.%s SET dirty = false WHERE "
+                                     "key_name = '%s' AND key_type = '%s'",
                                      SCHEMA_NAME,
                                      tname,
                                      key_name,
                                      key_type);
                     ret = SPI_execute(buf.data, false, 0);
-                    if (ret != SPI_OK_UPDATE_RETURNING || SPI_processed != 1)
+                    if (ret != SPI_OK_UPDATE || SPI_processed != 1)
                     {
-                        elog(FATAL, "bw_colupgrade: could not update schema properly");
+                        elog(ERROR, "bw_colupgrade: could not update schema properly");
                     }
-                    // FIXME: is there a race condition with inserts?
-                    // TODO: always ask for a lock on this table; if can't acquire, sleep
+                    // FIXME: always ask for a lock on this table; if can't acquire, sleep
 
                     break;
                 }
@@ -350,7 +355,7 @@ _PG_init(void)
                             "Duration between each check (in seconds).",
                             NULL,
                             &bw_colupgrader_naptime,
-                            180,
+                            10,
                             1,
                             INT_MAX,
                             PGC_SIGHUP,

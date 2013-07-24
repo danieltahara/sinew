@@ -312,7 +312,10 @@ json_get_text(PG_FUNCTION_ARGS)
     json_val = json_get_internal(json, key);
     if (json_val->type == STRING)
     {
-        PG_RETURN_CSTRING(json_val->value);
+        text *retval;
+
+        retval = cstring_to_text(json_val->value);
+        PG_RETURN_TEXT_P(retval);
     }
     else
     {

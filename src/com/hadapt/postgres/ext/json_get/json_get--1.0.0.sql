@@ -6,7 +6,7 @@
 
 CREATE OR REPLACE FUNCTION
 json_get_int(text, cstring)
-RETURNS integer
+RETURNS bigint
 AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;
 
