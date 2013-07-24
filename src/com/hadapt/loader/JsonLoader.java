@@ -127,6 +127,7 @@ public class JsonLoader {
                     rejects.write("\n");
                 }
             }
+            tmpDataFile.flush();
         } catch (IOException e) {
             e.printStackTrace();
         } finally { // TODO: clean me

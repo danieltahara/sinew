@@ -82,14 +82,24 @@ public class Main {
             String tname = commandToks[1];
             String dataPath = commandToks[3];
             JsonLoader loader = new JsonLoader(tname, dataPath);
+            FileWriter rejectsFile = null;
             try {
-                loader.loadTable(new FileWriter(File.createTempFile("load", ".rejects")));
+                rejectsFile = new FileWriter((File.createTempFile("load", ".rejects")));
+                loader.loadTable(rejectsFile);
                 ColumnUpgrader upgrader = new ColumnUpgrader(tname);
                 upgrader.execute();
             } catch (SQLException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             } catch (IOException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            } finally {
+                if (rejectsFile != null) {
+                    try {
+                        rejectsFile.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    }
+                }
             }
         } else {
 

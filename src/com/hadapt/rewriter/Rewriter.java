@@ -8,6 +8,7 @@ import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SelectBody;
 import net.sf.jsqlparser.statement.select.WithItem;
 
 public class Rewriter {
@@ -18,41 +19,41 @@ public class Rewriter {
 
     }
 
-    public String rewrite(String query) {
-        Statement stmt = null;
-        try {
-            stmt = _jsqlParser.parse(new StringReader(query));
-            if (stmt instanceof Select) {
-                return resolveColumnReferences((Select)stmt).toString();
-            } else {
-                return stmt.toString();
-            }
-        } catch (JSQLParserException e) {
-            // _looger.debug(parseerror; seeing if pg can handle it);
-            return query;
-        }
-    }
+    // public String rewrite(String query) {
+    //     Statement stmt = null;
+    //     try {
+    //         stmt = _jsqlParser.parse(new StringReader(query));
+    //         if (stmt instanceof Select) {
+    //             return resolveColumnReferences((Select)stmt).toString();
+    //         } else {
+    //             return stmt.toString();
+    //         }
+    //     } catch (JSQLParserException e) {
+    //         // _looger.debug(parseerror; seeing if pg can handle it);
+    //         return query;
+    //     }
+    // }
 
-    public Statement resolveColumnReferences(Select select) {
-        String[] tnames = extractTableNames(select);
+    // public Statement resolveColumnReferences(Select select) {
+    //     String[] tnames = extractTableNames(select);
 
-        select.setSelectBody(resolve(select.getSelectBody(), tnames));
-        if (!select.getWithItemsList().isEmpty()) {
-            select.setWithItemsList(resolveWithItems(select.getWithItemsList(), tnames));
-        }
-        return select;
-    }
+    //     select.setSelectBody(resolve(select.getSelectBody(), tnames));
+    //     if (!select.getWithItemsList().isEmpty()) {
+    //         select.setWithItemsList(resolveWithItems(select.getWithItemsList(), tnames));
+    //     }
+    //     return select;
+    // }
 
-    public List resolveWithItems(List withItems) {
-        for (Iterator withsIt = withItems.iterator(); withsIt.hasNext();) {
-            WithItem with = (WithItem) withsIt.next();
-            with.setSelectBody(resolve(with.getSelectBody()));
-            if (!with.getWithItemList().isEmpty()) {
-                with.setWithItemList(resolveWithItems(with.getWithItemList()));
-            }
-        }
-        return withItems;
-    }
+    // public List resolveWithItems(List withItems) {
+    //     for (Iterator withsIt = withItems.iterator(); withsIt.hasNext();) {
+    //         WithItem with = (WithItem) withsIt.next();
+    //         with.setSelectBody(resolve(with.getSelectBody()));
+    //         if (!with.getWithItemList().isEmpty()) {
+    //             with.setWithItemList(resolveWithItems(with.getWithItemList()));
+    //         }
+    //     }
+    //     return withItems;
+    // }
 
     // // Bread and butter
     // public void visit(Column tableColumn) {

@@ -1,0 +1,2 @@
+load / verification is not 100%, I don't think
+upgrade/query will fail if even one record is malformed (i.e. json_get ERRORs out)
