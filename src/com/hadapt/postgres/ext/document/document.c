@@ -6,6 +6,9 @@
 #include <catalog/pg_type.h>
 #include <funcapi.h>
 #include <fmgr.h>
+#include <executor/spi.h>
+#include <lib/stringinfo.h>
+#include <utils/snapmgr.h>
 
 #include "lib/jsmn/jsmn.h"
 
@@ -21,20 +24,13 @@ typedef enum { STRING = 1,
                ARRAY,
                NONE
              } json_typeid;
-               // ARRAY_S, /* Array of strings */
-               // ARRAY_I, /* Array of ints */
-               // ARRAY_F, /* Array of floats */
-               // ARRAY_B, /* Array of booleans */
-               // ARRAY_DOC /* Array of documents */
-               // ARRAY_ARR /* Array of arrays; we are going to treat this as a
-               //              string for the sake of avoiding deep recursion */
 
 #define STRING_TYPE "text"
 #define INTEGER_TYPE "bigint"
 #define FLOAT_TYPE "double precision"
 #define BOOLEAN_TYPE "boolean"
 #define DOCUMENT_TYPE "document"
-#define ARRAY_TYPE "[]"
+#define ARRAY_TYPE "[]" /* The only non-terminal type we have */
 
 static char *
 pstrndup(char *str, int len)
@@ -114,12 +110,83 @@ jsmn_get_type(jsmntok_t* tok, char *json)
     }
 }
 
-static int
-get_attribute_id(char *keyname, json_typeid type)
+static void
+get_attribute(int id, char **key_ref, char **type_ref)
 {
-    char *typename;
-    //FIXME: lookup; add if necessary; add to top level transaction context
+  // FIXME:
 }
+
+get_attribute_id(char *keyname, char *typename)
+static int
+{
+    static char *last_keyname = NULL;
+    static char *last_typename = NULL;
+    static int last_attr_id = -1;
+
+    StringInfoData buf;
+    int ret;
+    bool isnull;
+    int attr_id;
+
+    if (last_keyname && last_attr_id > 0 &&
+        !strcmp(last_keyname, keyname) &&
+        !strcmp(last_typename, typename)) {
+        return last_attr_id;
+    }
+
+    SPI_connect();
+
+    initStringInfo(&buf);
+    appendStringInfo(&buf, "select _id from document_schema._attributes"
+        " where key_name = '%s' AND key_type = '%s'", keyname, typename);
+    ret = SPI_execute(buf.data, true, 0);
+    if (ret != SPI_OK_SELECT)
+    {
+        elog(ERROR, "document: SPI_execute failed: error code %d", ret);
+    }
+
+    if (SPI_processed != 1) {
+        return -1;
+    }
+
+    attr_id = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[0],
+                       SPI_tuptable->tupdesc,
+                       1, &isnull));
+    if (isnull)
+    {
+        elog(ERROR, "document: null result");
+    }
+
+    SPI_finish();
+
+    last_type = type;
+    last_attr_id = attr_id;
+    last_keyname = pstrndup(keyname, strlen(keyname)); /* Memory leak here */
+
+    return attr_id;
+}
+
+static int
+add_attribute(char *keyname, char *typename)
+{
+    SPI_connect();
+
+    initStringInfo(&buf);
+    appendStringInfo(&buf, "insert into document_schema._attributes values"
+        "('%s', '%s')", keyname, typename);
+
+    ret = SPI_execute(buf.data, false, 0);
+    if (ret != SPI_OK_INSERT)
+    {
+        elog(ERROR, "document: SPI_execute failed: error code %d", ret);
+    }
+
+    // FIXME: do i need transaction stuff?
+    SPI_finish();
+
+    return get_attribute_id(keyname, typename); /* Refreshes the cache and gives value */
+}
+
 
 typedef struct {
     int        natts;
@@ -139,7 +206,6 @@ to_binary(json_type type, char *value, void **outbuff_ref)
 
     switch (type)
     {
-      // FIXME: convert to **
         case STRING:
             (char*)outbuff = pstrncpy(value, strlen(value));
             return strlen(value);
@@ -164,10 +230,9 @@ to_binary(json_type type, char *value, void **outbuff_ref)
             }
             return 1;
         case DOCUMENT:
-            json_fill_document(str, &doc);
-            return document_to_binary(&doc, outbuff);
+            return document_to_binary(str, outbuff_ref);
         case ARRAY:
-            return array_to_binary(str, outbuff);
+            return array_to_binary(str, outbuff_ref);
         case NONE:
         case DEFAULT:
             elog(WARNING, "document: invalid data type");
@@ -191,7 +256,14 @@ document_to_binary(char *json, char **outbuff_ref)
                                      original position */
     for (int i = 0; i < natts; i++)
     {
-        attr_ids[i] = get_attribute_id(doc.keys[i], doc.types[i]);
+        const char *type;
+
+        type = get_pg_type(doc.types[i], doc.values[i]);
+        attr_ids[i] = get_attribute_id(doc.keys[i], type);
+        if (attr_ids[i] < 0)
+        {
+            attr_ids[i] = add_attribute(doc.keys[i], type);
+        }
         attr_id_refs[i] = attr_ids + i;
     }
     qsort(attr_id_refs, natts, sizeof(int), intref_comparator);
@@ -302,35 +374,293 @@ array_to_binary(char *json_arr, char **outbuff_ref)
 
 
 Datum string_to_document_datum(PG_FUNCTION_ARGS);
-//Datum document_datum_to_string(PG_FUNCTION_ARGS);
-
-// For the next three can operate directly on binary data
-// Datum document_get(PG_FUNCTION_ARGS);
-// // Datum document_put(PG_FUNCTION_ARGS);
-// Datum document_delete(PG_FUNCTION_ARGS);
+Datum document_datum_to_string(PG_FUNCTION_ARGS);
 
 PG_FUNCTION_INFO_V1(string_to_document_datum);
-//PG_FUNCTION_INFO_V1(document_datum_to_string);
+PG_FUNCTION_INFO_V1(document_datum_to_string);
 
-PG_FUNCTION_INFO_V1(document_get);
-PG_FUNCTION_INFO_V1(document_put);
-PG_FUNCTION_INFO_V1(document_delete);
-
-static Datum
+Datum
 string_to_document_datum(PG_FUNCTION_ARGS)
 {
     char *str = PG_GETARG_CSTRING_COPY(0);
     char *data;
 
-    // FIXME: load catalog into top transactioncontext
-    if (document_to_binary(str, data) > 0)
+    if (document_to_binary(str, &data) > 0)
     {
-        return PointerGetDatum(data);
+        PG_RETURN_BYTEA_P(data);
     }
     else
     {
-        return PointerGetDatum(NULL); // TODO: valid?
+        PG_RETURN_BYTEA_P(NULL); // FIXME: legal?
     }
+}
+
+static char *
+binary_document_to_string(char *binary)
+{
+    document doc;
+    int natts;
+    char *result;
+    int result_size, result_maxsize;
+
+    binary_fill_document(binary, &doc);
+    natts = doc->natts;
+
+    result_size = 3; /* {\n} */
+    result_maxsize = 64; // TODO: #define
+    result = palloc0(result_maxsize + 1);
+    strcat(result, "{\n");
+
+    for (int i = 0; i < natts; i++)
+    {
+        char *key;
+        char *value;
+        char *attr;
+        int attr_len;
+
+        key = doc->keys[i];
+        value = doc->values[i];
+
+        attr_len = strlen(key) + strlen(value) + 5; /* "k":v,\n" */
+        attr = palloc0(attr_len + 1);
+        sprintf(result, "\"%s\":%s\n", key, value);
+
+        if (result_size + attr_len + 1 >= result_maxsize)
+        {
+            result_maxsize = 2 * (result_size + attr_len) + 1;
+            result = repalloc(result, result_maxsize + 1);
+        }
+        strcat(result, attr);
+    }
+    strcat(result, "}"); /* There is space because we keep adding an extra bit to result_maxsize */
+
+    return result;
+}
+
+static void
+binary_fill_document(char *binary, document *doc)
+{
+    int natts;
+    int buffpos;
+    char **keys;
+    char **type_strings;
+    json_typeid *types;
+    char **values;
+
+    assert(binary);
+
+    memcpy(&natts, data, sizeof(int));
+    buffpos = sizeof(int);
+
+    keys = palloc0(natts * sizeof(char*));
+    values = palloc0(natts * sizeof(char*));
+    for (int i = 0; i < natts; i++)
+    {
+        int id;
+
+        memcpy(&id, data + buffpos, sizeof(int));
+        get_attribute(id, keys + i, type_strings +i);
+        types[i] = get_json_type(type_strings[i]);
+        buffpos += sizeof(int);
+    }
+
+    for (int i = 0; i < natts; i++)
+    {
+        int start, end;
+        char *value_data;
+
+        memcpy(&start, data + buffpos, sizeof(int));
+        memcpy(&end, data + buffpos + sizeof(int), sizeof(int));
+
+        value_data = palloc0(end - start);
+        memcpy(value_data, data + start, end - start);
+        values[i] = binary_to_string(types[i], value_data, end - start)
+
+        pfree(value_data);
+
+        buffpos += sizeof(int);
+    }
+
+    doc->natts = natts;
+    doc->keys = keys;
+    doc->types = types;
+    doc->values = values;
+}
+
+static char *
+binary_array_to_string(char *binary)
+{
+    int buffpos;
+    int natts;
+    json_typeid type;
+    char *result;
+    int result_size, result_maxsize;
+
+    assert(binary);
+
+    memcpy(&natts, binary, sizeof(int));
+    memcpy(&type, binary + sizeof(int), sizeof(int));
+    buffpos = 2 * sizeof(int);
+
+    result_size = 2; /* '[]' */
+    result_maxsize = 64
+    result = palloc0(result_maxize + 1);
+    strcat(result, "[");
+
+    for (int i = 0; i < natts; i++) {
+        int elt_size;
+        char *elt;
+
+        memcpy(&elt_size, binary + buffsize, sizeof(int));
+        if (result_size + elt_size + 2 + 1 >= result_maxsize) {
+            result_maxsize = 2 * (result_size + elt_size + 2) + 1;
+            result = repalloc(result, result_maxsize + 1);
+        }
+
+        buffsize += sizeof(int);
+
+        if (i != 0) {
+           strcat(result, ", ");
+        }
+
+        elt = palloc0(elt_size);
+        memcpy(elt, binary + buffsize, elt_size);
+        strcat(result, binary_to_string(type, elt, elt_size);
+        pfree(elt);
+
+        buffsize += elt_size;
+    }
+    strcat(result, "]"); /* There is space because we keep adding an extra bit to result_maxsize */
+
+    return result;
+}
+
+static char *
+binary_to_string(json_typeid type, char *binary, int datum_len)
+{
+    char *result;
+    int i;
+    double d;
+
+    assert(binary);
+
+    result = palloc0(datum_len * 8 + 2 + 1); /* Guaranteed to be enough base 10 */
+
+    switch (type)
+    {
+        case STRING:
+            sprintf(result, "\"%s\"", binary);
+            return result;
+        case INTEGER:
+            assert(datum_len == sizeof(int));
+            memcpy(&i, binary, sizeof(int));
+            sprintf(result, "%i", i);
+            return result;
+        case FLOAT:
+            assert(datum_len == sizeof(double));
+            memcpy(&d, binary, sizeof(double));
+            sprintf(result, "%d", d);
+            return result;
+        case BOOLEAN:
+            assert(datum_len == 1);
+            sprintf(result, "%s", *binary != 0 ? "true" : "false");
+            return result;
+        case DOCUMENT:
+            pfree(result);
+            return binary_document_to_string(binary);
+        case ARRAY:
+            pfree(result);
+            return binary_array_to_string(binary);
+        case NONE:
+        default:
+            elog(ERROR, "document: invalid binary");
+    }
+
+}
+
+const static char *
+get_json_type(const char *pg_type)
+{
+    if (!strcmp(pg_type, STRING_TYPE))
+    {
+        return STRING;
+    }
+    else if (!strcmp(pg_type, INTEGER_TYPE))
+    {
+        return INTEGER;
+    }
+    else if (!strcmp(pg_type, FLOAT_TYPE))
+    {
+        return FLOAT;
+    }
+    else if (!strcmp(pg_type, BOOLEAN_TYPE))
+    {
+        return BOOLEAN;
+    }
+    else if (!strcmp(pg_type, DOCUMENT_TYPE))
+    {
+        return DOCUMENT;
+    }
+    else
+    {
+        int len;
+        len = strlen(pg_type);
+        if (len > 2 && pg_type[len-2] == '[' && pg_type[len-1] == ']')
+        {
+            return ARRAY;
+        }
+        else
+        {
+            elog(ERROR, "document: invalid type id on deserialization");
+        }
+    }
+}
+
+static char *
+get_pg_type(json_typeid type, char *value)
+{
+    json_typeid arr_elt_type;
+    char *arr_elt_pg_type;
+    char *buffer;
+
+    assert(value);
+
+    arr_elt_type = NONE;
+
+    switch (type)
+    {
+        case STRING:
+            return STRING_TYPE;
+        case INTEGER:
+            return INTEGER_TYPE;
+        case FLOAT:
+            return FLOAT_TYPE;
+        case BOOLEAN:
+            return BOOLEAN_TYPE;
+        case DOCUMENT:
+            return DOCUMENT_TYPE;
+        case ARRAY:
+            memcpy(&arr_elt_type, value + sizeof(int), sizeof(int));
+            arr_elt_pg_type = get_pg_type(arr_elt_typ, value + 2 * sizeof(int));
+            buffer = palloc0(strlen(arr_elt_pg_type) + 2 + 1);
+            sprintf(buffer, "%s%s", arr_elt_pg_type, ARRAY_TYPE);
+            return buffer;
+        default:
+            elog(ERROR, "document: invalid type id on deserialization");
+    }
+}
+
+Datum
+document_datum_to_string(PG_FUNCTION_ARGS)
+{
+    char *data = PG_GETARG_BYTEA_P_COPY(0);
+    // FIXME: need to check datum size
+    // FIXME: this needs to go into serialization to create a varlena
+    char *result;
+
+    result = binary_document_to_string(data);
+
+    return PG_RETURN_CSTRING(result);
 }
 
 static void
@@ -457,4 +787,22 @@ jsmn_tokenize(char *json)
     elog(DEBUG5, "Completed parse");
 
     return tokens;
+}
+
+/*******************************************************************************
+ * Extraction Functions
+ ******************************************************************************/
+
+// For the next three can operate directly on binary data
+Datum document_get(PG_FUNCTION_ARGS);
+// // Datum document_put(PG_FUNCTION_ARGS);
+// Datum document_delete(PG_FUNCTION_ARGS);
+
+PG_FUNCTION_INFO_V1(document_get);
+// PG_FUNCTION_INFO_V1(document_put);
+// PG_FUNCTION_INFO_V1(document_delete);
+
+Datum
+document_get(PG_FUNCTION_ARGS)
+{
 }
