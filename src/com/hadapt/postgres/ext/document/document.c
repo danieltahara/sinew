@@ -116,8 +116,8 @@ get_attribute(int id, char **key_ref, char **type_ref)
   // FIXME:
 }
 
-get_attribute_id(char *keyname, char *typename)
 static int
+get_attribute_id(char *keyname, char *typename)
 {
     static char *last_keyname = NULL;
     static char *last_typename = NULL;
@@ -275,7 +275,7 @@ document_to_binary(char *json, char **outbuff_ref)
     buffpos += sizeof(int);
     for (int i = 0; i < natts; i++)
     {
-        memcpy(outbuff + buffpos, *(attr_id_refs + i), sizeof(int));
+        memcpy(outbuff + buffpos, attr_id_refs[i], sizeof(int));
         buffpos += sizeof(int);
     }
     /* Copy data and offsets */
@@ -387,11 +387,11 @@ string_to_document_datum(PG_FUNCTION_ARGS)
 
     if (document_to_binary(str, &data) > 0)
     {
-        PG_RETURN_BYTEA_P(data);
+        PG_RETURN_POINTER(data);
     }
     else
     {
-        PG_RETURN_BYTEA_P(NULL); // FIXME: legal?
+        PG_RETURN_NULL();
     }
 }
 
@@ -653,10 +653,9 @@ get_pg_type(json_typeid type, char *value)
 Datum
 document_datum_to_string(PG_FUNCTION_ARGS)
 {
-    char *data = PG_GETARG_BYTEA_P_COPY(0);
-    // FIXME: need to check datum size
-    // FIXME: this needs to go into serialization to create a varlena
+    char *data = (char*)PG_GETARG_POINTER(0);
     char *result;
+    // TODO: any way I can validate the size?
 
     result = binary_document_to_string(data);
 
@@ -795,14 +794,273 @@ jsmn_tokenize(char *json)
 
 // For the next three can operate directly on binary data
 Datum document_get(PG_FUNCTION_ARGS);
-// // Datum document_put(PG_FUNCTION_ARGS);
-// Datum document_delete(PG_FUNCTION_ARGS);
+Datum document_put(PG_FUNCTION_ARGS);
+Datum document_delete(PG_FUNCTION_ARGS);
 
 PG_FUNCTION_INFO_V1(document_get);
-// PG_FUNCTION_INFO_V1(document_put);
-// PG_FUNCTION_INFO_V1(document_delete);
+PG_FUNCTION_INFO_V1(document_put);
+PG_FUNCTION_INFO_V1(document_delete);
 
 Datum
 document_get(PG_FUNCTION_ARGS)
 {
+    char *data = (char*)PG_GETARG_POINTER(0);
+    char *attr_name = (char*)PG_GETARG_CSTRING(1);
+    char *attr_pg_type = (char*)PG_GETARG_CSTRING(2);
+    int attr_id;
+    int natts;
+    char *attr_listing;
+    int buffpos;
+
+    attr_id = get_attribute_id(attr_name, attr_name);
+
+    memcpy(&natts, data, sizeof(int));
+    buffpos = sizeof(int);
+
+    attr_listing = NULL;
+    attr_listing = bsearch(attr_id,
+                           data + buffpos,
+                           natts,
+                           sizeof(int),
+                           int_comparator);
+
+    // FIXME: that data better be long enough; this code ain't robust
+    if (attr_listing)
+    {
+        int pos;
+        int offstart, offend;
+        int len;
+        json_typeid type;
+        char *attr_data;
+        int i;
+        double d;
+
+        pos = (attr_listing - data) / sizeof(int);
+        buffpos += natts * sizeof(int);
+        memcpy(&offstart, data + buffpos + pos * sizeof(int), sizeof(int));
+        memcpy(&offend, data + (pos + 1) * sizeof(int), sizeof(int));
+        len = offend - offstart;
+
+        attr_data = palloc0(len + 1);
+        memcpy(attr_data, data + offstart, len);
+        attr_data[len] = '\0';
+        type = get_json_type(attr_pg_type);
+
+        switch (type)
+        {
+            case STRING:
+                 PG_RETURN_CSTRING(pstrndup(attr_data, len);
+            case INTEGER:
+                 assert(len == sizeof(int));
+                 memcpy(&i, attr_data, sizeof(int));
+                 PG_RETURN_UINT64(i);
+            case FLOAT:
+                 assert(len == sizeof(double));
+                 memcpy(&d, attr_data, sizeof(double));
+            case BOOLEAN:
+                 assert(len == sizeof(int));
+                 memcpy(&i, attr_data, sizeof(int));
+                 PG_RETURN_BOOL(i);
+            case DOCUMENT:
+                 PG_RETURN_POINTER(attr_data);
+            case ARRAY:
+                 PG_RETURN_ARRAYTYPE_P(attr_data);
+        }
+    }
+    else
+    {
+        PG_RETURN_NULL();
+    }
+}
+
+Datum
+document_delete(PG_FUNCTION_ARGS)
+{
+    char *data = (char*)PG_GETARG_POINTER(0);
+    char *attr_name = (char*)PG_GETARG_CSTRING(1);
+    char *attr_pg_type = (char*)PG_GETARG_CSTRING(2);
+    int attr_id;
+    int natts;
+    char *attr_listing;
+    char *outdata;
+
+    attr_id = get_attribute_id(attr_name, attr_name);
+
+    memcpy(&natts, data, sizeof(int));
+
+    attr_listing = NULL;
+    attr_listing = bsearch(attr_id,
+                           data + sizeof(int),
+                           natts,
+                           sizeof(int),
+                           int_comparator);
+
+    if (attr_listing)
+    {
+        int datalen; /* Length of original data */
+        int attr_pos; /* Position of attribute id in header */
+        int outpos; /* Offset of how much data is filled in outbuffer */
+        int new_natts; /* Decremented number of attributes */
+        int off0; /* Start of data part of document */
+
+        outpos = 0;
+        delta_offset = 0;
+
+        attr_pos = (attr_listing - data) / sizeof(int);
+        memcpy(&offstart, attr_listing + natts * sizeof(int), sizeof(int));
+        memcpy(&offend, attr_listing + (natts + 1) * sizeof(int), sizeof(int));
+        len = offend - offstart;
+
+        memcpy(&datalen, data + 2 * natts + 1, sizeof(int));
+        outdata = palloc0(datumlen - 2 * sizeof(int) - len);
+
+        /* Decrement number of attributes */
+        new_natts = natts - 1;
+        memcpy(outdata, &new_natts, sizeof(int));
+        outpos = sizeof(int);
+        /* Copy attr ids before current */
+        memcpy(outdata + outpos, data + sizeof(int), pos * sizeof(int));
+        outpos += pos * sizeof(int);
+        /* Copy remaining attr ids */
+        memcpy(outdata + outpos, attr_listing + sizeof(int), (natts - pos - 1) * sizeof(int));
+        outpos += (natts - pos - 1) * sizeof(int);
+        /* Copy first pos offsets */
+        memcpy(outdata + outpos, data + (natts + 1) * sizeof(int), pos * sizeof(int));
+        for (int i = pos + 1; i <= natts; i++) { /* <= b/c length appended at end */
+            int new_offs;
+            memcpy(&new_offs, data + (natts + 1) + i * sizeof(int), sizeof(int));
+            new_offs -= 2 * sizeof(int) - len;
+
+            memcpy(outdata + outpos, &new_offs, sizeof(int));
+
+            outpos += sizeof(int);
+        }
+        off0 = 2 * natts + 1;
+        memcpy(outdata + outpos, data + off0, offstart - off0);
+        outpos += offstart - off0;
+        memcpy(outdata + outpos, data + offend, datalen - offend);
+
+        PG_RETURN_POINTER(outdata);
+    }
+    else
+    {
+        PG_RETURN_POINTER(data);
+    }
+}
+
+/* Use this to downgrade */
+// NOTE: Assumes attribute does not exist
+Datum
+document_put(PG_FUNCTION_ARGS)
+{
+    char *data = (char*)PG_GETARG_POINTER(0);
+    char *attr_name = (char*)PG_GETARG_CSTRING(1);
+    char *attr_pg_type = (char*)PG_GETARG_CSTRING(2);
+    char *attr_value_str = (char*)PG_GETARG_CSTRING(3);
+    json_typeid attr_json_type;
+    char *attr_binary;
+    int attr_id;
+    int attr_size;
+    char *outdata;
+    int natts, newnatts;
+    int datasize;
+    int datapos, outdatapos;
+    int offstart, offend, off0; /* Offset to binary for attr, end of it, start of binary data in document */
+
+    attr_id = get_attribute_id(attr_name, attr_type);
+    if (attr_id < 0)
+    {
+        attr_id = add_attribute(attr_name, attr_type);
+    }
+
+    memcpy(&natts, data, sizeof(int));
+    newnatts = natts - 1;
+    memcpy(&datasize, data + (2 * natts + 1) * sizeof(int), sizeof(int));
+
+    attr_json_type = get_json_type(attr_pg_type);
+    attr_size = to_binary(attr_json_type, attr_value_str, &attr_binary);
+    outdata = palloc0(datasize + 2 * sizeof(int) + attr_size);
+
+    memcpy(outdata, &newnatts, sizeof(int));
+    datapos = outdatapos = sizeof(int);
+    int attr_pos;
+    for (attr_pos = 0; attr_pos < natts; attr_pos++)
+    {
+        int cur_attr_id;
+        memcpy(&cur_attr_id, data + datapos + attr_pos * sizeof(int), sizeof(int));
+        // TODO: custom bsearch, but right now, w/e
+        if (cur_attr_id > attr_id)
+        {
+            break;
+        }
+    }
+
+    /* Insert aid */
+    memcpy(outdata + outdatapos, data + datapos, attr_pos * sizeof(int));
+    outdatapos += attr_pos + sizeof(int);
+    datapos += attr_pos + sizeof(int);
+    memcpy(outdata + outdatapos, &attr_id, sizeof(int));
+    outdatapos += sizeof(int);
+    memcpy(outdata + outdatapos, data + datapos, (natts - attr_pos) * sizeof(int));
+    outdatapos += (natts - attr_pos) * sizeof(int);
+    datapos += (natts - attr_pos) * sizeof(int);
+
+    /* Increment all offsets and insert */
+    // TODO: this has got to be messed up
+    memcpy(outdata + outdatapos, data + datapos, (attr_pos + 1) * sizeof(int));
+    outdatapos += (attr_pos + 1) * sizeof(int);
+    memcpy(&offstart, data + datapos + attr_pos * sizeof(int), sizeof(int));
+    offend = offstart + attr_size;
+    memcpy(outdata + outdatapos, &offend, sizeof(int));
+    outdatapos += sizeof(int);
+    for (int i = attr_pos + 1; i <= natts; i++)
+    {
+        memcpy(&offstart, data + datapos + i * sizeof(int), sizeof(int));
+        offend = offstart + attr_size;
+        memcpy(outdata + outdatapos, &offend, sizeof(int));
+        outdatapos += sizeof(int);
+    }
+
+    /* Insert data */
+    off0 = (2 * natts + 1) * sizeof(int);
+    memcpy(outdata + outdatapos, data + off0, offstart - off0);
+    outdatapos += offstart - off0;
+    memcpy(outdata + outdatapos, attr_binary, attr_size);
+    outdatapos += attr_size;
+    memcpy(outdata + outdatapos, data + offstart,  data_size - offstart);
+
+    PG_RETURN_POINTER(outdata);
+}
+
+static int
+int_comparator(void *v1, void *v2)
+{
+    int i1, i2;
+
+    i1 = *(int*)v1;
+    i2 = *(int*)v2;
+
+    if (i1 < i2)
+    {
+        return -1;
+    }
+    else if (i1 == i2)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+static int
+intref_comparator(void *v1, void *v2)
+{
+    int *i1, *i2;
+
+    i1 = *(int*)v1;
+    i2 = *(int*)v2;
+
+    return int_comparator((void*)i1, (void*)i2);
 }
