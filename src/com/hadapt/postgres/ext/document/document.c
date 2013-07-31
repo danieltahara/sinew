@@ -864,6 +864,8 @@ document_get(PG_FUNCTION_ARGS)
             case DOCUMENT:
                  PG_RETURN_POINTER(attr_data);
             case ARRAY:
+            // FIXME: if text; need to convert to array of text
+            // FIXME: store strings as struct text *
                  PG_RETURN_ARRAYTYPE_P(attr_data);
         }
     }
