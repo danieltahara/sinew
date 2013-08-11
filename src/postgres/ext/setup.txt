@@ -1,0 +1,3 @@
+Run make from within lib/jsmn
+make json_get
+modify postgresql.conf to have shared_preload_libraries = 'bw_colupgrader'
