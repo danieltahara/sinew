@@ -32,6 +32,39 @@ typedef enum { STRING = 1,
 #define DOCUMENT_TYPE "document"
 #define ARRAY_TYPE "[]" /* The only non-terminal type we have */
 
+static int
+int_comparator(const void *v1, const void *v2)
+{
+    int i1, i2;
+
+    i1 = *(int*)v1;
+    i2 = *(int*)v2;
+
+    if (i1 < i2)
+    {
+        return -1;
+    }
+    else if (i1 == i2)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+static int
+intref_comparator(const void *v1, const void *v2)
+{
+    int *i1, *i2;
+
+    i1 = *(int**)v1;
+    i2 = *(int**)v2;
+
+    return int_comparator((void*)i1, (void*)i2);
+}
+
 static char *
 pstrndup(char *str, int len)
 {
@@ -87,7 +120,7 @@ jsmn_primitive_get_type(char *value_str)
 static json_typeid
 jsmn_get_type(jsmntok_t* tok, char *json)
 {
-    json_typeid tok_type = tok->type;
+    jsmntype_t tok_type = tok->type;
     char *value_str = jsmntok_to_str(tok, json);
 
     if (!value_str) {
@@ -113,7 +146,8 @@ jsmn_get_type(jsmntok_t* tok, char *json)
 static void
 get_attribute(int id, char **key_ref, char **type_ref)
 {
-  // FIXME:
+    // FIXME:
+    // from id, fill key_ref and type_ref
 }
 
 static int
@@ -190,54 +224,9 @@ add_attribute(char *keyname, char *typename)
 typedef struct {
     int        natts;
     char     **keys;
-    json_type *types;
+    json_typeid *types;
     char     **values;
 } document;
-
-static int
-to_binary(json_type type, char *value, void **outbuff_ref)
-{
-    jsmntok_t *tokens;
-    document doc;
-    void *outbuff;
-
-    outbuff = *outbuff_ref;
-
-    switch (type)
-    {
-        case STRING:
-            (char*)outbuff = pstrncpy(value, strlen(value));
-            return strlen(value);
-        case INTEGER:
-            outbuff = palloc0(sizeof(int));
-            *((int*)outbuff) = atoi(value);
-            return sizeof(int);
-        case FLOAT:
-            outbuff = palloc0(sizeof(double));
-            *((double*)outbuff) = atof(value);
-            return sizeof(double);
-            break;
-        case BOOLEAN:
-            outbuff = palloc0(1);
-            if (!strcmp(value, "true")) {
-                *(char*)outbuff = 1;
-            } else if (!strcmp(value, "false")) {
-                *(char*)outbuff = 0;
-            } else {
-                elog(WARNING, "document: boolean has invalid value");
-                return -1;
-            }
-            return 1;
-        case DOCUMENT:
-            return document_to_binary(str, outbuff_ref);
-        case ARRAY:
-            return array_to_binary(str, outbuff_ref);
-        case NONE:
-        case DEFAULT:
-            elog(WARNING, "document: invalid data type");
-            return -1;
-    }
-}
 
 static int
 document_to_binary(char *json, char **outbuff_ref)
@@ -245,15 +234,16 @@ document_to_binary(char *json, char **outbuff_ref)
     document doc;
     int natts;
     char *outbuff;
+    int  attr_ids[natts];
+    int *attr_id_refs[natts]; /* Just sort the pointers, so we can recover
+                                 original positions */
+    int i;
 
     json_fill_document(json, &doc);
     natts = doc.natts;
     outbuff = *outbuff_ref;
 
-    int  attr_ids[natts];
-    int *attr_id_refs[natts]; /* Just sort the pointer, so we can recover
-                                     original position */
-    for (int i = 0; i < natts; i++)
+    for (i = 0; i < natts; i++)
     {
         const char *type;
 
@@ -272,7 +262,7 @@ document_to_binary(char *json, char **outbuff_ref)
     outbuff = palloc0(data_size);
     memcpy(outbuff, &natts, sizeof(int));
     buffpos += sizeof(int);
-    for (int i = 0; i < natts; i++)
+    for (i = 0; i < natts; i++)
     {
         memcpy(outbuff + buffpos, attr_id_refs[i], sizeof(int));
         buffpos += sizeof(int);
@@ -280,7 +270,7 @@ document_to_binary(char *json, char **outbuff_ref)
     /* Copy data and offsets */
     buffpos = sizeof(int) + 2 * sizeof(int) * natts +
         sizeof(int); /* # attrs, attr_ids, offsets, length */
-    for (int i = 0; i < natts; i++)
+    for (i = 0; i < natts; i++)
     {
         char *binary;
         int *attr_id_ref = attr_id_refs[i];
@@ -371,6 +361,52 @@ array_to_binary(char *json_arr, char **outbuff_ref)
     return buffpos;
 }
 
+static int
+to_binary(json_type type, char *value, void **outbuff_ref)
+{
+    jsmntok_t *tokens;
+    document doc;
+    void *outbuff;
+
+    outbuff = *outbuff_ref;
+
+    switch (type)
+    {
+        case STRING:
+            (char*)outbuff = pstrncpy(value, strlen(value));
+            return strlen(value);
+        case INTEGER:
+            outbuff = palloc0(sizeof(int));
+            *((int*)outbuff) = atoi(value);
+            return sizeof(int);
+        case FLOAT:
+            outbuff = palloc0(sizeof(double));
+            *((double*)outbuff) = atof(value);
+            return sizeof(double);
+            break;
+        case BOOLEAN:
+            outbuff = palloc0(1);
+            if (!strcmp(value, "true")) {
+                *(char*)outbuff = 1;
+            } else if (!strcmp(value, "false")) {
+                *(char*)outbuff = 0;
+            } else {
+                elog(WARNING, "document: boolean has invalid value");
+                return -1;
+            }
+            return 1;
+        case DOCUMENT:
+            return document_to_binary(str, outbuff_ref);
+        case ARRAY:
+            return array_to_binary(str, outbuff_ref);
+        case NONE:
+        case DEFAULT:
+            elog(WARNING, "document: invalid data type");
+            return -1;
+    }
+}
+
+
 
 Datum string_to_document_datum(PG_FUNCTION_ARGS);
 Datum document_datum_to_string(PG_FUNCTION_ARGS);
@@ -458,7 +494,7 @@ binary_fill_document(char *binary, document *doc)
         int id;
 
         memcpy(&id, data + buffpos, sizeof(int));
-        get_attribute(id, keys + i, type_strings +i);
+        get_attribute(id, keys + i, type_strings + i);
         types[i] = get_json_type(type_strings[i]);
         buffpos += sizeof(int);
     }
@@ -658,7 +694,7 @@ document_datum_to_string(PG_FUNCTION_ARGS)
 
     result = binary_document_to_string(data);
 
-    return PG_RETURN_CSTRING(result);
+    PG_RETURN_CSTRING(result);
 }
 
 static void
@@ -739,8 +775,7 @@ json_fill_document(char *json, document *doc)
             break;
         }
     }
-    pfree(tokens)
-    return retval;
+    pfree(tokens);
 }
 
 static jsmntok_t *
@@ -817,7 +852,7 @@ document_get(PG_FUNCTION_ARGS)
     buffpos = sizeof(int);
 
     attr_listing = NULL;
-    attr_listing = bsearch(attr_id,
+    attr_listing = bsearch(&attr_id,
                            data + buffpos,
                            natts,
                            sizeof(int),
@@ -847,25 +882,26 @@ document_get(PG_FUNCTION_ARGS)
 
         switch (type)
         {
-            case STRING:
-                 PG_RETURN_CSTRING(pstrndup(attr_data, len);
-            case INTEGER:
-                 assert(len == sizeof(int));
-                 memcpy(&i, attr_data, sizeof(int));
-                 PG_RETURN_UINT64(i);
-            case FLOAT:
-                 assert(len == sizeof(double));
-                 memcpy(&d, attr_data, sizeof(double));
-            case BOOLEAN:
-                 assert(len == sizeof(int));
-                 memcpy(&i, attr_data, sizeof(int));
-                 PG_RETURN_BOOL(i);
-            case DOCUMENT:
-                 PG_RETURN_POINTER(attr_data);
-            case ARRAY:
-            // FIXME: if text; need to convert to array of text
-            // FIXME: store strings as struct text *
-                 PG_RETURN_ARRAYTYPE_P(attr_data);
+        case STRING:
+             PG_RETURN_CSTRING(pstrndup(attr_data, len));
+        case INTEGER:
+             assert(len == sizeof(int));
+             memcpy(&i, attr_data, sizeof(int));
+             PG_RETURN_UINT64(i);
+        case FLOAT:
+             assert(len == sizeof(double));
+             memcpy(&d, attr_data, sizeof(double));
+             PG_RETURN_FLOAT8(i);
+        case BOOLEAN:
+             assert(len == sizeof(int));
+             memcpy(&i, attr_data, sizeof(int));
+             PG_RETURN_BOOL(i);
+        case DOCUMENT:
+             PG_RETURN_POINTER(attr_data);
+        case ARRAY:
+             // FIXME: if text; need to convert to array of text
+             // FIXME: store strings as struct text *
+             PG_RETURN_ARRAYTYPE_P(attr_data);
         }
     }
     else
@@ -890,7 +926,7 @@ document_delete(PG_FUNCTION_ARGS)
     memcpy(&natts, data, sizeof(int));
 
     attr_listing = NULL;
-    attr_listing = bsearch(attr_id,
+    attr_listing = bsearch(&attr_id,
                            data + sizeof(int),
                            natts,
                            sizeof(int),
@@ -899,21 +935,21 @@ document_delete(PG_FUNCTION_ARGS)
     if (attr_listing)
     {
         int datalen; /* Length of original data */
-        int attr_pos; /* Position of attribute id in header */
         int outpos; /* Offset of how much data is filled in outbuffer */
         int new_natts; /* Decremented number of attributes */
         int off0; /* Start of data part of document */
+        int offstart, offend;
+        int len;
+        int i;
 
         outpos = 0;
-        delta_offset = 0;
 
-        attr_pos = (attr_listing - data) / sizeof(int);
-        memcpy(&offstart, attr_listing + natts * sizeof(int), sizeof(int));
+        memcpy(&offstart, attr_listing + (natts)  * sizeof(int), sizeof(int));
         memcpy(&offend, attr_listing + (natts + 1) * sizeof(int), sizeof(int));
         len = offend - offstart;
 
         memcpy(&datalen, data + 2 * natts + 1, sizeof(int));
-        outdata = palloc0(datumlen - 2 * sizeof(int) - len);
+        outdata = palloc0(datalen - 2 * sizeof(int) - len);
 
         /* Decrement number of attributes */
         new_natts = natts - 1;
@@ -927,8 +963,9 @@ document_delete(PG_FUNCTION_ARGS)
         outpos += (natts - pos - 1) * sizeof(int);
         /* Copy first pos offsets */
         memcpy(outdata + outpos, data + (natts + 1) * sizeof(int), pos * sizeof(int));
-        for (int i = pos + 1; i <= natts; i++) { /* <= b/c length appended at end */
+        for (i = pos + 1; i <= natts; i++) { /* <= b/c length appended at end */
             int new_offs;
+
             memcpy(&new_offs, data + (natts + 1) + i * sizeof(int), sizeof(int));
             new_offs -= 2 * sizeof(int) - len;
 
@@ -967,6 +1004,8 @@ document_put(PG_FUNCTION_ARGS)
     int datasize;
     int datapos, outdatapos;
     int offstart, offend, off0; /* Offset to binary for attr, end of it, start of binary data in document */
+    int attr_pos;
+    int i; /* Loop variable */
 
     attr_id = get_attribute_id(attr_name, attr_type);
     if (attr_id < 0)
@@ -984,7 +1023,6 @@ document_put(PG_FUNCTION_ARGS)
 
     memcpy(outdata, &newnatts, sizeof(int));
     datapos = outdatapos = sizeof(int);
-    int attr_pos;
     for (attr_pos = 0; attr_pos < natts; attr_pos++)
     {
         int cur_attr_id;
@@ -1014,7 +1052,7 @@ document_put(PG_FUNCTION_ARGS)
     offend = offstart + attr_size;
     memcpy(outdata + outdatapos, &offend, sizeof(int));
     outdatapos += sizeof(int);
-    for (int i = attr_pos + 1; i <= natts; i++)
+    for (i = attr_pos + 1; i <= natts; i++)
     {
         memcpy(&offstart, data + datapos + i * sizeof(int), sizeof(int));
         offend = offstart + attr_size;
@@ -1031,37 +1069,4 @@ document_put(PG_FUNCTION_ARGS)
     memcpy(outdata + outdatapos, data + offstart,  data_size - offstart);
 
     PG_RETURN_POINTER(outdata);
-}
-
-static int
-int_comparator(void *v1, void *v2)
-{
-    int i1, i2;
-
-    i1 = *(int*)v1;
-    i2 = *(int*)v2;
-
-    if (i1 < i2)
-    {
-        return -1;
-    }
-    else if (i1 == i2)
-    {
-        return 0;
-    }
-    else
-    {
-        return 1;
-    }
-}
-
-static int
-intref_comparator(void *v1, void *v2)
-{
-    int *i1, *i2;
-
-    i1 = *(int*)v1;
-    i2 = *(int*)v2;
-
-    return int_comparator((void*)i1, (void*)i2);
 }

@@ -6,6 +6,10 @@ MODULE_big = document
 EXTENSION = document
 DATA = document--1.0.0.sql
 
+jsmndir = lib/jsmn
+LIBS += $(jsmndir)/libjsmn.a
+SHLIB_LINK := $(LIBS)
+
 ifdef USE_PGXS
 PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
