@@ -187,7 +187,6 @@ add_attribute(char *keyname, char *typename)
     return get_attribute_id(keyname, typename); /* Refreshes the cache and gives value */
 }
 
-
 typedef struct {
     int        natts;
     char     **keys;
