@@ -16,8 +16,7 @@
 # these files, a simple CREATE EXTENSION command loads the objects into your
 # database."
 # http://www.postgresql.org/docs/devel/static/extend-extensions.html
-comment =
-  'native support for serializing and deserializing a key-value data type'
+comment = 'support for serializing and deserializing a key-value data type'
 default_version = '1.0.0'
 module_pathname = '$libdir/document'
 relocatable = true # Declares that extension may be used in any schema
