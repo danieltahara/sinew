@@ -9,139 +9,23 @@
 #include <executor/spi.h>
 #include <lib/stringinfo.h>
 #include <utils/snapmgr.h>
+#include <utils/array.h>
 
 #include "lib/jsmn/jsmn.h"
+#include "utils.h"
+#include "json.h"
 
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
 #endif
 
-typedef enum { STRING = 1,
-               INTEGER,
-               FLOAT,
-               BOOLEAN,
-               DOCUMENT,
-               ARRAY,
-               NONE
-             } json_typeid;
+/*******************************************************************************
+ * Document Schema Lookup
+ ******************************************************************************/
 
-#define STRING_TYPE "text"
-#define INTEGER_TYPE "bigint"
-#define FLOAT_TYPE "double precision"
-#define BOOLEAN_TYPE "boolean"
-#define DOCUMENT_TYPE "document"
-#define ARRAY_TYPE "[]" /* The only non-terminal type we have */
-
-static int
-int_comparator(const void *v1, const void *v2)
-{
-    int i1, i2;
-
-    i1 = *(int*)v1;
-    i2 = *(int*)v2;
-
-    if (i1 < i2)
-    {
-        return -1;
-    }
-    else if (i1 == i2)
-    {
-        return 0;
-    }
-    else
-    {
-        return 1;
-    }
-}
-
-static int
-intref_comparator(const void *v1, const void *v2)
-{
-    int *i1, *i2;
-
-    i1 = *(int**)v1;
-    i2 = *(int**)v2;
-
-    return int_comparator((void*)i1, (void*)i2);
-}
-
-static char *
-pstrndup(char *str, int len)
-{
-    char *retval;
-
-    retval = palloc0(len + 1);
-    strncpy(retval, str, len);
-    retval[len] = '\0';
-    return retval;
-}
-
-static char *
-jsmntok_to_str(jsmntok_t *tok, char *json)
-{
-    char *retval;
-    int   len;
-
-    assert(tok && json);
-
-    len = tok->end - tok->start;
-    retval = pstrndup(&json[tok->start], len);
-
-    return retval;
-}
-
-static json_typeid
-jsmn_primitive_get_type(char *value_str)
-{
-    char *ptr;
-    switch(value_str[0]) {
-    case 't': case 'f':
-        return BOOLEAN;
-    case 'n':
-        return NONE;
-    case '-':
-    case '0': case '1': case '2': case '3': case '4':
-    case '5': case '6': case '7': case '8': case '9':
-        ptr = NULL;
-        if ((ptr = strchr(value_str, '.')) && !strchr(ptr, '.')) // Only one decimal
-        {
-            return FLOAT;
-        }
-        else
-        {
-            return INTEGER;
-        }
-    default:
-        elog(WARNING, "document: doc_insert: Got invalid json: %s", value_str);
-        return NONE;
-    }
-}
-
-static json_typeid
-jsmn_get_type(jsmntok_t* tok, char *json)
-{
-    jsmntype_t tok_type = tok->type;
-    char *value_str = jsmntok_to_str(tok, json);
-
-    if (!value_str) {
-        return NONE;
-    }
-
-    switch (tok_type)
-    {
-    case JSMN_STRING:
-        return STRING;
-    case JSMN_PRIMITIVE:
-        return jsmn_primitive_get_type(value_str);
-    case JSMN_OBJECT:
-        return DOCUMENT;
-    case JSMN_ARRAY:
-        return ARRAY;
-    default:
-        elog(WARNING, "document: Got invalid json: %s", value_str);
-        return NONE;
-    }
-}
+static void get_attribute(int id, char **key_ref, char **type_ref); /* TODO: better name */
+static int get_attribute_id(const char *keyname, const char *typename);
+static int add_attribute(const char *keyname, const char *typename);
 
 static void
 get_attribute(int id, char **key_ref, char **type_ref)
@@ -151,7 +35,7 @@ get_attribute(int id, char **key_ref, char **type_ref)
 }
 
 static int
-get_attribute_id(char *keyname, char *typename)
+get_attribute_id(const char *keyname, const char *typename)
 {
     static char *last_keyname = NULL;
     static char *last_typename = NULL;
@@ -162,7 +46,7 @@ get_attribute_id(char *keyname, char *typename)
     bool isnull;
     int attr_id;
 
-    if (last_keyname && last_attr_id > 0 &&
+    if (last_keyname && last_typename && last_attr_id > 0 &&
         !strcmp(last_keyname, keyname) &&
         !strcmp(last_typename, typename)) {
         return last_attr_id;
@@ -193,16 +77,27 @@ get_attribute_id(char *keyname, char *typename)
 
     SPI_finish();
 
-    last_type = type;
     last_attr_id = attr_id;
-    last_keyname = pstrndup(keyname, strlen(keyname)); /* Memory leak here */
+    if (last_keyname)
+    {
+        pfree(last_keyname);
+    }
+    if (last_typename)
+    {
+        pfree(last_typename);
+    }
+    last_keyname = pstrndup(keyname, strlen(keyname));
+    last_typename = pstrndup(typename, strlen(typename));
 
     return attr_id;
 }
 
 static int
-add_attribute(char *keyname, char *typename)
+add_attribute(const char *keyname, const char *typename)
 {
+    int ret; /* Return code of SPI_execute */
+    StringInfoData buf;
+
     SPI_connect();
 
     initStringInfo(&buf);
@@ -221,6 +116,10 @@ add_attribute(char *keyname, char *typename)
     return get_attribute_id(keyname, typename); /* Refreshes the cache and gives value */
 }
 
+/*******************************************************************************
+ * De/Serialization
+ ******************************************************************************/
+
 typedef struct {
     int        natts;
     char     **keys;
@@ -228,185 +127,20 @@ typedef struct {
     char     **values;
 } document;
 
-static int
-document_to_binary(char *json, char **outbuff_ref)
-{
-    document doc;
-    int natts;
-    char *outbuff;
-    int  attr_ids[natts];
-    int *attr_id_refs[natts]; /* Just sort the pointers, so we can recover
-                                 original positions */
-    int i;
+static void json_to_document(char *json, document *doc);
+static int array_to_binary(char *json_arr, char **outbuff_ref);
+static int document_to_binary(char *json, char **outbuff_ref);
+static int to_binary(json_typeid type, char *value, char **outbuff_ref);
 
-    json_fill_document(json, &doc);
-    natts = doc.natts;
-    outbuff = *outbuff_ref;
-
-    for (i = 0; i < natts; i++)
-    {
-        const char *type;
-
-        type = get_pg_type(doc.types[i], doc.values[i]);
-        attr_ids[i] = get_attribute_id(doc.keys[i], type);
-        if (attr_ids[i] < 0)
-        {
-            attr_ids[i] = add_attribute(doc.keys[i], type);
-        }
-        attr_id_refs[i] = attr_ids + i;
-    }
-    qsort(attr_id_refs, natts, sizeof(int), intref_comparator);
-
-    int data_size = 2 * natts * sizeof(int) + 1024;
-    int buffpos = 0;
-    outbuff = palloc0(data_size);
-    memcpy(outbuff, &natts, sizeof(int));
-    buffpos += sizeof(int);
-    for (i = 0; i < natts; i++)
-    {
-        memcpy(outbuff + buffpos, attr_id_refs[i], sizeof(int));
-        buffpos += sizeof(int);
-    }
-    /* Copy data and offsets */
-    buffpos = sizeof(int) + 2 * sizeof(int) * natts +
-        sizeof(int); /* # attrs, attr_ids, offsets, length */
-    for (i = 0; i < natts; i++)
-    {
-        char *binary;
-        int *attr_id_ref = attr_id_refs[i];
-        int orig_pos = attr_id_ref - attr_ids;
-        int datum_size = to_binary(doc.types[orig_pos], doc.values[orig_pos],
-            binary);
-        memcpy(outbuff + buffpos, binary, datum_size);
-        memcpy(outbuff + (1 + natts + i) * sizeof(int), &buffpos,
-            sizeof(int);
-        buffpos += datum_size;
-        if (buffpos >= data_size)
-        {
-            data_size = 2 * buffpos + 1;
-            outbuff = repalloc(outbuff, data_size);
-        }
-
-        /* Cleanup */
-        pfree(binary);
-    }
-    memcpy(outbuff + (1 + 2 * natts) * sizeof(int), &buffpos, sizeof(int));
-
-    return buffpos;
-}
-
-static int
-array_to_binary(char *json_arr, char **outbuff_ref)
-{
-    jsmntok_t *tokens;
-    int data_size;
-    int buffpos;
-    int arrlen;
-    json_typeid arrtype;
-    char *outbuff;
-
-    tokens = jsmn_tokenize(str);
-    assert(tokens->type == JSMN_ARRAY);
-    outbuff = *outbuff_ref;
-
-    arrlen = tokens->size;
-    arrtype = jsmn_get_type(curtok, json_arr);
-    assert(arrtype != DOCUMENT); // TODO: for now
-
-    data_size = 2 * natts * sizeof(int) + 1024;
-    outbuff = palloc0(data_size);
-    buffpos = 0;
-
-    memcpy(outbuff + buffpos, &arrlen, sizeof(int));
-    buffpos += sizeof(int);
-    memcpy(outbuff + buffpos, &arrtype, sizeof(int));
-    buffpos += sizeof(int);
-
-    jsmntok_t *curtok;
-    curtok = tokens + 1;
-    for (int i = 0; i < arrlen; i++)
-    {
-        char *binary;
-        int datum_size;
-
-        if (jsmn_get_type(curtok, json_arr) != arrtype)
-        {
-            elog(WARNING, "document: inhomogenous types in JSMN_ARRAY: %s", json_arr);
-            pfree(outbuff);
-            outbuff = NULL;
-            return 0;
-        }
-
-        datum_size = to_binary(arrtype, jsmntok_to_str(curtok, json_arr), binary);
-        memcpy(outbuff + buffpos, &datum_size, sizeof(int));
-        buffpos += sizeof(int);
-        memcpy(outbuff + buffpos, binary, datum_size);
-        buffpos += datum_size;
-
-        if (buffpos >= data_size)
-        {
-            data_size = 2 * buffpos + 1;
-            outbuff = repalloc(outbuff, data_size);
-        }
-
-        pfree(binary);
-        if (curtok->type == JSMN_ARRAY || curtok->type == JSMN_ARRAY) {
-           curtok += curtok->size;
-        }
-        ++curtok;
-    }
-
-    pfree(tokens);
-
-    return buffpos;
-}
-
-static int
-to_binary(json_type type, char *value, void **outbuff_ref)
-{
-    jsmntok_t *tokens;
-    document doc;
-    void *outbuff;
-
-    outbuff = *outbuff_ref;
-
-    switch (type)
-    {
-        case STRING:
-            (char*)outbuff = pstrncpy(value, strlen(value));
-            return strlen(value);
-        case INTEGER:
-            outbuff = palloc0(sizeof(int));
-            *((int*)outbuff) = atoi(value);
-            return sizeof(int);
-        case FLOAT:
-            outbuff = palloc0(sizeof(double));
-            *((double*)outbuff) = atof(value);
-            return sizeof(double);
-            break;
-        case BOOLEAN:
-            outbuff = palloc0(1);
-            if (!strcmp(value, "true")) {
-                *(char*)outbuff = 1;
-            } else if (!strcmp(value, "false")) {
-                *(char*)outbuff = 0;
-            } else {
-                elog(WARNING, "document: boolean has invalid value");
-                return -1;
-            }
-            return 1;
-        case DOCUMENT:
-            return document_to_binary(str, outbuff_ref);
-        case ARRAY:
-            return array_to_binary(str, outbuff_ref);
-        case NONE:
-        case DEFAULT:
-            elog(WARNING, "document: invalid data type");
-            return -1;
-    }
-}
-
-
+/* TODO: should probably pass an outbuff ref in the same way as above */
+/* NOTE: the reason I pass an outbuff ref above is because the document binary
+ * can potentially have an x00 value, which would mess up attempts at using
+ * strlen(str). Since the deserialization functions return json strings, they
+ * do not face the same problem */
+static void binary_to_document(char *binary, document *doc);
+static char *binary_document_to_string(char *binary);
+static char *binary_array_to_string(char *binary);
+static char *binary_to_string(json_typeid type, char *binary, int datum_len);
 
 Datum string_to_document_datum(PG_FUNCTION_ARGS);
 Datum document_datum_to_string(PG_FUNCTION_ARGS);
@@ -414,306 +148,21 @@ Datum document_datum_to_string(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(string_to_document_datum);
 PG_FUNCTION_INFO_V1(document_datum_to_string);
 
-Datum
-string_to_document_datum(PG_FUNCTION_ARGS)
-{
-    char *str = PG_GETARG_CSTRING_COPY(0);
-    char *data;
-
-    if (document_to_binary(str, &data) > 0)
-    {
-        PG_RETURN_POINTER(data);
-    }
-    else
-    {
-        PG_RETURN_NULL();
-    }
-}
-
-static char *
-binary_document_to_string(char *binary)
-{
-    document doc;
-    int natts;
-    char *result;
-    int result_size, result_maxsize;
-
-    binary_fill_document(binary, &doc);
-    natts = doc->natts;
-
-    result_size = 3; /* {\n} */
-    result_maxsize = 64; // TODO: #define
-    result = palloc0(result_maxsize + 1);
-    strcat(result, "{\n");
-
-    for (int i = 0; i < natts; i++)
-    {
-        char *key;
-        char *value;
-        char *attr;
-        int attr_len;
-
-        key = doc->keys[i];
-        value = doc->values[i];
-
-        attr_len = strlen(key) + strlen(value) + 5; /* "k":v,\n" */
-        attr = palloc0(attr_len + 1);
-        sprintf(result, "\"%s\":%s\n", key, value);
-
-        if (result_size + attr_len + 1 >= result_maxsize)
-        {
-            result_maxsize = 2 * (result_size + attr_len) + 1;
-            result = repalloc(result, result_maxsize + 1);
-        }
-        strcat(result, attr);
-    }
-    strcat(result, "}"); /* There is space because we keep adding an extra bit to result_maxsize */
-
-    return result;
-}
-
 static void
-binary_fill_document(char *binary, document *doc)
-{
-    int natts;
-    int buffpos;
-    char **keys;
-    char **type_strings;
-    json_typeid *types;
-    char **values;
-
-    assert(binary);
-
-    memcpy(&natts, data, sizeof(int));
-    buffpos = sizeof(int);
-
-    keys = palloc0(natts * sizeof(char*));
-    values = palloc0(natts * sizeof(char*));
-    for (int i = 0; i < natts; i++)
-    {
-        int id;
-
-        memcpy(&id, data + buffpos, sizeof(int));
-        get_attribute(id, keys + i, type_strings + i);
-        types[i] = get_json_type(type_strings[i]);
-        buffpos += sizeof(int);
-    }
-
-    for (int i = 0; i < natts; i++)
-    {
-        int start, end;
-        char *value_data;
-
-        memcpy(&start, data + buffpos, sizeof(int));
-        memcpy(&end, data + buffpos + sizeof(int), sizeof(int));
-
-        value_data = palloc0(end - start);
-        memcpy(value_data, data + start, end - start);
-        values[i] = binary_to_string(types[i], value_data, end - start)
-
-        pfree(value_data);
-
-        buffpos += sizeof(int);
-    }
-
-    doc->natts = natts;
-    doc->keys = keys;
-    doc->types = types;
-    doc->values = values;
-}
-
-static char *
-binary_array_to_string(char *binary)
-{
-    int buffpos;
-    int natts;
-    json_typeid type;
-    char *result;
-    int result_size, result_maxsize;
-
-    assert(binary);
-
-    memcpy(&natts, binary, sizeof(int));
-    memcpy(&type, binary + sizeof(int), sizeof(int));
-    buffpos = 2 * sizeof(int);
-
-    result_size = 2; /* '[]' */
-    result_maxsize = 64
-    result = palloc0(result_maxize + 1);
-    strcat(result, "[");
-
-    for (int i = 0; i < natts; i++) {
-        int elt_size;
-        char *elt;
-
-        memcpy(&elt_size, binary + buffsize, sizeof(int));
-        if (result_size + elt_size + 2 + 1 >= result_maxsize) {
-            result_maxsize = 2 * (result_size + elt_size + 2) + 1;
-            result = repalloc(result, result_maxsize + 1);
-        }
-
-        buffsize += sizeof(int);
-
-        if (i != 0) {
-           strcat(result, ", ");
-        }
-
-        elt = palloc0(elt_size);
-        memcpy(elt, binary + buffsize, elt_size);
-        strcat(result, binary_to_string(type, elt, elt_size);
-        pfree(elt);
-
-        buffsize += elt_size;
-    }
-    strcat(result, "]"); /* There is space because we keep adding an extra bit to result_maxsize */
-
-    return result;
-}
-
-static char *
-binary_to_string(json_typeid type, char *binary, int datum_len)
-{
-    char *result;
-    int i;
-    double d;
-
-    assert(binary);
-
-    result = palloc0(datum_len * 8 + 2 + 1); /* Guaranteed to be enough base 10 */
-
-    switch (type)
-    {
-        case STRING:
-            sprintf(result, "\"%s\"", binary);
-            return result;
-        case INTEGER:
-            assert(datum_len == sizeof(int));
-            memcpy(&i, binary, sizeof(int));
-            sprintf(result, "%i", i);
-            return result;
-        case FLOAT:
-            assert(datum_len == sizeof(double));
-            memcpy(&d, binary, sizeof(double));
-            sprintf(result, "%d", d);
-            return result;
-        case BOOLEAN:
-            assert(datum_len == 1);
-            sprintf(result, "%s", *binary != 0 ? "true" : "false");
-            return result;
-        case DOCUMENT:
-            pfree(result);
-            return binary_document_to_string(binary);
-        case ARRAY:
-            pfree(result);
-            return binary_array_to_string(binary);
-        case NONE:
-        default:
-            elog(ERROR, "document: invalid binary");
-    }
-
-}
-
-const static char *
-get_json_type(const char *pg_type)
-{
-    if (!strcmp(pg_type, STRING_TYPE))
-    {
-        return STRING;
-    }
-    else if (!strcmp(pg_type, INTEGER_TYPE))
-    {
-        return INTEGER;
-    }
-    else if (!strcmp(pg_type, FLOAT_TYPE))
-    {
-        return FLOAT;
-    }
-    else if (!strcmp(pg_type, BOOLEAN_TYPE))
-    {
-        return BOOLEAN;
-    }
-    else if (!strcmp(pg_type, DOCUMENT_TYPE))
-    {
-        return DOCUMENT;
-    }
-    else
-    {
-        int len;
-        len = strlen(pg_type);
-        if (len > 2 && pg_type[len-2] == '[' && pg_type[len-1] == ']')
-        {
-            return ARRAY;
-        }
-        else
-        {
-            elog(ERROR, "document: invalid type id on deserialization");
-        }
-    }
-}
-
-static char *
-get_pg_type(json_typeid type, char *value)
-{
-    json_typeid arr_elt_type;
-    char *arr_elt_pg_type;
-    char *buffer;
-
-    assert(value);
-
-    arr_elt_type = NONE;
-
-    switch (type)
-    {
-        case STRING:
-            return STRING_TYPE;
-        case INTEGER:
-            return INTEGER_TYPE;
-        case FLOAT:
-            return FLOAT_TYPE;
-        case BOOLEAN:
-            return BOOLEAN_TYPE;
-        case DOCUMENT:
-            return DOCUMENT_TYPE;
-        case ARRAY:
-            memcpy(&arr_elt_type, value + sizeof(int), sizeof(int));
-            arr_elt_pg_type = get_pg_type(arr_elt_typ, value + 2 * sizeof(int));
-            buffer = palloc0(strlen(arr_elt_pg_type) + 2 + 1);
-            sprintf(buffer, "%s%s", arr_elt_pg_type, ARRAY_TYPE);
-            return buffer;
-        default:
-            elog(ERROR, "document: invalid type id on deserialization");
-    }
-}
-
-Datum
-document_datum_to_string(PG_FUNCTION_ARGS)
-{
-    char *data = (char*)PG_GETARG_POINTER(0);
-    char *result;
-    // TODO: any way I can validate the size?
-
-    result = binary_document_to_string(data);
-
-    PG_RETURN_CSTRING(result);
-}
-
-static void
-json_fill_document(char *json, document *doc)
+json_to_document(char *json, document *doc)
 {
     int natts;
     int capacity;
     jsmntok_t *tokens;
+    size_t i, j;
+    typedef enum { START, KEY, VALUE } parse_state;
+    parse_state state;
 
     assert(json);
     assert(doc);
 
     tokens = jsmn_tokenize(json);
     natts = 0;
-
-    size_t i, j;
-
-    typedef enum { START, KEY, VALUE } parse_state;
-    parse_state state;
 
     state = START;
     for (i = 0, j = 1; j > 0; ++i, --j)
@@ -722,7 +171,6 @@ json_fill_document(char *json, document *doc)
         char *keyname;
         char *value;
         json_typeid type;
-        int bytes;
 
         curtok = tokens + i;
         type = NONE;
@@ -766,9 +214,9 @@ json_fill_document(char *json, document *doc)
             ++natts;
             if (natts > capacity) {
                 capacity = 2 * natts;
-                doc->keys = repalloc(capacity * sizeof(char*));
-                doc->types = repalloc(capacity * sizeof(int));
-                doc->values = repalloc(capacity * sizeof(char*));
+                doc->keys = repalloc(doc->keys, capacity * sizeof(char*));
+                doc->types = repalloc(doc->types, capacity * sizeof(int));
+                doc->values = repalloc(doc->values, capacity * sizeof(char*));
             }
 
             state = KEY;
@@ -776,57 +224,416 @@ json_fill_document(char *json, document *doc)
         }
     }
     pfree(tokens);
+    doc->natts = natts;
 }
 
-static jsmntok_t *
-jsmn_tokenize(char *json)
+static int
+array_to_binary(char *json_arr, char **outbuff_ref)
 {
-    jsmn_parser parser;
     jsmntok_t *tokens;
-    unsigned maxToks;
-    int status;
+    int data_size;
+    int buffpos;
+    int arrlen;
+    json_typeid arrtype;
+    char *outbuff;
+    jsmntok_t *curtok; /* Current token being processed */
+    int i; /* Loop variable */
 
-    jsmn_init(&parser);
-    maxToks = 256;
-    tokens = palloc0(sizeof(jsmntok_t) * maxToks);
-    assert(tokens);
+    tokens = jsmn_tokenize(json_arr);
+    assert(tokens->type == JSMN_ARRAY);
+    outbuff = *outbuff_ref;
 
-    if (json == NULL)
+    arrlen = tokens->size;
+    arrtype = jsmn_get_type(tokens + 1, json_arr);
+
+    data_size = 2 * arrlen * sizeof(int) + 1024;
+    outbuff = palloc0(data_size);
+    buffpos = 0;
+
+    memcpy(outbuff + buffpos, &arrlen, sizeof(int));
+    buffpos += sizeof(int);
+    memcpy(outbuff + buffpos, &arrtype, sizeof(int));
+    buffpos += sizeof(int);
+
+    curtok = tokens + 1;
+    for (i = 0; i < arrlen; i++)
     {
-        elog(DEBUG5, "Null json");
-        retval = palloc0(sizeof(json_value));
-        retval->type = NONE;
-        return retval;
+        char *binary;
+        int datum_size;
+
+        if (jsmn_get_type(curtok, json_arr) != arrtype)
+        {
+            elog(WARNING, "document: inhomogenous types in JSMN_ARRAY: %s", json_arr);
+            pfree(outbuff);
+            outbuff = NULL;
+            return 0;
+        }
+
+        datum_size = to_binary(arrtype, jsmntok_to_str(curtok, json_arr), &binary);
+        memcpy(outbuff + buffpos, &datum_size, sizeof(int));
+        buffpos += sizeof(int);
+        memcpy(outbuff + buffpos, binary, datum_size);
+        buffpos += datum_size;
+
+        if (buffpos >= data_size)
+        {
+            data_size = 2 * buffpos + 1;
+            outbuff = repalloc(outbuff, data_size);
+        }
+
+        pfree(binary);
+        if (curtok->type == JSMN_ARRAY || curtok->type == JSMN_ARRAY) {
+           curtok += curtok->size;
+        }
+        ++curtok;
     }
-    status = jsmn_parse(&parser, json, tokens, maxToks);
-    while (status == JSMN_ERROR_NOMEM)
+
+    pfree(tokens);
+
+    return buffpos;
+}
+
+static int
+document_to_binary(char *json, char **outbuff_ref)
+{
+    document doc;
+    int natts;
+    char *outbuff;
+    int  attr_ids[natts];
+    int *attr_id_refs[natts]; /* Just sort the pointers, so we can recover
+                                 original positions */
+    int i;
+    int data_size;
+    int buffpos;
+
+    json_to_document(json, &doc);
+    natts = doc.natts;
+    outbuff = *outbuff_ref;
+
+    for (i = 0; i < natts; i++)
     {
-        maxToks = maxToks * 2 + 1;
-        tokens = repalloc(tokens, sizeof(jsmntok_t) * maxToks);
-        assert(tokens);
-        status = jsmn_parse(&parser, json, tokens, maxToks);
-    }
+        const char *type;
 
-    if (status == JSMN_ERROR_INVAL)
+        type = get_pg_type(doc.types[i], doc.values[i]);
+        attr_ids[i] = get_attribute_id(doc.keys[i], type);
+        if (attr_ids[i] < 0)
+        {
+            attr_ids[i] = add_attribute(doc.keys[i], type);
+        }
+        attr_id_refs[i] = attr_ids + i;
+    }
+    qsort(attr_id_refs, natts, sizeof(int), intref_comparator);
+
+    data_size = 2 * natts * sizeof(int) + 1024;
+    buffpos = 0;
+    outbuff = palloc0(data_size);
+    memcpy(outbuff, &natts, sizeof(int));
+    buffpos += sizeof(int);
+    for (i = 0; i < natts; i++)
     {
-        elog(ERROR, "json_get: jsmn: invalid JSON string");
+        memcpy(outbuff + buffpos, attr_id_refs[i], sizeof(int));
+        buffpos += sizeof(int);
     }
-
-    if (status == JSMN_ERROR_PART)
+    /* Copy data and offsets */
+    buffpos = sizeof(int) + 2 * sizeof(int) * natts +
+        sizeof(int); /* # attrs, attr_ids, offsets, length */
+    for (i = 0; i < natts; i++)
     {
-        elog(ERROR, "json_get: jsmn: truncated JSON string");
+        char *binary;
+        int *attr_id_ref = attr_id_refs[i];
+        int orig_pos = attr_id_ref - attr_ids;
+        int datum_size = to_binary(doc.types[orig_pos], doc.values[orig_pos],
+            &binary);
+        memcpy(outbuff + buffpos, binary, datum_size);
+        memcpy(outbuff + (1 + natts + i) * sizeof(int), &buffpos,
+            sizeof(int));
+        buffpos += datum_size;
+        if (buffpos >= data_size)
+        {
+            data_size = 2 * buffpos + 1;
+            outbuff = repalloc(outbuff, data_size);
+        }
 
+        /* Cleanup */
+        pfree(binary);
     }
-    elog(DEBUG5, "Completed parse");
+    memcpy(outbuff + (1 + 2 * natts) * sizeof(int), &buffpos, sizeof(int));
 
-    return tokens;
+    return buffpos;
+}
+
+static int
+to_binary(json_typeid typeid, char *value, char **outbuff_ref)
+{
+    char *outbuff;
+
+    outbuff = *outbuff_ref;
+
+    switch (typeid)
+    {
+    case STRING:
+        outbuff = pstrndup(value, strlen(value));
+        return strlen(value);
+    case INTEGER:
+        /* NOTE: I don't think that throwing everything into a char* matters,
+         * as long as the length is correct and I've stored the number in its
+         * binary form */
+        outbuff = palloc0(sizeof(int));
+        *((int*)outbuff) = atoi(value);
+        return sizeof(int);
+    case FLOAT:
+        outbuff = palloc0(sizeof(double));
+        *((double*)outbuff) = atof(value);
+        return sizeof(double);
+    case BOOLEAN:
+        outbuff = palloc0(1);
+        if (!strcmp(value, "true")) {
+            *outbuff = 1;
+        } else if (!strcmp(value, "false")) {
+            *outbuff = 0;
+        } else {
+            elog(WARNING, "document: boolean has invalid value");
+            return -1;
+        }
+        return 1;
+    case DOCUMENT:
+        return document_to_binary(value, outbuff_ref);
+    case ARRAY:
+        return array_to_binary(value, outbuff_ref);
+    case NONE:
+    default:
+        elog(WARNING, "document: invalid data type");
+        return -1;
+    }
+    return -1; /* To shut up compiler warnings */
+}
+
+Datum
+string_to_document_datum(PG_FUNCTION_ARGS)
+{
+    char *str = PG_GETARG_CSTRING(0);
+    char *data;
+
+    str = pstrndup(str, strlen(str));
+
+    if (document_to_binary(str, &data) > 0)
+    {
+        PG_RETURN_POINTER(data);
+    }
+    else
+    {
+        PG_RETURN_NULL();
+    }
+}
+
+static void
+binary_to_document(char *binary, document *doc)
+{
+    int natts;
+    int buffpos;
+    char **keys;
+    char **type_strings;
+    json_typeid *types;
+    char **values;
+    int i; /* Loop variable */
+
+    assert(binary);
+
+    memcpy(&natts, binary, sizeof(int));
+    buffpos = sizeof(int);
+
+    keys = palloc0(natts * sizeof(char*));
+    values = palloc0(natts * sizeof(char*));
+    type_strings = palloc0(natts * sizeof(char*));
+    types = palloc0(natts * sizeof(json_typeid));
+    for (i = 0; i < natts; i++)
+    {
+        int id;
+
+        memcpy(&id, binary + buffpos, sizeof(int));
+        get_attribute(id, keys + i, type_strings + i);
+        types[i] = get_json_type(type_strings[i]);
+        buffpos += sizeof(int);
+    }
+    pfree(type_strings);
+
+    for (i = 0; i < natts; i++)
+    {
+        int start, end;
+        char *value_data;
+
+        memcpy(&start, binary + buffpos, sizeof(int));
+        memcpy(&end, binary + buffpos + sizeof(int), sizeof(int));
+
+        value_data = palloc0(end - start);
+        memcpy(value_data, binary + start, end - start);
+        values[i] = binary_to_string(types[i], value_data, end - start);
+
+        pfree(value_data);
+
+        buffpos += sizeof(int);
+    }
+
+    doc->natts = natts;
+    doc->keys = keys;
+    doc->types = types;
+    doc->values = values;
+}
+
+static char *
+binary_document_to_string(char *binary)
+{
+    document doc;
+    int natts;
+    char *result;
+    int result_size, result_maxsize;
+    int i; /* Loop variable */
+
+    binary_to_document(binary, &doc);
+    natts = doc.natts;
+
+    result_size = 3; /* {\n} */
+    result_maxsize = 64; // TODO: #define
+    result = palloc0(result_maxsize + 1);
+    strcat(result, "{\n");
+
+    for (i = 0; i < natts; i++)
+    {
+        char *key;
+        char *value;
+        char *attr;
+        int attr_len;
+
+        key = doc.keys[i];
+        value = doc.values[i];
+
+        attr_len = strlen(key) + strlen(value) + 5; /* "k":v,\n" */
+        attr = palloc0(attr_len + 1);
+        sprintf(result, "\"%s\":%s\n", key, value);
+
+        if (result_size + attr_len + 1 >= result_maxsize)
+        {
+            result_maxsize = 2 * (result_size + attr_len) + 1;
+            result = repalloc(result, result_maxsize + 1);
+        }
+        strcat(result, attr);
+    }
+    strcat(result, "}"); /* There is space because we keep adding an extra bit to result_maxsize */
+
+    return result;
+}
+
+static char *
+binary_array_to_string(char *binary)
+{
+    int buffpos;
+    int natts;
+    json_typeid type;
+    char *result;
+    int result_size, result_maxsize;
+    int i; /* Loop variable */
+
+    assert(binary);
+
+    memcpy(&natts, binary, sizeof(int));
+    memcpy(&type, binary + sizeof(int), sizeof(int));
+    buffpos = 2 * sizeof(int);
+
+    result_size = 2; /* '[]' */
+    result_maxsize = 64;
+    result = palloc0(result_maxsize + 1);
+    strcat(result, "[");
+
+    for (i = 0; i < natts; i++) {
+        int elt_size;
+        char *elt;
+
+        memcpy(&elt_size, binary + buffpos, sizeof(int));
+        if (result_size + elt_size + 2 + 1 >= result_maxsize) {
+            result_maxsize = 2 * (result_size + elt_size + 2) + 1;
+            result = repalloc(result, result_maxsize + 1);
+        }
+
+        result_size += sizeof(int);
+        buffpos += sizeof(int);
+
+        if (i != 0) {
+           strcat(result, ", ");
+        }
+
+        elt = palloc0(elt_size);
+        memcpy(elt, binary + buffpos, elt_size);
+        strcat(result, binary_to_string(type, elt, elt_size));
+        pfree(elt);
+
+        result_size += elt_size;
+        buffpos += elt_size;
+    }
+    strcat(result, "]"); /* There is space because we keep adding an extra bit to result_maxsize */
+
+    return result;
+}
+
+static char *
+binary_to_string(json_typeid type, char *binary, int datum_len)
+{
+    char *result;
+    int i;
+    double d;
+
+    assert(binary);
+
+    result = palloc0(datum_len * 8 + 2 + 1); /* Guaranteed to be enough base 10 */
+
+    switch (type)
+    {
+        case STRING:
+            sprintf(result, "\"%s\"", binary);
+            return result;
+        case INTEGER:
+            assert(datum_len == sizeof(int));
+            memcpy(&i, binary, sizeof(int));
+            sprintf(result, "%d", i);
+            return result;
+        case FLOAT:
+            assert(datum_len == sizeof(double));
+            memcpy(&d, binary, sizeof(double));
+            sprintf(result, "%f", d);
+            return result;
+        case BOOLEAN:
+            assert(datum_len == 1);
+            sprintf(result, "%s", *binary != 0 ? "true" : "false");
+            return result;
+        case DOCUMENT:
+            pfree(result);
+            return binary_document_to_string(binary);
+        case ARRAY:
+            pfree(result);
+            return binary_array_to_string(binary);
+        case NONE:
+        default:
+            elog(ERROR, "document: invalid binary");
+    }
+
+}
+
+Datum
+document_datum_to_string(PG_FUNCTION_ARGS)
+{
+    char *data = (char*)PG_GETARG_POINTER(0);
+    char *result;
+    // TODO: any way I can validate the size?
+
+    result = binary_document_to_string(data);
+
+    PG_RETURN_CSTRING(result);
 }
 
 /*******************************************************************************
  * Extraction Functions
  ******************************************************************************/
 
-// For the next three can operate directly on binary data
+/* NOTE: Because format is known, methods can operate directly on binary data */
 Datum document_get(PG_FUNCTION_ARGS);
 Datum document_put(PG_FUNCTION_ARGS);
 Datum document_delete(PG_FUNCTION_ARGS);
@@ -887,7 +694,7 @@ document_get(PG_FUNCTION_ARGS)
         case INTEGER:
              assert(len == sizeof(int));
              memcpy(&i, attr_data, sizeof(int));
-             PG_RETURN_UINT64(i);
+             PG_RETURN_INT64(i);
         case FLOAT:
              assert(len == sizeof(double));
              memcpy(&d, attr_data, sizeof(double));
@@ -902,6 +709,10 @@ document_get(PG_FUNCTION_ARGS)
              // FIXME: if text; need to convert to array of text
              // FIXME: store strings as struct text *
              PG_RETURN_ARRAYTYPE_P(attr_data);
+        case NONE:
+        default:
+             elog(DEBUG5, "Had a null attribute type in the document schema");
+             PG_RETURN_NULL();
         }
     }
     else
@@ -920,8 +731,9 @@ document_delete(PG_FUNCTION_ARGS)
     int natts;
     char *attr_listing;
     char *outdata;
+    int attr_pos; /* Position of attribute in header */
 
-    attr_id = get_attribute_id(attr_name, attr_name);
+    attr_id = get_attribute_id(attr_name, attr_pg_type);
 
     memcpy(&natts, data, sizeof(int));
 
@@ -931,6 +743,7 @@ document_delete(PG_FUNCTION_ARGS)
                            natts,
                            sizeof(int),
                            int_comparator);
+    attr_pos = (attr_listing - data - sizeof(int)) / sizeof(int);
 
     if (attr_listing)
     {
@@ -956,14 +769,14 @@ document_delete(PG_FUNCTION_ARGS)
         memcpy(outdata, &new_natts, sizeof(int));
         outpos = sizeof(int);
         /* Copy attr ids before current */
-        memcpy(outdata + outpos, data + sizeof(int), pos * sizeof(int));
-        outpos += pos * sizeof(int);
+        memcpy(outdata + outpos, data + sizeof(int), attr_pos * sizeof(int));
+        outpos += attr_pos * sizeof(int);
         /* Copy remaining attr ids */
-        memcpy(outdata + outpos, attr_listing + sizeof(int), (natts - pos - 1) * sizeof(int));
-        outpos += (natts - pos - 1) * sizeof(int);
+        memcpy(outdata + outpos, attr_listing + sizeof(int), (natts - attr_pos - 1) * sizeof(int));
+        outpos += (natts - attr_pos - 1) * sizeof(int);
         /* Copy first pos offsets */
-        memcpy(outdata + outpos, data + (natts + 1) * sizeof(int), pos * sizeof(int));
-        for (i = pos + 1; i <= natts; i++) { /* <= b/c length appended at end */
+        memcpy(outdata + outpos, data + (natts + 1) * sizeof(int), attr_pos * sizeof(int));
+        for (i = attr_pos + 1; i <= natts; i++) { /* <= b/c length appended at end */
             int new_offs;
 
             memcpy(&new_offs, data + (natts + 1) + i * sizeof(int), sizeof(int));
@@ -995,7 +808,7 @@ document_put(PG_FUNCTION_ARGS)
     char *attr_name = (char*)PG_GETARG_CSTRING(1);
     char *attr_pg_type = (char*)PG_GETARG_CSTRING(2);
     char *attr_value_str = (char*)PG_GETARG_CSTRING(3);
-    json_typeid attr_json_type;
+    json_typeid attr_json_typeid;
     char *attr_binary;
     int attr_id;
     int attr_size;
@@ -1007,18 +820,18 @@ document_put(PG_FUNCTION_ARGS)
     int attr_pos;
     int i; /* Loop variable */
 
-    attr_id = get_attribute_id(attr_name, attr_type);
+    attr_id = get_attribute_id(attr_name, attr_pg_type);
     if (attr_id < 0)
     {
-        attr_id = add_attribute(attr_name, attr_type);
+        attr_id = add_attribute(attr_name, attr_pg_type);
     }
 
     memcpy(&natts, data, sizeof(int));
     newnatts = natts - 1;
     memcpy(&datasize, data + (2 * natts + 1) * sizeof(int), sizeof(int));
 
-    attr_json_type = get_json_type(attr_pg_type);
-    attr_size = to_binary(attr_json_type, attr_value_str, &attr_binary);
+    attr_json_typeid = get_json_type(attr_pg_type);
+    attr_size = to_binary(attr_json_typeid, attr_value_str, &attr_binary);
     outdata = palloc0(datasize + 2 * sizeof(int) + attr_size);
 
     memcpy(outdata, &newnatts, sizeof(int));
@@ -1066,7 +879,7 @@ document_put(PG_FUNCTION_ARGS)
     outdatapos += offstart - off0;
     memcpy(outdata + outdatapos, attr_binary, attr_size);
     outdatapos += attr_size;
-    memcpy(outdata + outdatapos, data + offstart,  data_size - offstart);
+    memcpy(outdata + outdatapos, data + offstart,  datasize - offstart);
 
     PG_RETURN_POINTER(outdata);
 }
