@@ -2,15 +2,20 @@
 
 export SRC_ROOT=`pwd`/src
 
+# Install GNU readline library
+echo "Installing GNU readline"
+sudo apt-get install libreadline6 libreadline6-dbg libreadline6-dev
+echo ""
+
 # Postgres install
-export PG_ROOT=/usr/local/pgsql
-if [(which psql)]; then
+# export PG_ROOT=/usr/local/pgsql
+if ! which psql > /dev/null ; then
     echo "Installing postgres"
     cd /tmp
     wget http://ftp.postgresql.org/pub/source/v9.3beta2/postgresql-9.3beta2.tar.gz
     tar -xzf postgresql-9.3beta2.tar.gz
-    (cd postgresql-9.3beta2; ./configure -enable-debug -without-readline && make
-        && sudo make install)
+    (cd postgresql-9.3beta2; ./configure -enable-debug && make &&
+        sudo make install) || exit 1
     adduser postgres && passwd postgres
     mkdir /usr/local/pgsql/data
     sudo chown postgres:postgres /usr/local/pgsql/data
@@ -21,12 +26,12 @@ fi
 
 # Update postgres extensions
 echo "Updating Postgres extensions"
-echo "=============="
+echo ""
 
 echo "Document extension"
-export PG_ROOT=$SRC_ROOT/../../postgresql-9.3beta2
+export PG_ROOT=$SRC_ROOT/../../postgresql-9.3beta2 # TODO: change me
 rm -rf $PG_ROOT/contrib/document
-cp -r src/postgres/document $PG_ROOT/contrib/document || exit 1
+cp -r $SRC_ROOT/postgres/document $PG_ROOT/contrib/document || exit 1
 (cd $PG_ROOT/contrib/document;
    (cd lib/jsmn; make) && make && sudo make install) || exit 1
 echo ""

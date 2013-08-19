@@ -1,6 +1,7 @@
 #include <postgres.h>
 #include "utils.h"
 
+int
 int_comparator(const void *v1, const void *v2)
 {
     int i1, i2;
@@ -22,7 +23,7 @@ int_comparator(const void *v1, const void *v2)
     }
 }
 
-static int
+int
 intref_comparator(const void *v1, const void *v2)
 {
     int *i1, *i2;

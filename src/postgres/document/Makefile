@@ -1,10 +1,10 @@
 # Copyright Hadapt, Inc. 2013
 # All rights reserved.
 
-OBJS = document.o
-MODULE_big = document
-EXTENSION = document
-DATA = document--1.0.0.sql
+OBJS = document.o json.o utils.o
+MODULE_big = document_type
+EXTENSION = document_type
+DATA = document_type--1.0.0.sql
 
 jsmndir = lib/jsmn
 LIBS += $(jsmndir)/libjsmn.a

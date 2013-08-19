@@ -101,8 +101,8 @@ add_attribute(const char *keyname, const char *typename)
     SPI_connect();
 
     initStringInfo(&buf);
-    appendStringInfo(&buf, "insert into document_schema._attributes values"
-        "('%s', '%s')", keyname, typename);
+    appendStringInfo(&buf, "insert into document_schema._attributes(key_name, "
+        "key_type) values ('%s', '%s')", keyname, typename);
 
     ret = SPI_execute(buf.data, false, 0);
     if (ret != SPI_OK_INSERT)

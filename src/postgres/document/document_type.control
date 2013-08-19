@@ -18,5 +18,5 @@
 # http://www.postgresql.org/docs/devel/static/extend-extensions.html
 comment = 'support for serializing and deserializing a key-value data type'
 default_version = '1.0.0'
-module_pathname = '$libdir/document'
+module_pathname = '$libdir/document_type'
 relocatable = true # Declares that extension may be used in any schema

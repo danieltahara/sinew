@@ -1,3 +1,5 @@
+#include "lib/jsmn/jsmn.h"
+
 typedef enum { STRING = 1,
                INTEGER,
                FLOAT,

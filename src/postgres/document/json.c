@@ -2,7 +2,7 @@
 #include <assert.h>
 
 #include "json.h"
-#include "lib/jsmn/jsmn.h"
+#include "utils.h"
 
 char *
 jsmntok_to_str(jsmntok_t *tok, char *json)
@@ -87,10 +87,12 @@ jsmn_tokenize(char *json)
 
     if (json == NULL)
     {
+        jsmntok_t *nulltok;
+
         elog(DEBUG5, "Null json");
-        retval = palloc0(sizeof(json_value));
-        retval->type = NONE;
-        return retval;
+        nulltok = palloc0(sizeof(json));
+        nulltok->type = NONE;
+        return nulltok;
     }
     status = jsmn_parse(&parser, json, tokens, maxToks);
     while (status == JSMN_ERROR_NOMEM)
@@ -141,7 +143,7 @@ get_pg_type(json_typeid type, char *value)
             return DOCUMENT_TYPE;
         case ARRAY:
             memcpy(&arr_elt_type, value + sizeof(int), sizeof(int));
-            arr_elt_pg_type = get_pg_type(arr_elt_typ, value + 2 * sizeof(int));
+            arr_elt_pg_type = get_pg_type(arr_elt_type, value + 2 * sizeof(int));
             buffer = palloc0(strlen(arr_elt_pg_type) + 2 + 1);
             sprintf(buffer, "%s%s", arr_elt_pg_type, ARRAY_TYPE);
             return buffer;
@@ -150,7 +152,7 @@ get_pg_type(json_typeid type, char *value)
     }
 }
 
-static json_typeid
+json_typeid
 get_json_type(const char *pg_type)
 {
     if (!strcmp(pg_type, STRING_TYPE))

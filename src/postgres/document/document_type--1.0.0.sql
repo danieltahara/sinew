@@ -2,7 +2,7 @@
 -- All rights reserved.
 
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
-\echo Use "CREATE EXTENSION document" to load this file. \quit
+\echo Use "CREATE EXTENSION document_type" to load this file. \quit
 
 -- Serialization Functions
 
@@ -23,7 +23,10 @@ LANGUAGE C IMMUTABLE STRICT;
 CREATE TYPE document (
     INPUT = string_to_document_datum,
     OUTPUT = document_datum_to_string
-)
+);
+
+CREATE SCHEMA IF NOT EXISTS document_schema;
+CREATE TABLE IF NOT EXISTS document_schema._attributes(_id serial, key_name text, key_type text);
 
 -- Extraction Functions
 
