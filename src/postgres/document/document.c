@@ -35,7 +35,6 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
     StringInfoData buf;
     int ret;
     bool isnull;
-    int attr_id;
 
     SPI_connect();
 
@@ -471,13 +470,18 @@ Datum
 string_to_document_datum(PG_FUNCTION_ARGS)
 {
     char *str = PG_GETARG_CSTRING(0);
-    char *data;
+    char *binary;
+    int size;
+    bytea *datum;
 
     str = pstrndup(str, strlen(str));
 
-    if (document_to_binary(str, &data) > 0)
+    if ((size = document_to_binary(str, &binary)) > 0)
     {
-        PG_RETURN_POINTER(data);
+        datum = palloc0(VARHDRSZ + size);
+        SET_VARSIZE(datum, VARHDRSZ + size);
+        memcpy(datum->vl_dat, binary, size); /* FIXME: Hack for now */
+        PG_RETURN_POINTER(datum);
     }
     else
     {
@@ -681,11 +685,11 @@ binary_to_string(json_typeid type, char *binary, int datum_len)
 Datum
 document_datum_to_string(PG_FUNCTION_ARGS)
 {
-    char *data = (char*)PG_GETARG_POINTER(0);
+    bytea *datum = (bytea*)PG_GETARG_POINTER(0);
     char *result;
-    // TODO: any way I can validate the size?
 
-    result = binary_document_to_string(data);
+    // TODO: I have the size sitting around here, could use it to verify
+    result = binary_document_to_string(datum->vl_dat);
 
     PG_RETURN_CSTRING(result);
 }
