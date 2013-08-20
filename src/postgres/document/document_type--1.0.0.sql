@@ -22,7 +22,8 @@ LANGUAGE C IMMUTABLE STRICT;
 
 CREATE TYPE document (
     INPUT = string_to_document_datum,
-    OUTPUT = document_datum_to_string
+    OUTPUT = document_datum_to_string,
+    INTERNALLENGTH = VARIABLE
 );
 
 CREATE SCHEMA IF NOT EXISTS document_schema;
