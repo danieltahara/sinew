@@ -23,15 +23,56 @@ PG_MODULE_MAGIC;
  * Document Schema Lookup
  ******************************************************************************/
 
-static void get_attribute(int id, char **key_ref, char **type_ref); /* TODO: better name */
-static int get_attribute_id(const char *keyname, const char *typename);
-static int add_attribute(const char *keyname, const char *typename);
+static void get_attribute(int id,
+                          char **key_name_ref,
+                          char **type_name_ref); /* TODO: better name */
+static int get_attribute_id(const char *key_name, const char *type_name);
+static int add_attribute(const char *key_name, const char *type_name);
 
 static void
-get_attribute(int id, char **key_ref, char **type_ref)
+get_attribute(int id, char **key_name_ref, char **key_type_ref)
 {
-    // FIXME:
-    // from id, fill key_ref and type_ref
+    StringInfoData buf;
+    int ret;
+    bool isnull;
+    int attr_id;
+
+    SPI_connect();
+
+    initStringInfo(&buf);
+    appendStringInfo(&buf, "select key_name, key_type from"
+        " document_schema._attributes where _id = '%d'", id);
+    ret = SPI_execute(buf.data, true, 0);
+    if (ret != SPI_OK_SELECT)
+    {
+        elog(ERROR, "document: SPI_execute failed (get_attribute): error code"
+            " %d", ret);
+    }
+
+    if (SPI_processed != 1) {
+        *key_name_ref = NULL;
+        *key_type_ref = NULL;
+        return;
+    }
+
+    *key_name_ref = pstrndup(
+        DatumGetCString(SPI_getbinval(SPI_tuptable->vals[0],
+                        SPI_tuptable->tupdesc,
+                        1, &isnull));
+    if (isnull)
+    {
+        elog(ERROR, "document (get_attribute): null key_name");
+    }
+    *key_type_ref = pstrndup(
+        DatumGetCString(SPI_getbinval(SPI_tuptable->vals[0],
+                        SPI_tuptable->tupdesc,
+                        2, &isnull));
+    if (isnull)
+    {
+        elog(ERROR, "document (get_attribute): null key_type");
+    }
+
+    SPI_finish();
 }
 
 static int
