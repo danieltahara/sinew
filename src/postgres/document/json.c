@@ -31,7 +31,7 @@ jsmn_primitive_get_type(char *value_str)
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
         ptr = NULL;
-        if ((ptr = strchr(value_str, '.')) && !strchr(ptr, '.')) // Only one decimal
+        if ((ptr = strchr(value_str, '.')) && !strchr(ptr + 1, '.')) // Only one decimal
         {
             return FLOAT;
         }

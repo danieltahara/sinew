@@ -34,7 +34,6 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
 {
     StringInfoData buf;
     int ret;
-    bool isnull;
 
     SPI_connect();
 
@@ -49,27 +48,19 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
     }
 
     if (SPI_processed != 1) {
+        /* TODO: IF attribute doesn't exist, signal error */
         *key_name_ref = NULL;
         *key_type_ref = NULL;
         return;
     }
 
-    *key_name_ref = pstrdup(
-        DatumGetCString(SPI_getbinval(SPI_tuptable->vals[0],
-                        SPI_tuptable->tupdesc,
-                        1, &isnull)));
-    if (isnull)
-    {
-        elog(ERROR, "document (get_attribute): null key_name");
-    }
-    *key_type_ref = pstrdup(
-        DatumGetCString(SPI_getbinval(SPI_tuptable->vals[0],
-                        SPI_tuptable->tupdesc,
-                        2, &isnull)));
-    if (isnull)
-    {
-        elog(ERROR, "document (get_attribute): null key_type");
-    }
+    *key_name_ref = SPI_getvalue(SPI_tuptable->vals[0],
+                                 SPI_tuptable->tupdesc,
+                                 1);
+    *key_type_ref = SPI_getvalue(SPI_tuptable->vals[0],
+                                 SPI_tuptable->tupdesc,
+                                 2);
+    assert(*key_name_ref && *key_type_ref);
 
     SPI_finish();
 }
@@ -493,13 +484,22 @@ binary_to_document(char *binary, document *doc)
     for (i = 0; i < natts; i++)
     {
         int id;
+        char *key_string;
+        char *type_string;
 
         memcpy(&id, binary + buffpos, sizeof(int));
-        get_attribute(id, keys + i, type_strings + i);
-        types[i] = get_json_type(type_strings[i]);
+        get_attribute(id, &key_string, &type_string);
+        // elog(WARNING, "Got attribute info: %s, %s", key_string, type_string);
+
+        keys[i] = pstrndup(key_string, strlen(key_string));
+        types[i] = get_json_type(type_string);
+
+        pfree(key_string);
+        pfree(type_string);
+
         buffpos += sizeof(int);
     }
-    pfree(type_strings);
+    elog(WARNING, "Got ids, keys, and types");
 
     for (i = 0; i < natts; i++)
     {
@@ -522,6 +522,8 @@ binary_to_document(char *binary, document *doc)
     doc->keys = keys;
     doc->types = types;
     doc->values = values;
+
+    /* FIXME: technically should free all the memory */
 }
 
 static char *
@@ -553,7 +555,7 @@ binary_document_to_string(char *binary)
 
         attr_len = strlen(key) + strlen(value) + 5; /* "k":v,\n" */
         attr = palloc0(attr_len + 1);
-        sprintf(result, "\"%s\":%s\n", key, value);
+        sprintf(attr, "\"%s\":%s\n", key, value);
 
         if (result_size + attr_len + 1 >= result_maxsize)
         {
