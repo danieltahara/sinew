@@ -74,23 +74,16 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
     SPI_finish();
 }
 
+/* TODO: want to memoize this somehow; need to figure out right memory context
+ */
 static int
 get_attribute_id(const char *keyname, const char *typename)
 {
-    static char *last_keyname = NULL;
-    static char *last_typename = NULL;
-    static int last_attr_id = -1;
-
     StringInfoData buf;
     int ret;
     bool isnull;
     int attr_id;
 
-    if (last_keyname && last_typename && last_attr_id > 0 &&
-        !strcmp(last_keyname, keyname) &&
-        !strcmp(last_typename, typename)) {
-        return last_attr_id;
-    }
 
     SPI_connect();
 
@@ -116,18 +109,6 @@ get_attribute_id(const char *keyname, const char *typename)
     }
 
     SPI_finish();
-
-    last_attr_id = attr_id;
-    if (last_keyname)
-    {
-        pfree(last_keyname);
-    }
-    if (last_typename)
-    {
-        pfree(last_typename);
-    }
-    last_keyname = pstrndup(keyname, strlen(keyname));
-    last_typename = pstrndup(typename, strlen(typename));
 
     return attr_id;
 }
