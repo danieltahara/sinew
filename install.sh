@@ -8,8 +8,8 @@ sudo apt-get install libreadline6 libreadline6-dbg libreadline6-dev
 echo ""
 
 # Postgres install
-# export PG_ROOT=/usr/local/pgsql
-if ! which psql > /dev/null ; then
+export PG_ROOT=/usr/local/pgsql
+if ! (ls $PG_ROOT > /dev/null); then
     echo "Installing postgres"
     cd /tmp
     wget http://ftp.postgresql.org/pub/source/v9.3beta2/postgresql-9.3beta2.tar.gz
@@ -17,10 +17,8 @@ if ! which psql > /dev/null ; then
     (cd postgresql-9.3beta2; ./configure -enable-debug && make &&
         sudo make install) || exit 1
     adduser postgres && passwd postgres
-    mkdir /usr/local/pgsql/data
+    sudo mkdir /usr/local/pgsql/data
     sudo chown postgres:postgres /usr/local/pgsql/data
-    su - postgres
-    /usr/local/pgsql/bin/initdb -D /usr/local/pgsql/data/
     echo ""
 fi
 
