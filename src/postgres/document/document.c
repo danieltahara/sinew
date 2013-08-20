@@ -42,7 +42,7 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
     initStringInfo(&buf);
     appendStringInfo(&buf, "select key_name, key_type from"
         " document_schema._attributes where _id = '%d'", id);
-    ret = SPI_execute(buf.data, true, 0);
+    ret = SPI_execute(buf.data, false, 0);
     if (ret != SPI_OK_SELECT)
     {
         elog(ERROR, "document: SPI_execute failed (get_attribute): error code"
@@ -98,7 +98,7 @@ get_attribute_id(const char *keyname, const char *typename)
     initStringInfo(&buf);
     appendStringInfo(&buf, "select _id from document_schema._attributes"
         " where key_name = '%s' AND key_type = '%s'", keyname, typename);
-    ret = SPI_execute(buf.data, true, 0);
+    ret = SPI_execute(buf.data, false, 0);
     if (ret != SPI_OK_SELECT)
     {
         elog(ERROR, "document: SPI_execute failed: error code %d", ret);
