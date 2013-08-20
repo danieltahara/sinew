@@ -331,6 +331,8 @@ array_to_binary(char *json_arr, char **outbuff_ref)
 
     pfree(tokens);
 
+    *outbuff_ref = outbuff;
+
     return buffpos;
 }
 
@@ -368,7 +370,7 @@ document_to_binary(char *json, char **outbuff_ref)
     }
     qsort(attr_id_refs, natts, sizeof(int*), intref_comparator);
 
-    data_size = 2 * natts * sizeof(int) + 1024;
+    data_size = 2 * natts * sizeof(int) + 1024; /* arbitrary initial value */
     buffpos = 0;
     outbuff = palloc0(data_size);
     memcpy(outbuff, &natts, sizeof(int));
@@ -384,24 +386,33 @@ document_to_binary(char *json, char **outbuff_ref)
     for (i = 0; i < natts; i++)
     {
         char *binary;
-        int *attr_id_ref = attr_id_refs[i];
-        int orig_pos = attr_id_ref - attr_ids;
-        int datum_size = to_binary(doc.types[orig_pos], doc.values[orig_pos],
+        int *attr_id_ref;
+        int orig_pos;
+        int datum_size;
+
+        attr_id_ref = attr_id_refs[i];
+        orig_pos = attr_id_ref - attr_ids;
+        datum_size = to_binary(doc.types[orig_pos], doc.values[orig_pos],
             &binary);
-        memcpy(outbuff + buffpos, binary, datum_size);
-        memcpy(outbuff + (1 + natts + i) * sizeof(int), &buffpos,
-            sizeof(int));
-        buffpos += datum_size;
-        if (buffpos >= data_size)
+        if (buffpos + datum_size >= data_size)
         {
-            data_size = 2 * buffpos + 1;
+            data_size = 2 * (buffpos + datum_size) + 1;
             outbuff = repalloc(outbuff, data_size);
         }
+        memcpy(outbuff + buffpos, binary, datum_size);
+        memcpy(outbuff + (1 + natts + i) * sizeof(int), &buffpos,
+            sizeof(int)); /* # attrs, attr_ids, ith offset */
+        buffpos += datum_size;
 
         /* Cleanup */
         pfree(binary);
     }
     memcpy(outbuff + (1 + 2 * natts) * sizeof(int), &buffpos, sizeof(int));
+
+    pfree(attr_ids);
+    pfree(attr_id_refs);
+
+    *outbuff_ref = outbuff;
 
     return buffpos;
 }
@@ -417,6 +428,7 @@ to_binary(json_typeid typeid, char *value, char **outbuff_ref)
     {
     case STRING:
         outbuff = pstrndup(value, strlen(value));
+        *outbuff_ref = outbuff;
         return strlen(value);
     case INTEGER:
         /* NOTE: I don't think that throwing everything into a char* matters,
@@ -424,10 +436,12 @@ to_binary(json_typeid typeid, char *value, char **outbuff_ref)
          * binary form */
         outbuff = palloc0(sizeof(int));
         *((int*)outbuff) = atoi(value);
+        *outbuff_ref = outbuff;
         return sizeof(int);
     case FLOAT:
         outbuff = palloc0(sizeof(double));
         *((double*)outbuff) = atof(value);
+        *outbuff_ref = outbuff;
         return sizeof(double);
     case BOOLEAN:
         outbuff = palloc0(1);
@@ -439,6 +453,7 @@ to_binary(json_typeid typeid, char *value, char **outbuff_ref)
             elog(WARNING, "document: boolean has invalid value");
             return -1;
         }
+        *outbuff_ref = outbuff;
         return 1;
     case DOCUMENT:
         return document_to_binary(value, outbuff_ref);
