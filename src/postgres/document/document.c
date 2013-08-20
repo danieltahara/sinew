@@ -55,18 +55,18 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
         return;
     }
 
-    *key_name_ref = pstrndup(
+    *key_name_ref = pstrdup(
         DatumGetCString(SPI_getbinval(SPI_tuptable->vals[0],
                         SPI_tuptable->tupdesc,
-                        1, &isnull));
+                        1, &isnull)));
     if (isnull)
     {
         elog(ERROR, "document (get_attribute): null key_name");
     }
-    *key_type_ref = pstrndup(
+    *key_type_ref = pstrdup(
         DatumGetCString(SPI_getbinval(SPI_tuptable->vals[0],
                         SPI_tuptable->tupdesc,
-                        2, &isnull));
+                        2, &isnull)));
     if (isnull)
     {
         elog(ERROR, "document (get_attribute): null key_type");
