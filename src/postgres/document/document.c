@@ -340,15 +340,18 @@ document_to_binary(char *json, char **outbuff_ref)
     document doc;
     int natts;
     char *outbuff;
-    int  attr_ids[natts];
-    int *attr_id_refs[natts]; /* Just sort the pointers, so we can recover
-                                 original positions */
+    int  *attr_ids;
+    int **attr_id_refs; /* Just sort the pointers, so we can recover original
+                           positions */
     int i;
     int data_size;
     int buffpos;
 
     json_to_document(json, &doc);
     natts = doc.natts;
+    attr_ids = palloc0(natts * sizeof(int));
+    attr_id_refs = palloc0(natts * sizeof(int*));
+
     outbuff = *outbuff_ref;
 
     for (i = 0; i < natts; i++)
@@ -363,7 +366,7 @@ document_to_binary(char *json, char **outbuff_ref)
         }
         attr_id_refs[i] = attr_ids + i;
     }
-    qsort(attr_id_refs, natts, sizeof(int), intref_comparator);
+    qsort(attr_id_refs, natts, sizeof(int*), intref_comparator);
 
     data_size = 2 * natts * sizeof(int) + 1024;
     buffpos = 0;
