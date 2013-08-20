@@ -26,7 +26,7 @@ CREATE TYPE document (
 );
 
 CREATE SCHEMA IF NOT EXISTS document_schema;
-CREATE TABLE IF NOT EXISTS document_schema._attributes(_id serial, key_name text, key_type text);
+CREATE TABLE IF NOT EXISTS document_schema._attributes(_id serial, key_name text NOT NULL, key_type text NOT NULL);
 
 -- Extraction Functions
 

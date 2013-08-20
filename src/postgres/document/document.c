@@ -559,7 +559,8 @@ binary_document_to_string(char *binary)
         }
         strcat(result, attr);
     }
-    strcat(result, "}"); /* There is space because we keep adding an extra bit to result_maxsize */
+    strcat(result, "}"); /* There is space because we keep adding an extra bit
+                            to result_maxsize */
 
     return result;
 }
@@ -610,7 +611,8 @@ binary_array_to_string(char *binary)
         result_size += elt_size;
         buffpos += elt_size;
     }
-    strcat(result, "]"); /* There is space because we keep adding an extra bit to result_maxsize */
+    strcat(result, "]"); /* There is space because we keep adding an extra bit
+                            to result_maxsize */
 
     return result;
 }
@@ -813,14 +815,21 @@ document_delete(PG_FUNCTION_ARGS)
         memcpy(outdata + outpos, data + sizeof(int), attr_pos * sizeof(int));
         outpos += attr_pos * sizeof(int);
         /* Copy remaining attr ids */
-        memcpy(outdata + outpos, attr_listing + sizeof(int), (natts - attr_pos - 1) * sizeof(int));
+        memcpy(outdata + outpos,
+               attr_listing + sizeof(int),
+               (natts - attr_pos - 1) * sizeof(int));
         outpos += (natts - attr_pos - 1) * sizeof(int);
         /* Copy first pos offsets */
-        memcpy(outdata + outpos, data + (natts + 1) * sizeof(int), attr_pos * sizeof(int));
-        for (i = attr_pos + 1; i <= natts; i++) { /* <= b/c length appended at end */
+        memcpy(outdata + outpos,
+               data + (natts + 1) * sizeof(int),
+               attr_pos * sizeof(int));
+        for (i = attr_pos + 1; i <= natts; i++) { /* <= b/c length appended at
+                                                     end */
             int new_offs;
 
-            memcpy(&new_offs, data + (natts + 1) + i * sizeof(int), sizeof(int));
+            memcpy(&new_offs,
+                   data + (natts + 1) + i * sizeof(int),
+                   sizeof(int));
             new_offs -= 2 * sizeof(int) - len;
 
             memcpy(outdata + outpos, &new_offs, sizeof(int));
@@ -857,7 +866,8 @@ document_put(PG_FUNCTION_ARGS)
     int natts, newnatts;
     int datasize;
     int datapos, outdatapos;
-    int offstart, offend, off0; /* Offset to binary for attr, end of it, start of binary data in document */
+    int offstart, offend, off0; /* Offset to binary for attr, end of it, start
+                                   of binary data in document */
     int attr_pos;
     int i; /* Loop variable */
 
@@ -880,7 +890,9 @@ document_put(PG_FUNCTION_ARGS)
     for (attr_pos = 0; attr_pos < natts; attr_pos++)
     {
         int cur_attr_id;
-        memcpy(&cur_attr_id, data + datapos + attr_pos * sizeof(int), sizeof(int));
+        memcpy(&cur_attr_id,
+               data + datapos + attr_pos * sizeof(int),
+               sizeof(int));
         // TODO: custom bsearch, but right now, w/e
         if (cur_attr_id > attr_id)
         {
@@ -894,7 +906,9 @@ document_put(PG_FUNCTION_ARGS)
     datapos += attr_pos + sizeof(int);
     memcpy(outdata + outdatapos, &attr_id, sizeof(int));
     outdatapos += sizeof(int);
-    memcpy(outdata + outdatapos, data + datapos, (natts - attr_pos) * sizeof(int));
+    memcpy(outdata + outdatapos,
+           data + datapos,
+           (natts - attr_pos) * sizeof(int));
     outdatapos += (natts - attr_pos) * sizeof(int);
     datapos += (natts - attr_pos) * sizeof(int);
 
