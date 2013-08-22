@@ -208,16 +208,29 @@ json_to_document(char *json, document *doc)
             state = VALUE;
             break;
         case VALUE:
+            value = jsmntok_to_str(curtok, json);
+            type = jsmn_get_type(curtok, json);
+
             if (curtok->type == JSMN_ARRAY)
             {
-                i += curtok->size; /* Skip all of the tokens */
+                jsmntok_t *tok;
+                int end;
+
+                tok = curtok;
+                end = curtok->end;
+                while (tok->start <= end) {
+                    ++i;
+                    tok = tokens + i;
+                }
+                --i; /* Hack because loop increments i for us */
+                // TODO: get rid of i in loop; just increment curtok
+                // properly
             }
             else if (curtok->type == JSMN_OBJECT)
             {
+                // FIXME:
                 i += curtok->size; /* Skip all of the tokens */
             }
-            value = jsmntok_to_str(curtok, json);
-            type = jsmn_get_type(curtok, json);
 
             doc->keys[natts] = keyname;
             doc->types[natts] = type;
@@ -332,9 +345,9 @@ document_to_binary(char *json, char **outbuff_ref)
     {
         const char *type;
 
-        elog(WARNING, "Key: %s",  doc.keys[i]);
-        elog(WARNING, "type: %d", doc.types[i]);
-        elog(WARNING, "value: %s",  doc.values[i]);
+        // elog(WARNING, "Key: %s",  doc.keys[i]);
+        // elog(WARNING, "type: %d", doc.types[i]);
+        // elog(WARNING, "value: %s",  doc.values[i]);
 
         type = get_pg_type(doc.types[i], doc.values[i]);
         attr_ids[i] = get_attribute_id(doc.keys[i], type);
@@ -515,6 +528,9 @@ binary_to_document(char *binary, document *doc)
         value_data = palloc0(end - start);
         memcpy(value_data, binary + start, end - start);
         values[i] = binary_to_string(types[i], value_data, end - start);
+        // elog(WARNING, "key: %s", keys[i]);
+        // elog(WARNING, "type: %d", types[i]);
+        // elog(WARNING, "value: %s", values[i]);
 
         pfree(value_data);
 

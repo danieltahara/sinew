@@ -127,7 +127,7 @@ get_pg_type(json_typeid type, char *value)
     jsmntok_t *tokens; /* In case we have an array and need to recur */
 
     assert(value);
-    elog(WARNING, "%d, %s", type, value);
+    // elog(WARNING, "%d, %s", type, value);
 
     arr_elt_type = NONE;
 
