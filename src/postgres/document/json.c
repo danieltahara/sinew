@@ -124,8 +124,10 @@ get_pg_type(json_typeid type, char *value)
     json_typeid arr_elt_type;
     char *arr_elt_pg_type;
     char *buffer;
+    jsmntok_t *tokens; /* In case we have an array and need to recur */
 
     assert(value);
+    elog(WARNING, "%d, %s", type, value);
 
     arr_elt_type = NONE;
 
@@ -142,13 +144,15 @@ get_pg_type(json_typeid type, char *value)
         case DOCUMENT:
             return DOCUMENT_TYPE;
         case ARRAY:
-            memcpy(&arr_elt_type, value + sizeof(int), sizeof(int));
-            arr_elt_pg_type = get_pg_type(arr_elt_type, value + 2 * sizeof(int));
+            tokens = jsmn_tokenize(value);
+            assert(tokens->type == JSMN_ARRAY);
+            arr_elt_type = jsmn_get_type(tokens + 1, value);
+            arr_elt_pg_type = get_pg_type(arr_elt_type, jsmntok_to_str(tokens + 1, value));
             buffer = palloc0(strlen(arr_elt_pg_type) + 2 + 1);
             sprintf(buffer, "%s%s", arr_elt_pg_type, ARRAY_TYPE);
             return buffer;
         default:
-            elog(ERROR, "document: invalid type id on deserialization");
+            elog(ERROR, "document: invalid type id on serialization");
     }
 }
 

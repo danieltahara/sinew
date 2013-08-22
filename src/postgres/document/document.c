@@ -222,6 +222,7 @@ json_to_document(char *json, document *doc)
             doc->keys[natts] = keyname;
             doc->types[natts] = type;
             doc->values[natts] = value;
+            elog(WARNING, "%s, %d, %s", keyname, type, value);
 
             ++natts;
             if (natts > capacity) {
@@ -330,6 +331,10 @@ document_to_binary(char *json, char **outbuff_ref)
     for (i = 0; i < natts; i++)
     {
         const char *type;
+
+        elog(WARNING, "Key: %s",  doc.keys[i]);
+        elog(WARNING, "type: %d", doc.types[i]);
+        elog(WARNING, "value: %s",  doc.values[i]);
 
         type = get_pg_type(doc.types[i], doc.values[i]);
         attr_ids[i] = get_attribute_id(doc.keys[i], type);
@@ -487,7 +492,7 @@ binary_to_document(char *binary, document *doc)
 
         memcpy(&id, binary + buffpos, sizeof(int));
         get_attribute(id, &key_string, &type_string);
-        // elog(WARNING, "Got attribute info: %s, %s", key_string, type_string);
+        elog(WARNING, "Got attribute info: %s, %s", key_string, type_string);
 
         keys[i] = pstrndup(key_string, strlen(key_string));
         types[i] = get_json_type(type_string);
