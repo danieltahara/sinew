@@ -32,19 +32,19 @@ CREATE TABLE IF NOT EXISTS document_schema._attributes(_id serial, key_name text
 -- Extraction Functions
 
 CREATE OR REPLACE FUNCTION
-document_get(text, cstring)
-RETURNS anyelement
+document_get(document, cstring, cstring)
+RETURNS text
 AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION
-document_put(text, cstring)
-RETURNS void
+document_put(document, cstring, cstring)
+RETURNS document
 AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION
-document_delete(text, cstring)
+document_delete(document, cstring, cstring)
 RETURNS void
 AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;

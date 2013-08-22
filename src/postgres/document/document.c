@@ -467,7 +467,6 @@ binary_to_document(char *binary, document *doc)
     int natts;
     int buffpos;
     char **keys;
-    char **type_strings;
     json_typeid *types;
     char **values;
     int i; /* Loop variable */
@@ -479,7 +478,6 @@ binary_to_document(char *binary, document *doc)
 
     keys = palloc0(natts * sizeof(char*));
     values = palloc0(natts * sizeof(char*));
-    type_strings = palloc0(natts * sizeof(char*));
     types = palloc0(natts * sizeof(json_typeid));
     for (i = 0; i < natts; i++)
     {
@@ -693,14 +691,16 @@ PG_FUNCTION_INFO_V1(document_delete);
 Datum
 document_get(PG_FUNCTION_ARGS)
 {
-    char *data = (char*)PG_GETARG_POINTER(0);
+    bytea *datum = (bytea*)PG_GETARG_BYTEA_P(0);
     char *attr_name = (char*)PG_GETARG_CSTRING(1);
     char *attr_pg_type = (char*)PG_GETARG_CSTRING(2);
+    const char *data;
     int attr_id;
     int natts;
     char *attr_listing;
     int buffpos;
 
+    data = datum->vl_dat;
     attr_id = get_attribute_id(attr_name, attr_name);
 
     memcpy(&natts, data, sizeof(int));
@@ -723,6 +723,7 @@ document_get(PG_FUNCTION_ARGS)
         char *attr_data;
         int i;
         double d;
+        bytea *datum;
 
         pos = (attr_listing - data) / sizeof(int);
         buffpos += natts * sizeof(int);
@@ -752,10 +753,16 @@ document_get(PG_FUNCTION_ARGS)
              memcpy(&i, attr_data, sizeof(int));
              PG_RETURN_BOOL(i);
         case DOCUMENT:
-             PG_RETURN_POINTER(attr_data);
+             // TODO: DRY this
+             datum = palloc0(VARHDRSZ + len);
+             SET_VARSIZE(datum, VARHDRSZ + len);
+             memcpy(datum->vl_dat, attr_data, len);
+             PG_RETURN_POINTER(datum);
         case ARRAY:
              // FIXME: if text; need to convert to array of text
              // FIXME: store strings as struct text *
+             // http://doxygen.postgresql.org/arrayfuncs_8c_source.html#l02865
+             // http://www.postgresql.org/message-id/3e3c86f90802281153o15e70724u425cdd0173bb2373@mail.gmail.com
              PG_RETURN_ARRAYTYPE_P(attr_data);
         case NONE:
         default:
@@ -772,15 +779,17 @@ document_get(PG_FUNCTION_ARGS)
 Datum
 document_delete(PG_FUNCTION_ARGS)
 {
-    char *data = (char*)PG_GETARG_POINTER(0);
+    bytea *datum = (bytea*)PG_GETARG_BYTEA_P_COPY(0);
     char *attr_name = (char*)PG_GETARG_CSTRING(1);
     char *attr_pg_type = (char*)PG_GETARG_CSTRING(2);
+    char *data;
     int attr_id;
     int natts;
     char *attr_listing;
     char *outdata;
     int attr_pos; /* Position of attribute in header */
 
+    data = datum->vl_dat;
     attr_id = get_attribute_id(attr_name, attr_pg_type);
 
     memcpy(&natts, data, sizeof(int));
@@ -859,24 +868,28 @@ document_delete(PG_FUNCTION_ARGS)
 Datum
 document_put(PG_FUNCTION_ARGS)
 {
-    char *data = (char*)PG_GETARG_POINTER(0);
+    bytea *datum = (bytea*)PG_GETARG_BYTEA_P_COPY(0);
     char *attr_name = (char*)PG_GETARG_CSTRING(1);
     char *attr_pg_type = (char*)PG_GETARG_CSTRING(2);
     char *attr_value_str = (char*)PG_GETARG_CSTRING(3);
+    char *data;
     json_typeid attr_json_typeid;
     char *attr_binary;
     int attr_id;
     int attr_size;
     char *outdata;
     int natts, newnatts;
-    int datasize;
+    int datasize, out_datasize;
     int datapos, outdatapos;
     int offstart, offend, off0; /* Offset to binary for attr, end of it, start
                                    of binary data in document */
     int attr_pos;
     int i; /* Loop variable */
+    bytea* out_datum;
 
+    data = datum->vl_dat;
     attr_id = get_attribute_id(attr_name, attr_pg_type);
+
     if (attr_id < 0)
     {
         attr_id = add_attribute(attr_name, attr_pg_type);
@@ -941,5 +954,10 @@ document_put(PG_FUNCTION_ARGS)
     outdatapos += attr_size;
     memcpy(outdata + outdatapos, data + offstart,  datasize - offstart);
 
-    PG_RETURN_POINTER(outdata);
+    out_datasize = datasize + 2 * sizeof(int) + attr_size;
+    out_datum = palloc0(VARHDRSZ + out_datasize);
+    SET_VARSIZE(out_datum, out_datasize);
+    memcpy(out_datum->vl_dat, outdata, out_datasize);
+
+    PG_RETURN_POINTER(out_datum);
 }
