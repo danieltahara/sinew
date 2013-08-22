@@ -558,7 +558,7 @@ binary_document_to_string(char *binary)
 
         attr_len = strlen(key) + strlen(value) + 5; /* "k":v,\n" */
         attr = palloc0(attr_len + 1);
-        sprintf(attr, "\"%s\":%s\n", key, value);
+        sprintf(attr, "\"%s\":%s,\n", key, value);
 
         if (result_size + attr_len + 1 >= result_maxsize)
         {
