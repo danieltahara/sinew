@@ -308,10 +308,18 @@ array_to_binary(char *json_arr, char **outbuff_ref)
         }
 
         pfree(binary);
-        if (curtok->type == JSMN_ARRAY || curtok->type == JSMN_ARRAY) {
-           curtok += curtok->size;
+        if (curtok->type == JSMN_ARRAY || curtok->type == JSMN_OBJECT)
+        {
+            int end;
+
+            end = curtok->end;
+            while (curtok->start <= end) ++curtok;
+            /* TODO: DRY with json_to_document */
         }
-        ++curtok;
+        else
+        {
+            ++curtok;
+        }
     }
 
     pfree(tokens);
