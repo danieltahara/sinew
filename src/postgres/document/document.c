@@ -623,9 +623,10 @@ binary_array_to_string(char *binary)
 static char *
 binary_to_string(json_typeid type, char *binary, int datum_len)
 {
-    char *result;
     int i;
     double d;
+    char *temp; /* Store temporary result of conversion of raw string */
+    char *result;
 
     assert(binary);
 
@@ -634,7 +635,9 @@ binary_to_string(json_typeid type, char *binary, int datum_len)
     switch (type)
     {
         case STRING:
-            sprintf(result, "\"%s\"", binary);
+            temp = pstrndup(binary, datum_len);
+            sprintf(result, "\"%s\"", temp);
+            pfree(temp);
             return result;
         case INTEGER:
             assert(datum_len == sizeof(int));
