@@ -1,0 +1,85 @@
+# Single
+{
+"index": 1,
+"index_start_at": 56,
+"integer": 0,
+"float": 17.2035,
+"name": "Malcolm",
+"surname": "Stuart",
+"fullname": "Rhonda Sumner",
+"email": "jordan@hicks.ve",
+"bool": false
+}
+
+# Null values
+{
+"index": 1,
+"index_start_at": null,
+"name":"daniel"
+}
+
+# Multiple with identical
+{
+"index": 1,
+"index_start_at": 56,
+"integer": 0,
+"float": 17.2035,
+"name": "Malcolm",
+"surname": "Stuart",
+"fullname": "Rhonda Sumner",
+"email": "jordan@hicks.ve",
+"bool": false
+}
+{
+"index": 2,
+"index_start_at": 57,
+"integer": 23,
+"float": 10.0381,
+"name": "Tamara",
+"surname": "Benton",
+"fullname": "George Hall",
+"email": "martin@baxter.sc",
+"bool": true
+}
+
+# Multiple with subset
+{
+"index": 1,
+"index_start_at": 56,
+"integer": 0,
+"float": 17.2035,
+"name": "Malcolm",
+"surname": "Stuart",
+"fullname": "Rhonda Sumner",
+"email": "jordan@hicks.ve",
+"bool": false
+}
+{
+"index_start_at": 57,
+"float": 10.0381,
+"name": "Tamara",
+"surname": "Benton",
+}
+
+# Multiple with new
+{
+"index": 1,
+"index_start_at": 56,
+"integer": 0,
+"float": 17.2035,
+"name": "Malcolm",
+"surname": "Stuart",
+"fullname": "Rhonda Sumner",
+"email": "jordan@hicks.ve",
+"bool": false
+}
+{
+"index_start_at": 57,
+"float": 10.0381,
+"name": "Tamara",
+"surname": "Benton",
+"url":"http://myurl.com",
+"my_num":4
+}
+
+
