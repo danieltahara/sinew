@@ -210,6 +210,11 @@ json_to_document(char *json, document *doc)
         case VALUE:
             value = jsmntok_to_str(curtok, json);
             type = jsmn_get_type(curtok, json);
+            if (type == NONE) /* Implicit convention: explicit 'nulls' do not
+                                 exist; i.e. don't include the key */
+            {
+                break;
+            }
 
             if (curtok->type == JSMN_ARRAY)
             {
@@ -228,8 +233,19 @@ json_to_document(char *json, document *doc)
             }
             else if (curtok->type == JSMN_OBJECT)
             {
-                // FIXME:
-                i += curtok->size; /* Skip all of the tokens */
+                // DRY
+                jsmntok_t *tok;
+                int end;
+
+                tok = curtok;
+                end = curtok->end;
+                while (tok->start <= end) {
+                    ++i;
+                    tok = tokens + i;
+                }
+                --i; /* Hack because loop increments i for us */
+                // TODO: get rid of i in loop; just increment curtok
+                // properly
             }
 
             doc->keys[natts] = keyname;
