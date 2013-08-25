@@ -88,6 +88,7 @@ get_attribute_id(const char *keyname, const char *typename)
     }
 
     if (SPI_processed != 1) {
+        SPI_finish();
         return -1;
     }
 
@@ -728,40 +729,202 @@ document_datum_to_string(PG_FUNCTION_ARGS)
  ******************************************************************************/
 
 /* NOTE: Because format is known, methods can operate directly on binary data */
+/* TODO: should honestly make the _get methods take const char* */
+static Datum document_get_internal(const char *doc,
+                                   char *attr_path,
+                                   char *attr_pg_type,
+                                   bool *is_null);
+static Datum array_get_internal(const char *arr,
+                                int index,
+                                char *attr_path,
+                                char *attr_pg_type,
+                                bool *is_null);
+static Datum make_datum(char *attr_data,
+                        int len,
+                        json_typeid type,
+                        bool *is_null);
+/* TODO: when type is '*' */
 Datum document_get(PG_FUNCTION_ARGS);
+Datum document_get_int(PG_FUNCTION_ARGS);
+Datum document_get_float(PG_FUNCTION_ARGS);
+Datum document_get_bool(PG_FUNCTION_ARGS);
+Datum document_get_text(PG_FUNCTION_ARGS);
 Datum document_put(PG_FUNCTION_ARGS);
 Datum document_delete(PG_FUNCTION_ARGS);
 
 PG_FUNCTION_INFO_V1(document_get);
+PG_FUNCTION_INFO_V1(document_get_int);
+PG_FUNCTION_INFO_V1(document_get_float);
+PG_FUNCTION_INFO_V1(document_get_bool);
+PG_FUNCTION_INFO_V1(document_get_text);
 PG_FUNCTION_INFO_V1(document_put);
 PG_FUNCTION_INFO_V1(document_delete);
 
-Datum
-document_get(PG_FUNCTION_ARGS)
+static Datum
+make_datum(char *attr_data, int len, json_typeid type, bool *is_null)
 {
-    bytea *datum = (bytea*)PG_GETARG_BYTEA_P(0);
-    char *attr_name = (char*)PG_GETARG_CSTRING(1);
-    char *attr_pg_type = (char*)PG_GETARG_CSTRING(2);
-    const char *data;
+    int i;
+    double d;
+    bytea *dd;
+    char *s;
+    text *t;
+
+    elog(WARNING, "in make datum");
+
+    switch (type)
+    {
+    case STRING:
+         t = palloc0(VARHDRSZ + len + 1);
+         SET_VARSIZE(t, VARHDRSZ + len + 1);
+         memcpy(t->vl_dat, attr_data, len);
+         t->vl_dat[len] = '\0'; /* Not necessary b/c palloc0 */
+         return PointerGetDatum(t);
+    case INTEGER:
+         assert(len == sizeof(int));
+         memcpy(&i, attr_data, sizeof(int));
+         return Int64GetDatum(i);
+    case FLOAT:
+         assert(len == sizeof(double));
+         memcpy(&d, attr_data, sizeof(double));
+         return Float8GetDatum(d);
+    case BOOLEAN:
+         assert(len == 1);
+         memcpy(&i, attr_data, sizeof(int));
+         return BoolGetDatum(i);
+    case DOCUMENT:
+         dd = palloc0(VARHDRSZ + len);
+         SET_VARSIZE(dd, VARHDRSZ + len);
+         memcpy(dd->vl_dat, attr_data, len);
+         return PointerGetDatum(dd);
+    case ARRAY:
+         s = binary_array_to_string(attr_data);
+         len = strlen(s);
+         t = palloc0(VARHDRSZ + len + 1);
+         SET_VARSIZE(t, VARHDRSZ + len + 1);
+         memcpy(t->vl_dat, s, len);
+         return PointerGetDatum(t);
+    case NONE: /* Shouldn't happen */
+    default:
+         *is_null = true;
+         return (Datum)0; // Copy of PG_RETURN_NULL();
+    }
+}
+
+static Datum
+array_get_internal(const char *arr,
+                   int index,
+                   char *attr_path,
+                   char *attr_pg_type,
+                   bool *is_null)
+{
+    int arrlen;
+    json_typeid type;
+    char *attr_data;
+    int buffpos;
+    int i;
+    int itemlen;
+
+    assert(arr);
+    memcpy(&arrlen, arr, sizeof(int));
+    memcpy(&type, arr + sizeof(int), sizeof(int));
+
+    if (index >= arrlen)
+    {
+        *is_null = true;
+        return (Datum)0;
+    }
+
+
+    buffpos = 2 * sizeof(int);
+
+    for (i = 0; i < index - 1; i++)
+    {
+        memcpy(&itemlen, arr + buffpos, sizeof(int));
+        buffpos += sizeof(int) + itemlen;
+    }
+    memcpy(&itemlen, arr + buffpos, sizeof(int));
+    buffpos += sizeof(int);
+
+    attr_data = palloc0(itemlen + 1);
+    memcpy(attr_data, arr + buffpos, itemlen);
+    attr_data[itemlen] = '\0'; /* NOTE: not techinically necessary */
+    type = get_json_type(attr_pg_type);
+
+    if (strlen(attr_path) == 0)
+    {
+        return make_datum(attr_data, itemlen, type, is_null);
+    }
+    else /* That means we need to keep traversing path */
+    {
+        if (type != DOCUMENT || type != ARRAY)
+        {
+            *is_null = true;
+            return (Datum)0;
+        }
+        else
+        {
+            return document_get_internal(attr_data,
+                                         attr_path,
+                                         attr_pg_type,
+                                         is_null);
+        }
+    }
+}
+
+static Datum
+document_get_internal(const char *doc,
+                      char *attr_path,
+                      char *attr_pg_type,
+                      bool *is_null)
+{
     int attr_id;
     int natts;
     char *attr_listing;
     int buffpos;
+    char **path;
+    char *path_arr_index_map;
+    int path_depth;
 
-    data = datum->vl_dat;
-    attr_id = get_attribute_id(attr_name, attr_name);
+    elog(WARNING, "%s", attr_path);
+    path_depth = parse_attr_path(attr_path, &path, &path_arr_index_map);
+    elog(WARNING, "parsed attr_path");
+    /* NOTE: Technically, I just want the first part; I don't need to parse
+       the whole thing */
 
-    memcpy(&natts, data, sizeof(int));
+    if (path_depth == 0)
+    {
+        *is_null = true;
+        return (Datum)0;
+    }
+
+    elog(WARNING, "attr name: %s", path[0]);
+    elog(WARNING, "path depth: %d", path_depth);
+    if (path_depth > 1)
+    {
+        attr_id = get_attribute_id(path[0],
+                                   get_pg_type_for_path(path,
+                                                        path_arr_index_map,
+                                                        path_depth,
+                                                        attr_pg_type));
+    }
+    else
+    {
+        attr_id = get_attribute_id(path[0], attr_pg_type);
+    }
+
+    memcpy(&natts, doc, sizeof(int));
     buffpos = sizeof(int);
 
     attr_listing = NULL;
     attr_listing = bsearch(&attr_id,
-                           data + buffpos,
+                           doc + buffpos,
                            natts,
                            sizeof(int),
                            int_comparator);
+    elog(WARNING, "found listing");
+    elog(WARNING, "attr id %d", attr_id);
+    elog(WARNING, "natts %d", natts);
 
-    // FIXME: that data better be long enough; this code ain't robust
     if (attr_listing)
     {
         int pos;
@@ -769,58 +932,185 @@ document_get(PG_FUNCTION_ARGS)
         int len;
         json_typeid type;
         char *attr_data;
-        int i;
-        double d;
-        bytea *datum;
+        char *subpath; /* In the case of a nested doc or array */
 
-        pos = (attr_listing - data) / sizeof(int);
+        pos = (attr_listing - buffpos - doc) / sizeof(int);
         buffpos += natts * sizeof(int);
-        memcpy(&offstart, data + buffpos + pos * sizeof(int), sizeof(int));
-        memcpy(&offend, data + (pos + 1) * sizeof(int), sizeof(int));
+        memcpy(&offstart, doc + buffpos + pos * sizeof(int), sizeof(int));
+        memcpy(&offend, doc + buffpos + (pos + 1) * sizeof(int), sizeof(int));
         len = offend - offstart;
 
         attr_data = palloc0(len + 1);
-        memcpy(attr_data, data + offstart, len);
+        memcpy(attr_data, doc + offstart, len);
         attr_data[len] = '\0';
         type = get_json_type(attr_pg_type);
 
-        switch (type)
+        elog (WARNING, "path depth: %d", path_depth);
+
+        if (path_depth > 1)
         {
-        case STRING:
-             PG_RETURN_CSTRING(pstrndup(attr_data, len));
-        case INTEGER:
-             assert(len == sizeof(int));
-             memcpy(&i, attr_data, sizeof(int));
-             PG_RETURN_INT64(i);
-        case FLOAT:
-             assert(len == sizeof(double));
-             memcpy(&d, attr_data, sizeof(double));
-             PG_RETURN_FLOAT8(i);
-        case BOOLEAN:
-             assert(len == sizeof(int));
-             memcpy(&i, attr_data, sizeof(int));
-             PG_RETURN_BOOL(i);
-        case DOCUMENT:
-             // TODO: DRY this
-             datum = palloc0(VARHDRSZ + len);
-             SET_VARSIZE(datum, VARHDRSZ + len);
-             memcpy(datum->vl_dat, attr_data, len);
-             PG_RETURN_POINTER(datum);
-        case ARRAY:
-             // FIXME: if text; need to convert to array of text
-             // FIXME: store strings as struct text *
-             // http://doxygen.postgresql.org/arrayfuncs_8c_source.html#l02865
-             // http://www.postgresql.org/message-id/3e3c86f90802281153o15e70724u425cdd0173bb2373@mail.gmail.com
-             PG_RETURN_ARRAYTYPE_P(attr_data);
-        case NONE:
-        default:
-             elog(DEBUG5, "Had a null attribute type in the document schema");
-             PG_RETURN_NULL();
+            if (type == DOCUMENT)
+            {
+                if (path_arr_index_map[1] == true)
+                {
+                    elog(ERROR, "document_get: invalid path - %s", attr_path);
+                }
+                subpath = strchr(attr_path, '.');
+                return document_get_internal(attr_data,
+                                             subpath + 1,
+                                             attr_pg_type,
+                                             is_null);
+            }
+            else if (type == ARRAY)
+            {
+                if (path_arr_index_map[1] == false)
+                {
+                    elog(ERROR, "document_get: invalid path - %s", attr_path);
+                }
+                subpath = strchr(attr_path, ']');
+                /* NOTE: Might be memory issues with very deep nesting */
+                return array_get_internal(attr_data,
+                                          strtol(path[1], NULL, 10),
+                                          subpath + 1,
+                                          attr_pg_type,
+                                          is_null);
+            }
+            else
+            {
+                *is_null = true;
+                return (Datum)0;
+            }
+        }
+        else
+        {
+            elog(WARNING, "Got to make datum");
+            return make_datum(attr_data, len, type, is_null);
         }
     }
     else
     {
+        *is_null = true;
+        return (Datum)0;
+    }
+}
+
+Datum
+document_get(PG_FUNCTION_ARGS)
+{
+    bytea *datum = (bytea*)PG_GETARG_BYTEA_P(0);
+    char *attr_path = (char*)PG_GETARG_CSTRING(1);
+    char *attr_pg_type = (char*)PG_GETARG_CSTRING(2);
+    Datum retval;
+    bool is_null;
+
+    is_null = false;
+    retval = document_get_internal(datum->vl_dat,
+                                   attr_path,
+                                   attr_pg_type,
+                                   &is_null);
+    if (is_null)
+    {
         PG_RETURN_NULL();
+    }
+    else
+    {
+        return retval;
+    }
+}
+
+Datum
+document_get_int(PG_FUNCTION_ARGS)
+{
+    bytea *datum = (bytea*)PG_GETARG_BYTEA_P(0);
+    char *attr_path = (char*)PG_GETARG_CSTRING(1);
+    Datum retval;
+    bool is_null;
+
+    is_null = false;
+    retval = document_get_internal(datum->vl_dat,
+                                   attr_path,
+                                   INTEGER_TYPE,
+                                   &is_null);
+
+    if (is_null)
+    {
+        PG_RETURN_NULL();
+    }
+    else
+    {
+        return retval;
+    }
+}
+
+Datum
+document_get_float(PG_FUNCTION_ARGS)
+{
+    bytea *datum = (bytea*)PG_GETARG_BYTEA_P(0);
+    char *attr_path = (char*)PG_GETARG_CSTRING(1);
+    Datum retval;
+    bool is_null;
+
+    is_null = false;
+    retval = document_get_internal(datum->vl_dat,
+                                   attr_path,
+                                   FLOAT_TYPE,
+                                   &is_null);
+
+    if (is_null)
+    {
+        PG_RETURN_NULL();
+    }
+    else
+    {
+        return retval;
+    }
+}
+
+Datum
+document_get_bool(PG_FUNCTION_ARGS)
+{
+    bytea *datum = (bytea*)PG_GETARG_BYTEA_P(0);
+    char *attr_path = (char*)PG_GETARG_CSTRING(1);
+    Datum retval;
+    bool is_null;
+
+    is_null = false;
+    retval = document_get_internal(datum->vl_dat,
+                                   attr_path,
+                                   BOOLEAN_TYPE,
+                                   &is_null);
+
+    if (is_null)
+    {
+        PG_RETURN_NULL();
+    }
+    else
+    {
+        return retval;
+    }
+}
+
+Datum
+document_get_text(PG_FUNCTION_ARGS)
+{
+    bytea *datum = (bytea*)PG_GETARG_BYTEA_P(0);
+    char *attr_path = (char*)PG_GETARG_CSTRING(1);
+    Datum retval;
+    bool is_null;
+
+    is_null = false;
+    retval = document_get_internal(datum->vl_dat,
+                                   attr_path,
+                                   STRING_TYPE,
+                                   &is_null);
+
+    if (is_null)
+    {
+        PG_RETURN_NULL();
+    }
+    else
+    {
+        return retval;
     }
 }
 

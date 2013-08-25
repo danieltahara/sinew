@@ -149,12 +149,47 @@ get_pg_type(json_typeid type, char *value)
             arr_elt_type = jsmn_get_type(tokens + 1, value);
             arr_elt_pg_type = get_pg_type(arr_elt_type, jsmntok_to_str(tokens + 1, value));
             buffer = palloc0(strlen(arr_elt_pg_type) + 2 + 1);
+            /* NOTE: 'leaks' memory for nested arrays */
             sprintf(buffer, "%s%s", arr_elt_pg_type, ARRAY_TYPE);
             return buffer;
         case NONE:
             elog(WARNING, "document: got a null");
         default:
             elog(ERROR, "document: invalid type id on serialization");
+    }
+}
+
+char *
+get_pg_type_for_path(char **path,
+                     char *path_arr_index_map,
+                     int depth,
+                     char *base_type)
+{
+    if (depth == 1)
+    {
+        return base_type;
+    }
+    else
+    {
+        if (path_arr_index_map[1])
+        {
+            char *array_pg_type;
+            char *buffer;
+
+            array_pg_type = get_pg_type_for_path(path + 1,
+                                                 path_arr_index_map + 1,
+                                                 --depth,
+                                                 base_type);
+            buffer = palloc0(strlen(array_pg_type) + 2 + 1);
+            sprintf(buffer, "%s%s", array_pg_type, ARRAY_TYPE);
+
+            elog(WARNING, "type: %s", buffer);
+            return buffer;
+        }
+        else
+        {
+            return DOCUMENT_TYPE;
+        }
     }
 }
 

@@ -27,3 +27,7 @@ jsmntok_t *jsmn_tokenize(char *json);
 /* JSON type conversion function */
 json_typeid get_json_type(const char *pg_type);
 char *get_pg_type(json_typeid type, char *value);
+char *get_pg_type_for_path(char **path,
+                           char *path_arr_index_map,
+                           int depth,
+                           char *base_type);

@@ -38,6 +38,32 @@ AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION
+document_get_int(document, cstring)
+RETURNS bigint
+AS 'MODULE_PATHNAME'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION
+document_get_float(document, cstring)
+RETURNS double precision
+AS 'MODULE_PATHNAME'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION
+document_get_bool(document, cstring)
+RETURNS boolean
+AS 'MODULE_PATHNAME'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION
+document_get_text(document, cstring)
+RETURNS text
+AS 'MODULE_PATHNAME'
+LANGUAGE C IMMUTABLE STRICT;
+
+-- Modification Functions
+
+CREATE OR REPLACE FUNCTION
 document_put(document, cstring, cstring)
 RETURNS document
 AS 'MODULE_PATHNAME'
@@ -45,6 +71,6 @@ LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION
 document_delete(document, cstring, cstring)
-RETURNS void
+RETURNS document
 AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;
