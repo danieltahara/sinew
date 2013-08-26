@@ -56,7 +56,11 @@ parse_attr_path(char *attr_path, char ***path, char **path_arr_index_map)
     char *tok_start;
     int i;
 
-    assert(strlen(attr_path) > 0);
+    assert(attr_path);
+    if (strlen(attr_path) == 0)
+    {
+        return 0;
+    }
 
     /* This is a case where I'm not going to pfree and let PG manage it */
     attr_path_copy = pstrndup(attr_path, strlen(attr_path));
