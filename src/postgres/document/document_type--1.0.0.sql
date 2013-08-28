@@ -4,6 +4,8 @@
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
 \echo Use "CREATE EXTENSION document_type" to load this file. \quit
 
+-- NOTE: 'STRICT' tag signifies that if any input is null, output is also null
+
 -- Serialization Functions
 
 CREATE TYPE document;
