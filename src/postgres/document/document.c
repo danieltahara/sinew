@@ -830,7 +830,7 @@ array_get_internal(const char *arr,
     assert(arr);
     assert(attr_path && attr_pg_type);
     memcpy(&arrlen, arr, sizeof(int));
-    memcpy(&type, arr + sizeof(int), sizeof(int));
+    memcpy(&type, arr + sizeof(int), sizeof(int)); /* NOTE: technically, the method will never be called with a type mismatch */
 
     elog(WARNING, "In array get internal");
     elog(WARNING, "index: %d", index);
@@ -962,7 +962,7 @@ document_get_internal(const char *doc,
     elog(WARNING, "attr id %d", attr_id);
     elog(WARNING, "natts %d", natts);
 
-    if (attr_listing)
+    if (attr_listing) /* TODO: separate attr_listing == NULL */
     {
         int pos;
         int offstart, offend;
@@ -1206,23 +1206,127 @@ document_get_doc(PG_FUNCTION_ARGS)
     }
 }
 
-Datum
-document_delete(PG_FUNCTION_ARGS)
+static int
+array_delete_internal(char *arr, int size, int index, char *attr_path, char *attr_pg_type, char *outbuff_ref)
 {
-    bytea *datum = (bytea*)PG_GETARG_BYTEA_P_COPY(0);
-    char *attr_name = (char*)PG_GETARG_CSTRING(1);
-    char *attr_pg_type = (char*)PG_GETARG_CSTRING(2);
-    char *data;
-    int attr_id;
+    int arrlen;
+    json_typeid type;
+    int arrpos;
+    int i;
+    int item_size;
+    int path_depth;
+    char **path;
+    char *path_arr_index_map;
+
+    assert(arr);
+    assert(attr_path && attr_pg_type);
+    memcpy(&arrlen, arr, sizeof(int));
+    memcpy(&type, arr + sizeof(int), sizeof(int));
+
+    if (index >= arrlen)
+    {
+        return -1;
+    }
+
+    arrpos = 2 * sizeof(int);
+    for (i = 0; i < index;; i++)
+    {
+        item_size = *(int*)(arr + arrpos);
+        arrpos += sizeof(int) + item_size;
+    }
+    item_size = *(int*)(arr + arrpos);
+
+    path_depth = parse_attr_path(attr_path, &path, &path_arr_index_map);
+    if (path_depth > 0)
+    {
+        if (type == DOCUMENT) /* attr_path has form .\w+(\.\w+|[\d+])* */
+        {
+            ++attr_path; /* Jump the period */
+            if (path_arr_index_map[0] == true)
+            {
+                elog(ERROR, "document_get: invalid path - %s", attr_path);
+            }
+            return document_delete_internal(arr + arrpos + sizeof(int),
+                                            item_size,
+                                            attr_path,
+                                            attr_pg_type,
+                                            outbuff_ref);
+        }
+        else if (type == ARRAY) /* Attr_path has form [\d+]... */
+        {
+            char *subpath;
+
+            if (path_arr_index_map[0] == false)
+            {
+                elog(ERROR, "document_get: not array index invalid path - %s", attr_path);
+            }
+            subpath = strchr(attr_path, ']') + 1;
+            return array_delete_internal(arr + arrpos + sizeof(int),
+                                         item_size,
+                                         strtol(path[0], NULL, 10),
+                                         subpath,
+                                         attr_pg_type,
+                                         outbuff_ref);
+        }
+        else
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        int new_size;
+
+        new_size = 2 * sizeof(int) + size - item_size - sizeof(int);
+        *outbuff_ref = palloc0(new_size);
+        memcpy(*outbuff_ref, arr, arrpos);
+        memcpy(*outbuff_ref + arrpos + sizeof(int) + item_size, arr, new_size - arrpos);
+        *(int*)(*outbuff_ref) = arrlen - 1;
+        return new_size;
+    }
+}
+
+static void
+document_delete_internal(char *doc, int size, char *attr_path, char *attr_pg_type)
+{
     int natts;
+    int attr_id;
     char *attr_listing;
-    char *outdata;
     int attr_pos; /* Position of attribute in header */
+    int attr_start, attr_end;
+    int attr_size;
+    char *attr_value;
+    int i;
+    int path_depth;
+    char **path;
+    char *path_arr_index_map;
 
-    data = datum->vl_dat;
-    attr_id = get_attribute_id(attr_name, attr_pg_type);
+    elog(WARNING, "%s", attr_path);
+    path_depth = parse_attr_path(attr_path, &path, &path_arr_index_map);
+    elog(WARNING, "parsed attr_path");
+    if (path_depth == 0)
+    {
+        return -1;
+    }
 
-    memcpy(&natts, data, sizeof(int));
+    if (path_depth > 1)
+    {
+        const char *pg_type;
+
+        pg_type = get_pg_type_for_path(path,
+                                       path_arr_index_map,
+                                       path_depth,
+                                       attr_pg_type);
+        attr_id = get_attribute_id(path[0], pg_type);
+        type = get_json_type(pg_type);
+    }
+    else
+    {
+        attr_id = get_attribute_id(path[0], attr_pg_type);
+        type = get_json_type(attr_pg_type); /* Unused, but for symmetry */
+    }
+
+    natts = *(int*)(doc);
 
     attr_listing = NULL;
     attr_listing = bsearch(&attr_id,
@@ -1230,67 +1334,105 @@ document_delete(PG_FUNCTION_ARGS)
                            natts,
                            sizeof(int),
                            int_comparator);
-    attr_pos = (attr_listing - data - sizeof(int)) / sizeof(int);
-
-    if (attr_listing)
+    if (attr_listing == NULL)
     {
-        int datalen; /* Length of original data */
-        int outpos; /* Offset of how much data is filled in outbuffer */
-        int new_natts; /* Decremented number of attributes */
-        int off0; /* Start of data part of document */
-        int offstart, offend;
-        int len;
-        int i;
+        return -1;
+    }
 
-        outpos = 0;
+    attr_pos = (attr_listing - doc - sizeof(int)) / sizeof(int);
+    attr_start = *(int*)(doc + (natts + 1 + attr_pos) * sizeof(int));
+    attr_end = *(int*)(doc + (natts + 1 + attr_pos + 1) * sizeof(int));
+    attr_size = attr_end - attr_start;
 
-        memcpy(&offstart, attr_listing + (natts)  * sizeof(int), sizeof(int));
-        memcpy(&offend, attr_listing + (natts + 1) * sizeof(int), sizeof(int));
-        len = offend - offstart;
+    if (path_depth > 1)
+    {
+        if (type == ARRAY)
+        {
+            char *arr;
+            char *binary;
+            int new_arrsize;
 
-        memcpy(&datalen, data + 2 * natts + 1, sizeof(int));
-        outdata = palloc0(datalen - 2 * sizeof(int) - len);
-
-        /* Decrement number of attributes */
-        new_natts = natts - 1;
-        memcpy(outdata, &new_natts, sizeof(int));
-        outpos = sizeof(int);
-        /* Copy attr ids before current */
-        memcpy(outdata + outpos, data + sizeof(int), attr_pos * sizeof(int));
-        outpos += attr_pos * sizeof(int);
-        /* Copy remaining attr ids */
-        memcpy(outdata + outpos,
-               attr_listing + sizeof(int),
-               (natts - attr_pos - 1) * sizeof(int));
-        outpos += (natts - attr_pos - 1) * sizeof(int);
-        /* Copy first pos offsets */
-        memcpy(outdata + outpos,
-               data + (natts + 1) * sizeof(int),
-               attr_pos * sizeof(int));
-        for (i = attr_pos + 1; i <= natts; i++) { /* <= b/c length appended at
-                                                     end */
-            int new_offs;
-
-            memcpy(&new_offs,
-                   data + (natts + 1) + i * sizeof(int),
-                   sizeof(int));
-            new_offs -= 2 * sizeof(int) - len;
-
-            memcpy(outdata + outpos, &new_offs, sizeof(int));
-
-            outpos += sizeof(int);
+            if (path_arr_index_map[1] == false)
+            {
+                elog(ERROR, "document_get: invalid path - %s", attr_path);
+            }
+            subpath = strchr(attr_path, ']') + 1;
+            new_arrsize = array_delete_internal(doc + attr_start,
+                                                attr_size,
+                                                strtol(path[1], NULL, 10),
+                                                subpath,
+                                                attr_pg_type,
+                                                &binary);
+            if (new_arrsize < 0)
+            {
+                return -1;
+            }
+            *outbuff_ref = palloc0(size - attr_size + new_arrsize);
+            memcpy(*outbuff_ref, doc, attr_start);
+            memcpy(*outbuff_ref + attr_start, binary, new_docsize);
+            memcpy(*outbuff_ref + attr_start + new_docsize, doc + attr_end, size - attr_end);
         }
-        off0 = 2 * natts + 1;
-        memcpy(outdata + outpos, data + off0, offstart - off0);
-        outpos += offstart - off0;
-        memcpy(outdata + outpos, data + offend, datalen - offend);
+        else if (type == DOCUMENT)
+        {
+            char *binary;
+            int new_docsize;
 
-        PG_RETURN_POINTER(outdata);
+            if (path_arr_index_map[1] == true)
+            {
+                elog(ERROR, "document_get: invalid path - %s", attr_path);
+            }
+            subpath = strchr(attr_path, '.') + 1;
+
+            new_docsize = document_delete_internal(doc + attr_start, attr_size, subpath, attr_pg_type, &binary);
+            if (new_docsize < 0)
+            {
+                return -1;
+            }
+            *outbuff_ref = palloc0(size - attr_size + new_docsize);
+            memcpy(*outbuff_ref, doc, attr_start);
+            memcpy(*outbuff_ref + attr_start, binary, new_docsize);
+            memcpy(*outbuff_ref + attr_start + new_docsize, doc + attr_end, size - attr_end);
+            return size - attr_size + new_docsize;
+        }
+        else
+        {
+            return -1;
+        }
     }
-    else
+    else /* Top-level attribute */
     {
-        PG_RETURN_POINTER(data);
+        *outbuff_ref = palloc0(size - attr_size);
+        memcpy(*outbuff_ref, doc, attr_start);
+        memcpy(*outbuff_ref + attr_start, doc + attr_end, size - attr_end);
+        *(int*)(*outbuff_ref) = natts - 1;
+
+        return size - attr_size;
     }
+}
+
+Datum
+document_delete(PG_FUNCTION_ARGS)
+{
+    bytea *datum = (bytea*)PG_GETARG_BYTEA_P_COPY(0);
+    char *attr_name = (char*)PG_GETARG_CSTRING(1);
+    char *attr_pg_type = (char*)PG_GETARG_CSTRING(2);
+    int size, outsize;
+    char *outbinary;
+    bytea *outdatum;
+
+    data = datum->vl_dat;
+    size = VARSIZE(datum)
+
+    outsize = document_delete_internal(data, size, attr_name, attr_pg_type, &outbinary);
+    if (outsize < 0)
+    {
+        PG_RETURN_POINTER(datum);
+    }
+    outdatum = palloc0(VARHDRSZ + outsize);
+    SET_VARSIZE(outdatum, VARHDRSZ + outsize);
+    memcpy(outdatum->vl_dat, outbinary, outsize);
+
+    PG_RETURN_POINTER(outdatum);
 }
 
 /* Use this to downgrade */
