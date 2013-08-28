@@ -31,7 +31,7 @@ CREATE TYPE document (
 CREATE SCHEMA IF NOT EXISTS document_schema;
 CREATE TABLE IF NOT EXISTS document_schema._attributes(_id serial, key_name text NOT NULL, key_type text NOT NULL);
 
--- Extraction Functions
+-- Accessors
 
 CREATE OR REPLACE FUNCTION
 document_get(document, cstring, cstring)
@@ -69,16 +69,48 @@ RETURNS document
 AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;
 
--- Modification Functions
+-- Delete
 
 CREATE OR REPLACE FUNCTION
-document_put(document, cstring, cstring)
+document_delete(document, cstring, cstring)
+RETURNS document
+AS 'MODULE_PATHNAME'
+LANGUAGE C IMMUTABLE STRICT;
+
+-- Put
+
+CREATE OR REPLACE FUNCTION
+document_put(document, cstring, cstring, cstring)
 RETURNS document
 AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION
-document_delete(document, cstring, cstring)
+document_put_int(document, cstring, bigint)
+RETURNS document
+AS 'MODULE_PATHNAME'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION
+document_put_float(document, cstring, double precision)
+RETURNS document
+AS 'MODULE_PATHNAME'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION
+document_put_bool(document, cstring, boolean)
+RETURNS document
+AS 'MODULE_PATHNAME'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION
+document_put_text(document, cstring, cstring)
+RETURNS document
+AS 'MODULE_PATHNAME'
+LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION
+document_put_doc(document, cstring, document)
 RETURNS document
 AS 'MODULE_PATHNAME'
 LANGUAGE C IMMUTABLE STRICT;
