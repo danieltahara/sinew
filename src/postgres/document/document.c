@@ -1499,113 +1499,6 @@ document_delete(PG_FUNCTION_ARGS)
 }
 
 static int
-array_put_internal(char *arr,
-                   int size,
-                   int index,
-                   char *attr_path,
-                   char *attr_pg_type,
-                   char *attr_binary,
-                   int attr_size,
-                   char **outbinary)
-{
-    int arrlen;
-    json_typeid type;
-    int arrpos;
-    int i;
-    int item_size;
-    int path_depth;
-    char **path;
-    char *path_arr_index_map;
-    char *outitem;
-
-    assert(arr);
-    assert(attr_path && attr_pg_type);
-    memcpy(&arrlen, arr, sizeof(int));
-    memcpy(&type, arr + sizeof(int), sizeof(int));
-
-    if (index >= arrlen + 1)
-    {
-        elog(WARNING, "document_put: array index OOB - %d", index);
-        return -1;
-    }
-
-    arrpos = 2 * sizeof(int);
-    for (i = 0; i < index; i++)
-    {
-        item_size = *(int*)(arr + arrpos);
-        arrpos += sizeof(int) + item_size;
-    }
-    item_size = *(int*)(arr + arrpos);
-
-    path_depth = parse_attr_path(attr_path, &path, &path_arr_index_map);
-    if (path_depth > 0)
-    {
-        if (type == DOCUMENT) /* attr_path has form .\w+(\.\w+|[\d+])* */
-        {
-            ++attr_path; /* Jump the period */
-            if (path_arr_index_map[0] == true)
-            {
-                elog(ERROR, "document_put: invalid path - %s", attr_path);
-            }
-            return document_put_internal(arr + arrpos + sizeof(int),
-                                         item_size,
-                                         attr_path,
-                                         attr_pg_type,
-                                         attr_binary,
-                                         attr_size,
-                                         &outitem);
-        }
-        else if (type == ARRAY) /* Attr_path has form [\d+]... */
-        {
-            char *subpath;
-
-            if (path_arr_index_map[0] == false)
-            {
-                elog(ERROR, "document_put: not array index invalid path - %s", attr_path);
-            }
-            subpath = strchr(attr_path, ']') + 1;
-            return array_put_internal(arr + arrpos + sizeof(int),
-                                      item_size,
-                                      strtol(path[0], NULL, 10),
-                                      subpath,
-                                      attr_pg_type,
-                                      attr_binary,
-                                      attr_size,
-                                      &outitem);
-        }
-        else
-        {
-            return -1;
-        }
-    }
-    else
-    {
-        int new_size;
-
-        if (index < arrlen)
-        {
-            new_size = size + attr_size - item_size;
-            *outbinary = palloc0(new_size);
-            memcpy(*outbinary, arr, arrpos);
-            memcpy(*outbinary + arrpos, &attr_size, sizeof(int));
-            memcpy(*outbinary + arrpos + sizeof(int), attr_binary, attr_size);
-            memcpy(*outbinary + arrpos + sizeof(int) + attr_size, arr, new_size - arrpos);
-            *(int*)(*outbinary) = arrlen;
-        }
-        else
-        {
-            new_size = size + attr_size + sizeof(int);
-            *outbinary = palloc0(new_size);
-            memcpy(*outbinary, arr, size);
-            memcpy(*outbinary + size, &attr_size, sizeof(int));
-            memcpy(*outbinary + size + sizeof(int), attr_binary, attr_size);
-            *(int*)(*outbinary) = arrlen + 1;
-        }
-        return new_size;
-    }
-}
-
-static int
 document_put_internal(char *doc,
                       int size,
                       char *attr_path,
@@ -1692,6 +1585,7 @@ document_put_internal(char *doc,
         if (attr_exists && (type == ARRAY || type == DOCUMENT))
         {
             int start, end;
+            char *subpath;
 
             start = *(int*)(doc + (1 + natts + attr_pos) * sizeof(int));
             end = *(int*)(doc + (1 + natts + attr_pos + 1) * sizeof(int));
@@ -1699,31 +1593,18 @@ document_put_internal(char *doc,
 
             if (type == ARRAY)
             {
-                char *subpath;
-
-                if (path_arr_index_map[0] == false)
-                {
-                    elog(ERROR, "document_put: not array index invalid path - %s", attr_path);
-                }
-                subpath = strchr(attr_path, ']') + 1;
-                item_size = array_put_internal(doc + start,
-                                               old_item_size,
-                                               strtol(path[0], NULL, 10),
-                                               subpath,
-                                               attr_pg_type,
-                                               attr_binary,
-                                               attr_size,
-                                               &outitem);
+                elog(ERROR, "Do not support inserting into an array");
             }
             else if (type == DOCUMENT)
             {
-                if (path_arr_index_map[0] == true)
+                if (path_arr_index_map[1] == true)
                 {
                     elog(ERROR, "document_put: not document key invalid path - %s", attr_path);
                 }
+                subpath = strchr(attr_path, '.') + 1;
                 item_size = document_put_internal(doc + start,
                                                   old_item_size,
-                                                  attr_path + 1,
+                                                  subpath,
                                                   attr_pg_type,
                                                   attr_binary,
                                                   attr_size,
