@@ -15,6 +15,7 @@ typedef enum { STRING = 1,
 #define BOOLEAN_TYPE "boolean"
 #define DOCUMENT_TYPE "document"
 #define ARRAY_TYPE "[]" /* The only non-terminal type we have */
+#define NULL_TYPE "null"
 
 /* JSMN type conversion functions */
 json_typeid jsmn_primitive_get_type(char *value_str);
