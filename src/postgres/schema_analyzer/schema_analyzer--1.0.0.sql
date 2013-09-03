@@ -7,7 +7,12 @@
 -- Relies on document_type
 CREATE EXTENSION document_type;
 
-CREATE OR REPLACE FUNCTION schema_analyzer()
+CREATE OR REPLACE FUNCTION analyze_document()
+RETURNS trigger
+AS 'MODULE_PATHNAME'
+LANGUAGE C;
+
+CREATE OR REPLACE FUNCTION analyze_schema()
 RETURNS trigger
 AS 'MODULE_PATHNAME'
 LANGUAGE C;
