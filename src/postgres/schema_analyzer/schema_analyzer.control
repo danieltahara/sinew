@@ -1,0 +1,7 @@
+# Copyright Hadapt, Inc. 2013
+# All rights reserved.
+
+comment = 'analyzes presence and absence of json keys on insert/update/delete'
+default_version = '1.0.0'
+module_pathname = '$libdir/schema_analyzer'
+relocatable = true # Declares that extension may be used in any schema
