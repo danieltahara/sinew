@@ -1,7 +1,10 @@
 #include <postgres.h> /* This must precede all other includes */
-#include "executor/spi.h"       /* this is what you need to work with SPI */
-#include "commands/trigger.h"   /* ... and triggers */
-#include "utils/stringinfo.h"
+#include <executor/spi.h>       /* this is what you need to work with SPI */
+#include <commands/trigger.h>   /* ... and triggers */
+#include <lib/stringinfo.h>
+#include <utils/rel.h>
+
+#include <assert.h>
 
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
@@ -14,14 +17,15 @@ static void update_key_counts(char *relname, char *doc, bool increment);
 static void
 update_key_counts(char *relname, char *doc, bool increment)
 {
-    bool isnull;
     int ret;
     int i, num_keys;
     StringInfoData buf;
 
     initStringInfo(&buf);
 
-    num_keys = *((int*)doc);
+    elog(WARNING, "%d", num_keys);
+    num_keys = *(int*)doc;
+    elog(WARNING, "%d", num_keys);
 
     for (i = 0; i < num_keys; ++i)
     {
@@ -50,7 +54,7 @@ update_key_counts(char *relname, char *doc, bool increment)
                              id);
         }
 
-        ret = SPI_execute(buf, false, 0);
+        ret = SPI_execute(buf.data, false, 0);
         if (ret != SPI_OK_UPDATE)
         {
             elog(ERROR,
@@ -58,9 +62,11 @@ update_key_counts(char *relname, char *doc, bool increment)
                  "code %d",
                  ret);
         }
+        elog(WARNING, "attempted update");
 
         /* Try to insert if key is new */
         if (SPI_processed != 1) {
+            elog(WARNING, "update failed; trying insert");
             if (!increment)
             {
                 elog(ERROR,
@@ -71,10 +77,10 @@ update_key_counts(char *relname, char *doc, bool increment)
             resetStringInfo(&buf);
             appendStringInfo(&buf,
                              "INSERT INTO document_schema.%s (key_id, count, "
-                             "dirty) VALUES(%d, 1, 'true')",
+                             "dirty, upgraded) VALUES(%d, 1, 'true', 'false')",
                              relname,
                              id);
-            ret = SPI_execute(buf, false, 0);
+            ret = SPI_execute(buf.data, false, 0);
             if (ret != SPI_OK_INSERT || SPI_processed != 1)
             {
                 elog(ERROR,
@@ -82,10 +88,12 @@ update_key_counts(char *relname, char *doc, bool increment)
                      "error code %d",
                      ret);
             }
+            elog(WARNING, "finished insert");
         }
 
         resetStringInfo(&buf);
     }
+    elog(WARNING, "end of analyze_doc");
 }
 
 Datum analyze_document(PG_FUNCTION_ARGS);
@@ -106,6 +114,7 @@ analyze_document(PG_FUNCTION_ARGS)
     char *relname;
     bytea* datum;
     char *doc_old, *doc_new;
+    bool isnull;
 
     if (!CALLED_AS_TRIGGER(fcinfo))
     {
@@ -117,23 +126,40 @@ analyze_document(PG_FUNCTION_ARGS)
         elog(ERROR, "analyze_document: spi_connect failed");
     }
 
-    tupdesc = trigdata->tg_tupdesc;
-    datum = DatumGetPointer(SPI_getbinval(trigdata->tg_trigtuple,
-                                          tupdesc,
-                                          1,
-                                          &isnull));
-    doc_old = doc->vl_dat;
-    datum = DatumGetPointer(SPI_getbinval(trigdata->tg_newtuple,
-                                          tupdesc,
-                                          1,
-                                          &isnull));
-    doc_new = doc->vl_dat;
+    tupdesc = trigdata->tg_relation->rd_att;
+    if (TRIGGER_FIRED_BY_INSERT(trigdata->tg_event) ||
+        TRIGGER_FIRED_BY_UPDATE(trigdata->tg_event) ||
+        TRIGGER_FIRED_BY_DELETE(trigdata->tg_event))
+    {
+        int size;
+        datum = (bytea*)DatumGetPointer(SPI_getbinval(trigdata->tg_trigtuple,
+                                                      tupdesc,
+                                                      2,
+                                                      &isnull));
+        size = VARSIZE(datum);
+        elog(WARNING, "size: %d", size - VARHDRSZ);
+
+        assert(datum);
+        doc_old = datum->vl_dat;
+    }
+    if (TRIGGER_FIRED_BY_UPDATE(trigdata->tg_event))
+    {
+        datum = (bytea*)DatumGetPointer(SPI_getbinval(trigdata->tg_newtuple,
+                                                      tupdesc,
+                                                      2,
+                                                      &isnull));
+        assert(datum);
+        doc_new = datum->vl_dat;
+    }
+    elog(WARNING, "Got doc");
 
     rd_id = trigdata->tg_relation->rd_id;
     initStringInfo(&buf);
-    appendStringInfo("SELECT relname FROM pg_class where oid = %d", rd_id);
+    appendStringInfo(&buf,
+                     "SELECT relname FROM pg_class where oid = %d",
+                     rd_id);
 
-    ret = SPI_execute(buf, false, 0);
+    ret = SPI_execute(buf.data, false, 0);
     if (ret != SPI_OK_SELECT)
     {
         elog(ERROR, "analyze_document: SPI_execute failed (get relname): error code"
@@ -148,7 +174,7 @@ analyze_document(PG_FUNCTION_ARGS)
 
     if (TRIGGER_FIRED_BY_INSERT(trigdata->tg_event))
     {
-        update_key_counts(relname, doc_new, true);
+        update_key_counts(relname, doc_old, true);
         rettuple = trigdata->tg_newtuple;
     }
     else if (TRIGGER_FIRED_BY_UPDATE(trigdata->tg_event))
@@ -168,7 +194,7 @@ analyze_document(PG_FUNCTION_ARGS)
     }
 
     SPI_finish();
-    return rettuple;
+    return PointerGetDatum(rettuple);
 }
 
 /* TODO: trigger function for once/stmt evaluates the counts and updates
@@ -183,6 +209,7 @@ analyze_schema(PG_FUNCTION_ARGS)
     StringInfoData buf;
     int count;
     char *relname;
+    bool isnull;
 
     if (!CALLED_AS_TRIGGER(fcinfo))
     {
@@ -198,16 +225,15 @@ analyze_schema(PG_FUNCTION_ARGS)
 
     /* Get number of records in table */
     appendStringInfo(&buf, "SELECT n_live_tup FROM pg_stat_user_tables WHERE relid = %d", rd_id);
+    ret = SPI_execute(buf.data, true, 0);
     if (ret != SPI_OK_SELECT)
     {
         elog(ERROR, "analyze_document: SPI_execute failed (get record count): error code"
              " %d", ret);
     }
-
     if (SPI_processed != 1) {
         PG_RETURN_NULL();
     }
-
     count = DatumGetInt64(SPI_getbinval(SPI_tuptable->vals[0],
                                         SPI_tuptable->tupdesc,
                                         1,
@@ -215,9 +241,8 @@ analyze_schema(PG_FUNCTION_ARGS)
 
     /* Get relation name */
     resetStringInfo(&buf);
-    appendStringInfo("SELECT relname FROM pg_class where oid = %d", rd_id);
-
-    ret = SPI_execute(buf, true, 0);
+    appendStringInfo(&buf, "SELECT relname FROM pg_class where oid = %d", rd_id);
+    ret = SPI_execute(buf.data, true, 0);
     if (ret != SPI_OK_SELECT)
     {
         elog(ERROR, "analyze_document: SPI_execute failed (get relname): error code"
@@ -231,11 +256,12 @@ analyze_schema(PG_FUNCTION_ARGS)
     relname = SPI_getvalue(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1);
 
     resetStringInfo(&buf);
-    appendStringInfo("UPDATE document_schema.%s SET upgraded = 'true', "
+    appendStringInfo(&buf,
+                     "UPDATE document_schema.%s SET upgraded = 'true', "
                      "dirty = 'true' WHERE count >= %d AND upgraded = 'false'",
                      relname,
-                     count * THRESHOLD_FREQUENCY);
-    ret = SPI_execute(buf, false, 0);
+                     (int)(count * THRESHOLD_FREQUENCY));
+    ret = SPI_execute(buf.data, false, 0);
     if (ret != SPI_OK_UPDATE)
     {
         elog(ERROR, "analyze_document: SPI_execute failed (upgrade cols): error code"
@@ -243,11 +269,12 @@ analyze_schema(PG_FUNCTION_ARGS)
     }
 
     resetStringInfo(&buf);
-    appendStringInfo("UPDATE document_schema.%s SET upgraded = 'false', "
+    appendStringInfo(&buf,
+                     "UPDATE document_schema.%s SET upgraded = 'false', "
                      "dirty = 'true' WHERE count < %d AND upgraded = 'true'",
                      relname,
-                     count * THRESHOLD_FREQUENCY);
-    ret = SPI_execute(buf, false, 0);
+                     (int)(count * THRESHOLD_FREQUENCY));
+    ret = SPI_execute(buf.data, false, 0);
     if (ret != SPI_OK_UPDATE)
     {
         elog(ERROR, "analyze_document: SPI_execute failed (downgrade cols): error code"
