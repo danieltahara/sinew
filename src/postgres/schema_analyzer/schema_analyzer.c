@@ -23,7 +23,6 @@ update_key_counts(char *relname, char *doc, bool increment)
 
     initStringInfo(&buf);
 
-    elog(WARNING, "%d", num_keys);
     num_keys = *(int*)doc;
     elog(WARNING, "%d", num_keys);
 
@@ -222,9 +221,12 @@ analyze_schema(PG_FUNCTION_ARGS)
     }
 
     rd_id = trigdata->tg_relation->rd_id;
+    elog(WARNING, "got relation id: %d", rd_id);
 
     /* Get number of records in table */
+    initStringInfo(&buf);
     appendStringInfo(&buf, "SELECT n_live_tup FROM pg_stat_user_tables WHERE relid = %d", rd_id);
+    elog(WARNING, "%s", buf.data);
     ret = SPI_execute(buf.data, true, 0);
     if (ret != SPI_OK_SELECT)
     {
@@ -234,10 +236,12 @@ analyze_schema(PG_FUNCTION_ARGS)
     if (SPI_processed != 1) {
         PG_RETURN_NULL();
     }
+    elog(WARNING, "HELLO");
     count = DatumGetInt64(SPI_getbinval(SPI_tuptable->vals[0],
                                         SPI_tuptable->tupdesc,
                                         1,
                                         &isnull));
+    elog(WARNING, "found %d tuples", count);
 
     /* Get relation name */
     resetStringInfo(&buf);
@@ -248,12 +252,11 @@ analyze_schema(PG_FUNCTION_ARGS)
         elog(ERROR, "analyze_document: SPI_execute failed (get relname): error code"
              " %d", ret);
     }
-
     if (SPI_processed != 1) {
         PG_RETURN_NULL();
     }
-
     relname = SPI_getvalue(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1);
+    elog(WARNING, "got relname: %s", relname);
 
     resetStringInfo(&buf);
     appendStringInfo(&buf,
@@ -267,6 +270,7 @@ analyze_schema(PG_FUNCTION_ARGS)
         elog(ERROR, "analyze_document: SPI_execute failed (upgrade cols): error code"
              " %d", ret);
     }
+    elog(WARNING, "upgraded");
 
     resetStringInfo(&buf);
     appendStringInfo(&buf,
@@ -281,5 +285,13 @@ analyze_schema(PG_FUNCTION_ARGS)
              " %d", ret);
     }
 
-    PG_RETURN_NULL();
+    elog(WARNING, "downgraded");
+
+    SPI_finish();
+
+    /* NOTE: This is weird; intuitively, it should be PG_RETURN_NULL() but that
+     * was erroring out.
+     * http://www.postgresql.org/docs/9.1/static/trigger-definition.html
+     */
+    return NULL;
 }
