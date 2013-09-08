@@ -1,24 +1,6 @@
-/* -------------------------------------------------------------------------
- *
- * bw_colupgrader.c
- *		Sample background worker code that demonstrates various coding
- *		patterns: establishing a database connection; starting and committing
- *		transactions; using GUC variables, and heeding SIGHUP to reread
- *		the configuration file; reporting to pg_stat_activity; using the
- *		process latch to sleep and exit in case of postmaster death.
- *
- * This code connects to a database, creates a schema and table, and summarizes
- * the numbers contained therein.  To see it working, insert an initial value
- * with "total" type and some initial value; then insert some other rows with
- * "delta" type.  Delta rows will be deleted by this worker and their values
- * aggregated into the total.
- *
- * Copyright (C) 2013, PostgreSQL Global Development Group
- *
- * IDENTIFICATION
- *		contrib/bw_colupgrader/bw_colupgrader.c
- *
- * -------------------------------------------------------------------------
+/*
+ * TODO: insert PG copyright header
+ * Copyright Hadapt, Inc. 2013
  */
 #include <postgres.h> /* This must precede all other includes */
 
@@ -42,7 +24,9 @@
 
 PG_MODULE_MAGIC;
 
-void    _PG_init(void);
+void _PG_init(void);
+static bool upgrade_columns(char *tname);
+static bool downgrade_columns(char *tname);
 
 /* flags set by signal handlers */
 static volatile sig_atomic_t got_sighup = false;
@@ -57,8 +41,8 @@ static int	bw_colupgrader_total_workers = 1;
 
 /*
  * Signal handler for SIGTERM
- *		Set a flag to let the main loop to terminate, and set our latch to wake
- *		it up.
+ * Set a flag to let the main loop to terminate, and set our latch to wake
+ * it up.
  */
 static void
 bw_colupgrader_sigterm(SIGNAL_ARGS)
@@ -76,8 +60,8 @@ bw_colupgrader_sigterm(SIGNAL_ARGS)
 
 /*
  * Signal handler for SIGHUP
- *		Set a flag to let the main loop to reread the config file, and set
- *		our latch to wake it up.
+ * Set a flag to let the main loop to reread the config file, and set
+ * our latch to wake it up.
  */
 static void
 bw_colupgrader_sighup(SIGNAL_ARGS)
@@ -96,166 +80,405 @@ bw_colupgrader_sighup(SIGNAL_ARGS)
 static void
 initialize_bw_colupgrader()
 {
-	int	  ret;
-	int	  ntup;
-	bool  isnull;
-	StringInfoData buf;
+    int	  ret;
+    int	  ntup;
+    bool  isnull;
+    StringInfoData buf;
 
-	SetCurrentStatementStartTimestamp();
-	StartTransactionCommand();
-	SPI_connect();
-	PushActiveSnapshot(GetTransactionSnapshot());
-	pgstat_report_activity(STATE_RUNNING, "bw_colupgrader: initializing document schema");
+    SetCurrentStatementStartTimestamp();
+    StartTransactionCommand();
+    SPI_connect();
+    PushActiveSnapshot(GetTransactionSnapshot());
+    pgstat_report_activity(STATE_RUNNING, "bw_colupgrader: initializing document schema");
 
-	/* XXX could we use CREATE SCHEMA IF NOT EXISTS? */
-	initStringInfo(&buf);
-	appendStringInfo(&buf, "select count(*) from pg_namespace where nspname = 'document_schema'");
+    /* XXX could we use CREATE SCHEMA IF NOT EXISTS? */
+    initStringInfo(&buf);
+    appendStringInfo(&buf, "select count(*) from pg_namespace where nspname = 'document_schema'");
 
-	ret = SPI_execute(buf.data, true, 0);
-	if (ret != SPI_OK_SELECT)
-	{
-		elog(ERROR, "bw_colupgrader: SPI_execute failed: error code %d", ret);
-	}
-
-	if (SPI_processed != 1)
-	{
-		elog(ERROR, "bw_colupgrader: not a singleton result");
+    ret = SPI_execute(buf.data, true, 0);
+    if (ret != SPI_OK_SELECT)
+    {
+        elog(ERROR, "bw_colupgrader: SPI_execute failed: error code %d", ret);
     }
 
-	ntup = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[0],
-									   SPI_tuptable->tupdesc,
-									   1, &isnull));
-	if (isnull)
-	{
-		elog(ERROR, "bw_colupgrader: null result");
+    if (SPI_processed != 1)
+    {
+        elog(ERROR, "bw_colupgrader: not a singleton result");
     }
 
-	if (ntup == 0)
-	{
-		resetStringInfo(&buf);
-		appendStringInfo(&buf, "CREATE SCHEMA document_schema");
+    ntup = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[0],
+                       SPI_tuptable->tupdesc,
+                       1, &isnull));
+    if (isnull)
+    {
+        elog(ERROR, "bw_colupgrader: null result");
+    }
 
-		/* set statement start time */
-		SetCurrentStatementStartTimestamp();
+    if (ntup == 0)
+    {
+        resetStringInfo(&buf);
+        appendStringInfo(&buf, "CREATE SCHEMA document_schema");
 
-		ret = SPI_execute(buf.data, false, 0);
+        /* set statement start time */
+        SetCurrentStatementStartTimestamp();
 
-		if (ret != SPI_OK_UTILITY)
-		{
-			elog(FATAL, "bw_colupgrader: failed to create my schema");
+        ret = SPI_execute(buf.data, false, 0);
+
+        if (ret != SPI_OK_UTILITY)
+        {
+            elog(FATAL, "bw_colupgrader: failed to create my schema");
         }
 
-		resetStringInfo(&buf);
-		appendStringInfo(&buf, "CREATE TABLE document_schema._attributes(_id SERIAL, key_name TEXT, key_type TEXT");
+        resetStringInfo(&buf);
+        appendStringInfo(&buf, "CREATE TABLE document_schema._attributes(_id SERIAL, key_name TEXT, key_type TEXT");
 
-		ret = SPI_execute(buf.data, false, 0);
+        ret = SPI_execute(buf.data, false, 0);
 
-		if (ret != SPI_OK_UTILITY)
-		{
-			elog(FATAL, "bw_colupgrader: failed to create document_schema._attributes");
+        if (ret != SPI_OK_UTILITY)
+        {
+            elog(FATAL, "bw_colupgrader: failed to create document_schema._attributes");
+        }
     }
-	}
 
-	SPI_finish();
-	PopActiveSnapshot();
-	CommitTransactionCommand();
-	pgstat_report_activity(STATE_IDLE, NULL);
+    SPI_finish();
+    PopActiveSnapshot();
+    CommitTransactionCommand();
+    pgstat_report_activity(STATE_IDLE, NULL);
 }
 
+static bool
+upgrade_columns(char *tname)
+{
+    StringInfoData buf;
+
+    initStringInfo(&buf);
+
+    /* Retrieve document schema for table */
+    appendStringInfo(&buf,
+                     "SELECT key_id FROM %s.%s WHERE "
+                     "upgraded = true AND dirty = true",
+                     SCHEMA_NAME,
+                     tname);
+    ret = SPI_execute(buf.data, true, 0);
+    if (ret != SPI_OK_SELECT)
+    {
+        elog(ERROR, "bw_colupgrade: cannot get document schema for table '%s'", tname);
+    }
+    else /* Materialize a column */
+    {
+        char *key_name;
+        char *key_type;
+        char *udf_suffix;
+        int attr_id;
+        bool isnull;
+        int ntups;
+        int *attr_ids;
+        int j;
+        bool exists;
+
+        ntups = SPI_processed;
+        if (ntups == 0) /* Go until we find a table with a column to upgrade, or we run out of tables */
+        {
+            elog(DEBUG5, "bw_colupgrade: table '%s' has no upgradeable columns", tname);
+            return false;
+        }
+
+        attr_ids = palloc0(ntups * sizeof(int));
+        for (j = 0; j < ntups; j++)
+        {
+              attr_id[j] = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[j],
+                                                       SPI_tuptable->tupdesc,
+                                                       1,
+                                                       &isnull));
+              if (isnull)
+              {
+                  elog(WARNING, "bw_colupgrade: null result for attribute id");
+                  return false;
+              }
+        }
+
+        for (j = 0; j < ntups; j++)
+        {
+              resetStringInfo(&buf);
+              appendStringInfo(&buf,
+                               "SELECT key_name, key_type FROM document_schema._attributes WHERE"
+                               " _id = %d",
+                               attr_id);
+              ret = SPI_execute(buf.data, true, 0);
+              if (ret != SPI_OK_SELECT)
+              {
+                  elog(ERROR, "bw_colupgrade: cannot find attribute name for id %d", attr_id);
+              }
+              if (SPI_processed == 0) /* Go until we find a table with a column to upgrade, or we run out of tables */
+              {
+                  elog(ERROR, "bw_colupgrade: cannot find attribute name for id %d", attr_id);
+                  return false;
+              }
+
+              key_name = SPI_getvalue(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1);
+              key_type = SPI_getvalue(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 2);
+
+              /* See if column exists */
+              resetStringInfo(&buf);
+              appendStringInfo(&buf,
+                               "SELECT 1 FROM pg_attribute WHERE attrelid = '%s'::regclass "
+                               "AND attrname = %s AND NOT attisdropped",
+                               tname,
+                               key_name);
+              ret = SPI_execute(buf.data, true, 0);
+              if (ret != SPI_OK_SELECT)
+              {
+                  elog(ERROR, "bw_colupgrade: checking column existence failed")
+              }
+              /* Need to create column */
+              if (SPI_processed == 0)
+              {
+                  resetStringInfo(&buf);
+                  appendStringInfo(&buf,
+                                   "ALTER TABLE %s ADD COLUMN %s %s",
+                                   tname,
+                                   key_name,
+                                   key_type);
+                  ret = SPI_execute(buf.data, false, 0);
+                  if (ret != SPI_OK_UTILITY)
+                  {
+                      elog(ERROR, "bw_colupgrade: column creation for '%s.%s' failed", tname, key_name);
+                  }
+              }
+
+              resetStringInfo(&buf);
+              appendStringInfo(&buf,
+                               "UPDATE %s SET %s = document_get(json_data, '%s', '%s')",
+                               tname,
+                               key_name,
+                               key_name,
+                               key_type);
+              ret = SPI_execute(buf.data, false, 0);
+              if (ret != SPI_OK_UPDATE)
+              {
+                  elog(ERROR, "bw_colupgrade: column upgrade for '%s.%s' failed", tname, key_name);
+              }
+              /* Delete from doc column */
+              resetStringInfo(&buf);
+              appendStringInfo(&buf,
+                               "UPDATE %s SET json_data = document_delete(json_data, '%s', '%s')",
+                               tname,
+                               key_name,
+                               key_type);
+              ret = SPI_execute(buf.data, false, 0);
+              if (ret != SPI_OK_UPDATE)
+              {
+                  elog(ERROR, "bw_colupgrade: column upgrade for '%s.%s' failed", tname, key_name);
+              }
+
+              /* Set dirty = false */
+              resetStringInfo(&buf);
+              appendStringInfo(&buf,
+                               "UPDATE %s.%s SET dirty = false" 
+                               " WHERE _id = %d",
+                               SCHEMA_NAME,
+                               tname,
+                               attr_id);
+              ret = SPI_execute(buf.data, false, 0);
+              if (ret != SPI_OK_UPDATE || SPI_processed != 1)
+              {
+                  elog(ERROR, "bw_colupgrade: could not update schema properly");
+              }
+        }
+        pfree(attr_ids);
+        return true;
+    }
+}
+
+static bool
+downgrade_columns(char *tname)
+{
+    StringInfoData buf;
+
+    initStringInfo(&buf);
+
+    /* Retrieve document schema for table */
+    appendStringInfo(&buf,
+                     "SELECT key_id FROM %s.%s WHERE "
+                     "upgraded = true AND dirty = true",
+                     SCHEMA_NAME,
+                     tname);
+    ret = SPI_execute(buf.data, true, 0);
+    if (ret != SPI_OK_SELECT)
+    {
+        elog(ERROR, "bw_colupgrade: cannot get document schema for table '%s'", tname);
+    }
+    else /* Materialize a column */
+    {
+        char *key_name;
+        char *key_type;
+        char *udf_suffix;
+        int attr_id;
+        bool isnull;
+        int ntups;
+        int *attr_ids;
+        int j;
+        bool exists;
+
+        ntups = SPI_processed;
+        if (ntups == 0) /* Go until we find a table with a column to upgrade, or we run out of tables */
+        {
+            elog(DEBUG5, "bw_colupgrade: table '%s' has no upgradeable columns", tname);
+            return false;
+        }
+
+        attr_ids = palloc0(ntups * sizeof(int));
+        for (j = 0; j < ntups; j++)
+        {
+              attr_id[j] = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[j],
+                                                       SPI_tuptable->tupdesc,
+                                                       1,
+                                                       &isnull));
+              if (isnull)
+              {
+                  elog(WARNING, "bw_colupgrade: null result for attribute id");
+                  return false;
+              }
+        }
+
+        for (j = 0; j < ntups; j++)
+        {
+              resetStringInfo(&buf);
+              appendStringInfo(&buf,
+                               "SELECT key_name, key_type FROM document_schema._attributes WHERE"
+                               " _id = %d",
+                               attr_id);
+              ret = SPI_execute(buf.data, true, 0);
+              if (ret != SPI_OK_SELECT)
+              {
+                  elog(ERROR, "bw_colupgrade: cannot find attribute name for id %d", attr_id);
+              }
+              if (SPI_processed == 0) /* Go until we find a table with a column to upgrade, or we run out of tables */
+              {
+                  elog(ERROR, "bw_colupgrade: cannot find attribute name for id %d", attr_id);
+                  return false;
+              }
+
+              key_name = SPI_getvalue(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1);
+              key_type = SPI_getvalue(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 2);
+
+              /*
+               * NOTE: assume that if we have upgraded == FALSE && dirty, then
+               * the column exists. Otherwise, we have bigger problems than
+               * this module
+               */
+              /* Add to doc column */
+              resetStringInfo(&buf);
+              appendStringInfo(&buf,
+                               "UPDATE %s SET json_data = document_put(json_data, '%s', '%s', %s)",
+                               tname,
+                               key_name,
+                               key_type,
+                               key_name);
+              ret = SPI_execute(buf.data, false, 0);
+              if (ret != SPI_OK_UPDATE)
+              {
+                  elog(ERROR, "bw_colupgrade: column upgrade for '%s.%s' failed", tname, key_name);
+              }
+
+              /* Delete current column */
+              resetStringInfo(&buf);
+              appendStringInfo(&buf,
+                               "ALTER TABLE %s DROP COLUMN %s",
+                               tname,
+                               key_name);
+              ret = SPI_execute(buf.data, false, 0);
+              if (ret != SPI_OK_UTILITY)
+              {
+                  elog(ERROR, "bw_colupgrade: column deletion for '%s.%s' failed", tname, key_name);
+              }
+
+              /* Set dirty = false */
+              resetStringInfo(&buf);
+              appendStringInfo(&buf,
+                               "UPDATE %s.%s SET dirty = false" 
+                               " WHERE _id = %d",
+                               SCHEMA_NAME,
+                               tname,
+                               attr_id);
+              ret = SPI_execute(buf.data, false, 0);
+              if (ret != SPI_OK_UPDATE || SPI_processed != 1)
+              {
+                  elog(ERROR, "bw_colupgrade: could not update schema properly");
+              }
+        }
+        pfree(attr_ids);
+        return true;
+    }
+}
 void
 bw_colupgrader_main(void *main_arg)
 {
-	StringInfoData buf;
+    StringInfoData buf;
 
-	/* We're now ready to receive signals */
-	BackgroundWorkerUnblockSignals();
+    /* We're now ready to receive signals */
+    BackgroundWorkerUnblockSignals();
 
-	/* Connect to our database */
-	BackgroundWorkerInitializeConnection("test", "postgres");
+    /* Connect to our database */
+    BackgroundWorkerInitializeConnection("test", "postgres");
 
-	initialize_bw_colupgrader();
+    initialize_bw_colupgrader();
 
-	/*
-	 * Main loop: do this until the SIGTERM handler tells us to terminate
-	 */
-	while (!got_sigterm)
-	{
-		int	ret;
-		int	rc;
+    while (!got_sigterm)
+    {
+        int	ret;
+        int	rc;
         int num_tables;
 
-		/*
-		 * Background workers mustn't call usleep() or any direct equivalent:
-		 * instead, they may wait on their process latch, which sleeps as
-		 * necessary, but is awakened if postmaster dies.  That way the
-		 * background process goes away immediately in an emergency.
-		 */
-		rc = WaitLatch(&MyProc->procLatch,
-					   WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-					   bw_colupgrader_naptime * 1000L);
-		ResetLatch(&MyProc->procLatch);
+        rc = WaitLatch(&MyProc->procLatch,
+                       WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
+                       bw_colupgrader_naptime * 1000L);
+        ResetLatch(&MyProc->procLatch);
 
-		/* emergency bailout if postmaster has died */
-		if (rc & WL_POSTMASTER_DEATH)
+        /* emergency bailout if postmaster has died */
+        if (rc & WL_POSTMASTER_DEATH)
         {
             proc_exit(1);
         }
 
-		/*
-		 * In case of a SIGHUP, just reload the configuration.
-		 */
-		if (got_sighup)
-		{
+        if (got_sighup)
+        {
             got_sighup = false;
             ProcessConfigFile(PGC_SIGHUP);
-		}
+        }
 
-		/*
-		 * Start a transaction on which we can run queries.  Note that each
-		 * StartTransactionCommand() call should be preceded by a
-		 * SetCurrentStatementStartTimestamp() call, which sets both the time
-		 * for the statement we're about the run, and also the transaction
-		 * start time.	Also, each other query sent to SPI should probably be
-		 * preceded by SetCurrentStatementStartTimestamp(), so that statement
-		 * start time is always up to date.
-		 *
-		 * The SPI_connect() call lets us run queries through the SPI manager,
-		 * and the PushActiveSnapshot() call creates an "active" snapshot
-		 * which is necessary for queries to have MVCC data to work on.
-		 *
-		 * The pgstat_report_activity() call makes our activity visible
-		 * through the pgstat views.
-		 */
-		SetCurrentStatementStartTimestamp();
-		StartTransactionCommand();
-		SPI_connect();
-		PushActiveSnapshot(GetTransactionSnapshot());
-		pgstat_report_activity(STATE_RUNNING, buf.data);
+        SetCurrentStatementStartTimestamp();
+        StartTransactionCommand();
+        SPI_connect();
+        PushActiveSnapshot(GetTransactionSnapshot());
+        pgstat_report_activity(STATE_RUNNING, buf.data);
 
         initStringInfo(&buf);
         appendStringInfo(&buf, "SELECT tablename FROM pg_tables WHERE schemaname='%s'", SCHEMA_NAME);
 
-		/* We can now execute queries via SPI */
-		ret = SPI_execute(buf.data, true, 0);
+        /* We can now execute queries via SPI */
+        ret = SPI_execute(buf.data, true, 0);
 
-		if (ret != SPI_OK_SELECT)
-		{
+        if (ret != SPI_OK_SELECT)
+        {
             elog(ERROR, "bw_colupgrade: cannot get table names in schema '%s'", SCHEMA_NAME);
-    }
+        }
 
-    num_tables = SPI_processed;
-		if (num_tables > 0)
+        num_tables = SPI_processed;
+        if (num_tables > 0)
         {
             int     i;
             char  **tnames;
 
             tnames = palloc0(num_tables * sizeof(char*));
-            for (i = 0; i < num_tables; i++) {
+            for (i = 0; i < num_tables; i++)
+            {
                 tnames[i] = SPI_getvalue(SPI_tuptable->vals[i], SPI_tuptable->tupdesc, 1);
             }
 
             /* Need to do this separately so as not to overwrite the global SPI_tuptable */
-            for (i = 0; i < num_tables; i++) {
+            for (i = 0; i < num_tables; i++)
+            {
                 char *tname;
                 // FIXME: always ask for a lock on this table; if can't acquire, sleep
 
@@ -266,124 +489,23 @@ bw_colupgrader_main(void *main_arg)
                     continue;
                 }
 
-                /* Retrieve document schema for table */
-                appendStringInfo(&buf,
-                                 "SELECT _id FROM %s.%s WHERE "
-                                 "upgraded = true AND dirty = true",
-                                 SCHEMA_NAME,
-                                 tname);
-                ret = SPI_execute(buf.data, true, 0);
-                if (ret != SPI_OK_SELECT)
+                if (upgradeColumns(tname) || downgradeColumns(tname))
                 {
-                    elog(ERROR, "bw_colupgrade: cannot get document schema for table '%s'", tname);
-                }
-                else /* Materialize a column */
-                {
-                    char *key_name;
-                    char *key_type;
-                    char *udf_suffix;
-                    int attr_id;
-                    bool isnull;
-                    int ntups;
-                    int *attr_ids;
-                    int j;
-
-                    ntups = SPI_processed;
-                    if (ntups == 0) /* Go until we find a table with a column to upgrade, or we run out of tables */
-                    {
-                        elog(DEBUG5, "bw_colupgrade: table '%s' has no upgradeable columns", tname);
-                        continue;
-                    }
-
-                    attr_ids = palloc0(ntups * sizeof(int));
-                    for (j = 0; j < ntups; j++)
-                    {
-                          attr_id[j] = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[j],
-                                                                   SPI_tuptable->tupdesc,
-                                                                   1,
-                                                                   &isnull));
-                          if (isnull)
-                          {
-                              elog(WARNING, "bw_colupgrade: null result for attribute id");
-                              continue;
-                          }
-                    }
-
-                    for (j = 0; j < ntups; j++)
-                    {
-                          resetStringInfo(&buf);
-                          appendStringInfo(&buf,
-                                           "SELECT key_name, key_type FROM document_schema._attributes WHERE"
-                                           " _id = %d",
-                                           attr_id);
-                          ret = SPI_execute(buf.data, true, 0);
-                          if (ret != SPI_OK_SELECT)
-                          {
-                              elog(ERROR, "bw_colupgrade: cannot find attribute name for id %d", attr_id);
-                          }
-                          if (SPI_processed == 0) /* Go until we find a table with a column to upgrade, or we run out of tables */
-                          {
-                              elog(ERROR, "bw_colupgrade: cannot find attribute name for id %d", attr_id);
-                              continue;
-                          }
-
-                          key_name = SPI_getvalue(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1);
-                          key_type = SPI_getvalue(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 2);
-                          resetStringInfo(&buf);
-                          appendStringInfo(&buf,
-                                           "UPDATE %s SET %s = document_get(json_data, '%s', '%s')",
-                                           tname,
-                                           key_name,
-                                           key_name,
-                                           key_type);
-                          ret = SPI_execute(buf.data, false, 0);
-                          if (ret != SPI_OK_UPDATE)
-                          {
-                              elog(ERROR, "bw_colupgrade: column upgrade for '%s.%s' failed", tname, key_name);
-                          }
-                          /* Delete from doc column */
-                          resetStringInfo(&buf);
-                          appendStringInfo(&buf,
-                                           "UPDATE %s SET json_data = document_delete(json_data, '%s', '%s')",
-                                           tname,
-                                           key_name,
-                                           key_type);
-                          ret = SPI_execute(buf.data, false, 0);
-                          if (ret != SPI_OK_UPDATE)
-                          {
-                              elog(ERROR, "bw_colupgrade: column upgrade for '%s.%s' failed", tname, key_name);
-                          }
-
-                          /* Set dirty = false */
-                          resetStringInfo(&buf);
-                          appendStringInfo(&buf,
-                                           "UPDATE %s.%s SET dirty = false" 
-                                           " WHERE _id = %d",
-                                           SCHEMA_NAME,
-                                           tname,
-                                           attr_id);
-                          ret = SPI_execute(buf.data, false, 0);
-                          if (ret != SPI_OK_UPDATE || SPI_processed != 1)
-                          {
-                              elog(ERROR, "bw_colupgrade: could not update schema properly");
-                          }
-                    }
-                    pfree(attr_ids);
                     break;
                 }
             }
         }
 
-		/*
-		 * And finish our transaction.
-		 */
-		SPI_finish();
-		PopActiveSnapshot();
-		CommitTransactionCommand();
-		pgstat_report_activity(STATE_IDLE, NULL);
-	}
+        /*
+         * And finish our transaction.
+         */
+        SPI_finish();
+        PopActiveSnapshot();
+        CommitTransactionCommand();
+        pgstat_report_activity(STATE_IDLE, NULL);
+    }
 
-	proc_exit(0);
+    proc_exit(0);
 }
 
 /*
