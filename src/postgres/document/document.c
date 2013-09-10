@@ -253,7 +253,7 @@ json_to_document(char *json, document *doc)
             doc->keys[natts] = keyname;
             doc->types[natts] = type;
             doc->values[natts] = value;
-            elog(WARNING, "%s, %d, %s", keyname, type, value);
+            // elog(WARNING, "%s, %d, %s", keyname, type, value);
 
             ++natts;
             if (natts > capacity) {
@@ -288,7 +288,7 @@ array_to_binary(char *json_arr, char **outbuff_ref)
     outbuff = *outbuff_ref;
 
     arrlen = tokens->size;
-    elog(WARNING, "arr size: %d", arrlen);
+    // elog(WARNING, "arr size: %d", arrlen);
     arrtype = jsmn_get_type(tokens + 1, json_arr);
 
     data_size = 2 * arrlen * sizeof(int) + 1024;
@@ -308,7 +308,7 @@ array_to_binary(char *json_arr, char **outbuff_ref)
 
         if (jsmn_get_type(curtok, json_arr) != arrtype)
         {
-            elog(WARNING, "document: inhomogenous types in JSMN_ARRAY: %s", json_arr);
+            // elog(WARNING, "document: inhomogenous types in JSMN_ARRAY: %s", json_arr);
             pfree(outbuff);
             outbuff = NULL;
             return 0;
@@ -445,7 +445,7 @@ to_binary(json_typeid typeid, char *value, char **outbuff_ref)
     case STRING:
         outbuff = pstrndup(value, strlen(value));
         *outbuff_ref = outbuff;
-        elog(WARNING, "%s", outbuff);
+        // elog(WARNING, "%s", outbuff);
         return strlen(value);
     case INTEGER:
         /* NOTE: I don't think that throwing everything into a char* matters,
@@ -454,7 +454,7 @@ to_binary(json_typeid typeid, char *value, char **outbuff_ref)
         outbuff = palloc0(sizeof(int));
         *((int*)outbuff) = atoi(value);
         *outbuff_ref = outbuff;
-        elog(WARNING, "%d", *outbuff);
+        // elog(WARNING, "%d", *outbuff);
         return sizeof(int);
     case FLOAT:
         outbuff = palloc0(sizeof(double));
@@ -521,7 +521,7 @@ binary_to_document(char *binary, document *doc)
     assert(binary);
 
     memcpy(&natts, binary, sizeof(int));
-    elog(WARNING, "Natts: %d", natts);
+    // elog(WARNING, "Natts: %d", natts);
     buffpos = sizeof(int);
 
     keys = palloc0(natts * sizeof(char*));
@@ -535,7 +535,7 @@ binary_to_document(char *binary, document *doc)
 
         memcpy(&id, binary + buffpos, sizeof(int));
         get_attribute(id, &key_string, &type_string);
-        elog(WARNING, "Got attribute info for: %d: %s, %s", id, key_string, type_string);
+        // elog(WARNING, "Got attribute info for: %d: %s, %s", id, key_string, type_string);
 
         keys[i] = pstrndup(key_string, strlen(key_string));
         types[i] = get_json_type(type_string);
@@ -558,13 +558,13 @@ binary_to_document(char *binary, document *doc)
 
         value_data = palloc0(end - start);
         memcpy(value_data, binary + start, end - start);
-        elog(WARNING, "converting value to binary");
-        elog(WARNING, "start: %d, end: %d", start, end);
-        elog(WARNING, "types[i]: %d", types[i]);
+        // elog(WARNING, "converting value to binary");
+        // elog(WARNING, "start: %d, end: %d", start, end);
+        // elog(WARNING, "types[i]: %d", types[i]);
         values[i] = binary_to_string(types[i], value_data, end - start);
-        elog(WARNING, "key: %s", keys[i]);
-        elog(WARNING, "type: %d", types[i]);
-        elog(WARNING, "value: %s", values[i]);
+        // elog(WARNING, "key: %s", keys[i]);
+        // elog(WARNING, "type: %d", types[i]);
+        // elog(WARNING, "value: %s", values[i]);
 
         pfree(value_data);
 
@@ -589,7 +589,7 @@ binary_document_to_string(char *binary)
     int i; /* Loop variable */
 
     binary_to_document(binary, &doc);
-    elog(WARNING, "converted  doc");
+    // elog(WARNING, "converted  doc");
     natts = doc.natts;
 
     result_size = 3; /* {\n} */
@@ -636,11 +636,11 @@ binary_array_to_string(char *binary)
 
     assert(binary);
 
-    elog(WARNING, "in binary array to string");
+    // elog(WARNING, "in binary array to string");
     memcpy(&natts, binary, sizeof(int));
-    elog(WARNING, "natts: %d", natts);
+    // elog(WARNING, "natts: %d", natts);
     memcpy(&type, binary + sizeof(int), sizeof(int));
-    elog(WARNING, "type: %d", type);
+    // elog(WARNING, "type: %d", type);
     buffpos = 2 * sizeof(int);
 
     result_size = 2; /* '[]' */
@@ -648,7 +648,7 @@ binary_array_to_string(char *binary)
     result = palloc0(result_maxsize + 1);
     strcat(result, "[");
 
-    elog(WARNING, "converting binary array to str with natts:%d", natts);
+    // elog(WARNING, "converting binary array to str with natts:%d", natts);
     for (i = 0; i < natts; i++) {
         int elt_size;
         char *elt;
@@ -690,10 +690,10 @@ binary_to_string(json_typeid type, char *binary, int datum_len)
 
     assert(binary);
 
-    elog(WARNING, "in binary to string");
-    elog(WARNING, "type: %d", type);
-    elog(WARNING, "len: %d", datum_len);
-    elog(WARNING, "prod = %d", datum_len * 8 + 2 + 1);
+    // elog(WARNING, "in binary to string");
+    // elog(WARNING, "type: %d", type);
+    // elog(WARNING, "len: %d", datum_len);
+    // elog(WARNING, "prod = %d", datum_len * 8 + 2 + 1);
     result = palloc0(datum_len * 8 + 2 + 1); /* Guaranteed to be enough base 10 */
 
     switch (type)
@@ -810,7 +810,7 @@ make_datum(char *attr_data, int len, json_typeid type, bool *is_null)
     char *s;
     text *t;
 
-    elog(WARNING, "in make datum");
+    // elog(WARNING, "in make datum");
 
     switch (type)
     {
@@ -871,9 +871,9 @@ array_get_internal(const char *arr,
     memcpy(&arrlen, arr, sizeof(int));
     memcpy(&type, arr + sizeof(int), sizeof(int)); /* NOTE: technically, the method will never be called with a type mismatch */
 
-    elog(WARNING, "In array get internal");
-    elog(WARNING, "index: %d", index);
-    elog(WARNING, "type: %d", type);
+    // elog(WARNING, "In array get internal");
+    // elog(WARNING, "index: %d", index);
+    // elog(WARNING, "type: %d", type);
     if (index >= arrlen)
     {
         *is_null = true;
@@ -896,7 +896,7 @@ array_get_internal(const char *arr,
 
     if (strlen(attr_path) == 0)
     {
-        elog(WARNING, "extracting array element");
+        // elog(WARNING, "extracting array element");
         return make_datum(attr_data, itemlen, type, is_null);
     }
     else /* That means we need to keep traversing path */
@@ -906,7 +906,7 @@ array_get_internal(const char *arr,
         int path_depth;
         char *subpath;
 
-        elog(WARNING, "attr_path: %s", attr_path);
+        // elog(WARNING, "attr_path: %s", attr_path);
         if (type != DOCUMENT && type != ARRAY)
         {
             *is_null = true;
@@ -933,7 +933,7 @@ array_get_internal(const char *arr,
                 elog(ERROR, "document_get: not array index invalid path - %s", attr_path);
             }
             subpath = strchr(attr_path, ']') + 1;
-            elog(WARNING, "subpath in arr: %s", subpath);
+            // elog(WARNING, "subpath in arr: %s", subpath);
             return array_get_internal(attr_data,
                                       strtol(path[0], NULL, 10),
                                       subpath,
@@ -958,9 +958,9 @@ document_get_internal(const char *doc,
     char *path_arr_index_map;
     int path_depth;
 
-    elog(WARNING, "%s", attr_path);
+    // elog(WARNING, "%s", attr_path);
     path_depth = parse_attr_path(attr_path, &path, &path_arr_index_map);
-    elog(WARNING, "parsed attr_path");
+    // elog(WARNING, "parsed attr_path");
     /* NOTE: Technically, I just want the first part; I don't need to parse
        the whole thing */
 
@@ -970,8 +970,8 @@ document_get_internal(const char *doc,
         return (Datum)0;
     }
 
-    elog(WARNING, "attr name: %s", path[0]);
-    elog(WARNING, "path depth: %d", path_depth);
+    // elog(WARNING, "attr name: %s", path[0]);
+    // elog(WARNING, "path depth: %d", path_depth);
     if (path_depth > 1)
     {
         const char *pg_type;
@@ -997,9 +997,9 @@ document_get_internal(const char *doc,
                            natts,
                            sizeof(int),
                            int_comparator);
-    elog(WARNING, "found listing");
-    elog(WARNING, "attr id %d", attr_id);
-    elog(WARNING, "natts %d", natts);
+    // elog(WARNING, "found listing");
+    // elog(WARNING, "attr id %d", attr_id);
+    // elog(WARNING, "natts %d", natts);
 
     if (attr_listing) /* TODO: separate attr_listing == NULL */
     {
@@ -1042,7 +1042,7 @@ document_get_internal(const char *doc,
                     elog(ERROR, "document_get: invalid path - %s", attr_path);
                 }
                 subpath = strchr(attr_path, ']') + 1;
-                elog(WARNING, "subpath: %s", subpath);
+                // elog(WARNING, "subpath: %s", subpath);
                 /* NOTE: Might be memory issues with very deep nesting */
                 return array_get_internal(attr_data,
                                           strtol(path[1], NULL, 10),
@@ -1058,7 +1058,7 @@ document_get_internal(const char *doc,
         }
         else
         {
-            elog(WARNING, "Got to make datum");
+            // elog(WARNING, "Got to make datum");
             return make_datum(attr_data, len, type, is_null);
         }
     }
@@ -1083,7 +1083,7 @@ document_get(PG_FUNCTION_ARGS)
                                    attr_path,
                                    attr_pg_type,
                                    &is_null);
-    elog(WARNING, "got retval");
+    // elog(WARNING, "got retval");
     if (is_null)
     {
         PG_RETURN_NULL();
@@ -1261,7 +1261,7 @@ document_delete(PG_FUNCTION_ARGS)
     data = datum->vl_dat;
     size = VARSIZE(datum) - VARHDRSZ;
 
-    elog(WARNING, "before delete");
+    // elog(WARNING, "before delete");
     outsize = document_put_internal(data,
                                     size,
                                     attr_path,
@@ -1269,7 +1269,7 @@ document_delete(PG_FUNCTION_ARGS)
                                     NULL,
                                     0,
                                     &outbinary);
-    elog(WARNING, "after delete");
+    // elog(WARNING, "after delete");
     if (outsize < 0)
     {
         PG_RETURN_POINTER(datum);
@@ -1304,9 +1304,9 @@ document_put_internal(char *doc,
     json_typeid type;
     int buffpos, outbuffpos;
 
-    elog(WARNING, "%s", attr_path);
+    // elog(WARNING, "%s", attr_path);
     path_depth = parse_attr_path(attr_path, &path, &path_arr_index_map);
-    elog(WARNING, "parsed attr_path");
+    // elog(WARNING, "parsed attr_path");
     if (path_depth == 0)
     {
         return -1;
@@ -1360,8 +1360,8 @@ document_put_internal(char *doc,
         }
     }
     attr_pos = i;
-    elog(WARNING, "attr pos: %d", attr_pos);
-    elog(WARNING, "attr exists?: %d", attr_exists);
+    // elog(WARNING, "attr pos: %d", attr_pos);
+    // elog(WARNING, "attr exists?: %d", attr_exists);
 
     /* Check for deletion */
     if (!attr_exists && !attr_binary)
@@ -1437,9 +1437,9 @@ document_put_internal(char *doc,
     {
         new_size += item_size + 2 * sizeof(int);
     }
-    elog(WARNING, "size: %d", size);
-    elog(WARNING, "item_size: %d", item_size);
-    elog(WARNING, "old_item_size: %d", old_item_size);
+    // elog(WARNING, "size: %d", size);
+    // elog(WARNING, "item_size: %d", item_size);
+    // elog(WARNING, "old_item_size: %d", old_item_size);
     new_natts = natts + 1;
     if (attr_exists)
     {
@@ -1447,7 +1447,7 @@ document_put_internal(char *doc,
         new_size -= 2 * sizeof(int);
         --new_natts;
     }
-    elog(WARNING, "new size: %d", new_size);
+    // elog(WARNING, "new size: %d", new_size);
     *outbinary = palloc0(new_size);
     *(int*)(*outbinary) = new_natts - !(outitem);
     buffpos = sizeof(int);
@@ -1501,7 +1501,7 @@ document_put_internal(char *doc,
 
         if (outitem || i != attr_pos)
         {
-            elog(WARNING, "start: %d", start);
+            // elog(WARNING, "start: %d", start);
             memcpy(*outbinary + outbuffpos, &start, sizeof(int));
             outbuffpos += sizeof(int);
         }
@@ -1528,7 +1528,7 @@ document_put_internal(char *doc,
         }
     }
     memcpy(*outbinary + outbuffpos, &new_size, sizeof(int));
-    elog(WARNING, "size: %d", new_size);
+    // elog(WARNING, "size: %d", new_size);
     return new_size;
 }
 
@@ -1553,7 +1553,7 @@ document_put(PG_FUNCTION_ARGS)
     size = VARSIZE(datum) - VARHDRSZ;
 
     type = get_json_type(attr_pg_type);
-    elog(WARNING, "json type: %d", type);
+    // elog(WARNING, "json type: %d", type);
     attr_size = to_binary(type, attr_value, &attr_binary);
     if (attr_size < 0)
     {

@@ -22,12 +22,12 @@ json_typeid
 jsmn_primitive_get_type(char *value_str)
 {
     char *ptr;
-    elog(WARNING, "value_str: %s", value_str);
+    // elog(WARNING, "value_str: %s", value_str);
     switch(value_str[0]) {
     case 't': case 'f':
         return BOOLEAN;
     case 'n':
-        elog(WARNING, "returned NONE TYPE");
+        // elog(WARNING, "returned NONE TYPE");
         return NONE;
     case '-':
     case '0': case '1': case '2': case '3': case '4':
@@ -185,7 +185,7 @@ get_pg_type_for_path(char **path,
             buffer = palloc0(strlen(array_pg_type) + 2 + 1);
             sprintf(buffer, "%s%s", array_pg_type, ARRAY_TYPE);
 
-            elog(WARNING, "type: %s", buffer);
+            // elog(WARNING, "type: %s", buffer);
             return buffer;
         }
         else

@@ -24,7 +24,7 @@ update_key_counts(char *relname, char *doc, bool increment)
     initStringInfo(&buf);
 
     num_keys = *(int*)doc;
-    elog(WARNING, "%d", num_keys);
+    // elog(WARNING, "%d", num_keys);
 
     for (i = 0; i < num_keys; ++i)
     {
@@ -61,11 +61,11 @@ update_key_counts(char *relname, char *doc, bool increment)
                  "code %d",
                  ret);
         }
-        elog(WARNING, "attempted update");
+        // elog(WARNING, "attempted update");
 
         /* Try to insert if key is new */
         if (SPI_processed != 1) {
-            elog(WARNING, "update failed; trying insert");
+            // elog(WARNING, "update failed; trying insert");
             if (!increment)
             {
                 elog(ERROR,
@@ -87,12 +87,12 @@ update_key_counts(char *relname, char *doc, bool increment)
                      "error code %d",
                      ret);
             }
-            elog(WARNING, "finished insert");
+            // elog(WARNING, "finished insert");
         }
 
         resetStringInfo(&buf);
     }
-    elog(WARNING, "end of analyze_doc");
+    // elog(WARNING, "end of analyze_doc");
 }
 
 Datum analyze_document(PG_FUNCTION_ARGS);
@@ -136,7 +136,7 @@ analyze_document(PG_FUNCTION_ARGS)
                                                       2,
                                                       &isnull));
         size = VARSIZE(datum);
-        elog(WARNING, "size: %d", size - VARHDRSZ);
+        // elog(WARNING, "size: %d", size - VARHDRSZ);
 
         assert(datum);
         doc_old = datum->vl_dat;
@@ -150,7 +150,7 @@ analyze_document(PG_FUNCTION_ARGS)
         assert(datum);
         doc_new = datum->vl_dat;
     }
-    elog(WARNING, "Got doc");
+    // elog(WARNING, "Got doc");
 
     rd_id = trigdata->tg_relation->rd_id;
     initStringInfo(&buf);
@@ -221,12 +221,12 @@ analyze_schema(PG_FUNCTION_ARGS)
     }
 
     rd_id = trigdata->tg_relation->rd_id;
-    elog(WARNING, "got relation id: %d", rd_id);
+    // elog(WARNING, "got relation id: %d", rd_id);
 
     /* Get number of records in table */
     initStringInfo(&buf);
     appendStringInfo(&buf, "SELECT n_live_tup FROM pg_stat_user_tables WHERE relid = %d", rd_id);
-    elog(WARNING, "%s", buf.data);
+    // elog(WARNING, "%s", buf.data);
     ret = SPI_execute(buf.data, true, 0);
     if (ret != SPI_OK_SELECT)
     {
@@ -236,12 +236,12 @@ analyze_schema(PG_FUNCTION_ARGS)
     if (SPI_processed != 1) {
         PG_RETURN_NULL();
     }
-    elog(WARNING, "HELLO");
+    // elog(WARNING, "HELLO");
     count = DatumGetInt64(SPI_getbinval(SPI_tuptable->vals[0],
                                         SPI_tuptable->tupdesc,
                                         1,
                                         &isnull));
-    elog(WARNING, "found %d tuples", count);
+    // elog(WARNING, "found %d tuples", count);
 
     /* Get relation name */
     resetStringInfo(&buf);
@@ -256,7 +256,7 @@ analyze_schema(PG_FUNCTION_ARGS)
         PG_RETURN_NULL();
     }
     relname = SPI_getvalue(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1);
-    elog(WARNING, "got relname: %s", relname);
+    // elog(WARNING, "got relname: %s", relname);
 
     resetStringInfo(&buf);
     appendStringInfo(&buf,
@@ -270,7 +270,7 @@ analyze_schema(PG_FUNCTION_ARGS)
         elog(ERROR, "analyze_document: SPI_execute failed (upgrade cols): error code"
              " %d", ret);
     }
-    elog(WARNING, "upgraded");
+    // elog(WARNING, "upgraded");
 
     resetStringInfo(&buf);
     appendStringInfo(&buf,
@@ -285,7 +285,7 @@ analyze_schema(PG_FUNCTION_ARGS)
              " %d", ret);
     }
 
-    elog(WARNING, "downgraded");
+    // elog(WARNING, "downgraded");
 
     SPI_finish();
 
