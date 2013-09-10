@@ -1,0 +1,3 @@
+\timing
+
+SELECT document_get_text(data, 'user.id_str') FROM test;

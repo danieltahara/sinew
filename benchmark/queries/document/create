@@ -1,0 +1,4 @@
+CREATE EXTENSION document;
+
+CREATE TABLE test(id serial, data document);
+-- SELECT configure_as_document_store('test');

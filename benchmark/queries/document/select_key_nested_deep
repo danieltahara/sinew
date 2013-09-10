@@ -1,0 +1,3 @@
+\timing
+
+SELECT document_get_text(data, 'entities.user_mentions[0].screen_name') FROM test;

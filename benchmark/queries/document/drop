@@ -1,0 +1,3 @@
+DELETE EXTENSION document_type;
+
+DROP TABLE test;

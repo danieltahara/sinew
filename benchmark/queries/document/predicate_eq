@@ -1,0 +1,3 @@
+\timing
+
+SELECT id FROM test where document_get_bool(data, 'retweeted') = true;
