@@ -214,6 +214,7 @@ json_to_document(char *json, document *doc)
             if (type == NONE) /* Implicit convention: explicit 'nulls' do not
                                  exist; i.e. don't include the key */
             {
+                state = KEY;
                 break;
             }
 
@@ -287,6 +288,7 @@ array_to_binary(char *json_arr, char **outbuff_ref)
     outbuff = *outbuff_ref;
 
     arrlen = tokens->size;
+    elog(WARNING, "arr size: %d", arrlen);
     arrtype = jsmn_get_type(tokens + 1, json_arr);
 
     data_size = 2 * arrlen * sizeof(int) + 1024;
@@ -557,6 +559,8 @@ binary_to_document(char *binary, document *doc)
         value_data = palloc0(end - start);
         memcpy(value_data, binary + start, end - start);
         elog(WARNING, "converting value to binary");
+        elog(WARNING, "start: %d, end: %d", start, end);
+        elog(WARNING, "types[i]: %d", types[i]);
         values[i] = binary_to_string(types[i], value_data, end - start);
         elog(WARNING, "key: %s", keys[i]);
         elog(WARNING, "type: %d", types[i]);
@@ -585,6 +589,7 @@ binary_document_to_string(char *binary)
     int i; /* Loop variable */
 
     binary_to_document(binary, &doc);
+    elog(WARNING, "converted  doc");
     natts = doc.natts;
 
     result_size = 3; /* {\n} */
@@ -631,8 +636,11 @@ binary_array_to_string(char *binary)
 
     assert(binary);
 
+    elog(WARNING, "in binary array to string");
     memcpy(&natts, binary, sizeof(int));
+    elog(WARNING, "natts: %d", natts);
     memcpy(&type, binary + sizeof(int), sizeof(int));
+    elog(WARNING, "type: %d", type);
     buffpos = 2 * sizeof(int);
 
     result_size = 2; /* '[]' */
@@ -640,6 +648,7 @@ binary_array_to_string(char *binary)
     result = palloc0(result_maxsize + 1);
     strcat(result, "[");
 
+    elog(WARNING, "converting binary array to str with natts:%d", natts);
     for (i = 0; i < natts; i++) {
         int elt_size;
         char *elt;
@@ -681,6 +690,10 @@ binary_to_string(json_typeid type, char *binary, int datum_len)
 
     assert(binary);
 
+    elog(WARNING, "in binary to string");
+    elog(WARNING, "type: %d", type);
+    elog(WARNING, "len: %d", datum_len);
+    elog(WARNING, "prod = %d", datum_len * 8 + 2 + 1);
     result = palloc0(datum_len * 8 + 2 + 1); /* Guaranteed to be enough base 10 */
 
     switch (type)
@@ -705,10 +718,14 @@ binary_to_string(json_typeid type, char *binary, int datum_len)
             sprintf(result, "%s", *binary != 0 ? "true" : "false");
             return result;
         case DOCUMENT:
-            pfree(result);
+            /* pfree(result); Hack to get rid of segfault: in
+             * http://d.pr/i/UM8I
+             */
             return binary_document_to_string(binary);
         case ARRAY:
-            pfree(result);
+            /* pfree(result); Hack to get rid of segfault: in
+             * http://d.pr/i/UM8I
+             */
             return binary_array_to_string(binary);
         case NONE:
         default:

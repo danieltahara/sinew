@@ -22,10 +22,12 @@ json_typeid
 jsmn_primitive_get_type(char *value_str)
 {
     char *ptr;
+    elog(WARNING, "value_str: %s", value_str);
     switch(value_str[0]) {
     case 't': case 'f':
         return BOOLEAN;
     case 'n':
+        elog(WARNING, "returned NONE TYPE");
         return NONE;
     case '-':
     case '0': case '1': case '2': case '3': case '4':
@@ -66,7 +68,6 @@ jsmn_get_type(jsmntok_t* tok, char *json)
     case JSMN_ARRAY:
         return ARRAY;
     default:
-        elog(WARNING, "document: Got invalid json: %s", value_str);
         return NONE;
     }
 }
@@ -153,7 +154,8 @@ get_pg_type(json_typeid type, char *value)
             sprintf(buffer, "%s%s", arr_elt_pg_type, ARRAY_TYPE);
             return buffer;
         case NONE:
-            elog(WARNING, "document: got a null");
+            elog(WARNING, "Got a NULL PG type");
+            return NULL_TYPE;
         default:
             elog(ERROR, "document: invalid type id on serialization");
     }
