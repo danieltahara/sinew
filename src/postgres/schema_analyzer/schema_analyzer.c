@@ -130,12 +130,12 @@ analyze_document(PG_FUNCTION_ARGS)
         TRIGGER_FIRED_BY_UPDATE(trigdata->tg_event) ||
         TRIGGER_FIRED_BY_DELETE(trigdata->tg_event))
     {
-        int size;
+        // int size;
         datum = (bytea*)DatumGetPointer(SPI_getbinval(trigdata->tg_trigtuple,
                                                       tupdesc,
                                                       2,
                                                       &isnull));
-        size = VARSIZE(datum);
+        // size = VARSIZE(datum);
         // elog(WARNING, "size: %d", size - VARHDRSZ);
 
         assert(datum);
