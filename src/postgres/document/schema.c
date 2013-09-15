@@ -1,11 +1,13 @@
 #include <postgres.h> /* This include must precede all other postgres
                          dependencies */
 
-#include <assert.h>
-
+#include <access/xact.h>
 #include <catalog/pg_type.h>
 #include <executor/spi.h>
 #include <lib/stringinfo.h>
+#include <utils/memutils.h>
+
+#include <assert.h>
 
 #include "lib/jsmn/jsmn.h"
 #include "utils.h"
@@ -13,17 +15,13 @@
 #include "hash_table.h"
 #include "schema.h"
 
-#ifdef PG_MODULE_MAGIC
-PG_MODULE_MAGIC;
-#endif
-
 /* Globals */
 static TransactionId info_xid = 0;
 static int num_keys = 0; /* Length of key_names and key_types */
 static char **key_names = NULL;
 static char **key_types = NULL;
 
-static TransactionId aid_xid = 0;
+static TransactionId attr_xid = 0;
 static table_t *attr_table = NULL;
 
 /* TODO: at some point, I might want to make the caching on key by key basis
@@ -33,6 +31,7 @@ static table_t *attr_table = NULL;
 static void
 get_attr_info(int id, char **key_name_ref, char **key_type_ref)
 {
+    // elog(WARNING, "get attr info: %d", id);
     if (id > num_keys)
     {
          *key_name_ref = NULL;
@@ -40,9 +39,10 @@ get_attr_info(int id, char **key_name_ref, char **key_type_ref)
     }
     else
     {
-         *key_name_ref = key_names[id];
-         *key_type_ref = key_types[id];
+         *key_name_ref = pstrndup(key_names[id], strlen(key_names[id]));
+         *key_type_ref = pstrndup(key_types[id], strlen(key_types[id]));
     }
+    // elog(WARNING, "finished");
 }
 
 /*******************************************************************************
@@ -59,6 +59,7 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
     {
         void *(*xact_palloc0)(MemoryContext, Size);
         bool isnull;
+        int i;
 
         info_xid = GetCurrentTransactionId();
 
@@ -66,13 +67,13 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
 
         initStringInfo(&buf);
         appendStringInfo(&buf,
-                         "select id, key_name, key_type from "
-                         "document_schema._attributes SORT BY id ASCENDING"); // Is Ascending tag necessary?
+                         "select _id, key_name, key_type from "
+                         "document_schema._attributes ORDER BY _id ASC"); // TODO: Is Ascending tag necessary?
         ret = SPI_execute(buf.data, false, 0);
         if (ret != SPI_OK_SELECT)
         {
             elog(ERROR,
-                 "document: SPI_execute failed (get_attribute): error code %d"
+                 "document: SPI_execute failed (get_attribute): error code %d",
                  ret);
         }
 
@@ -83,6 +84,7 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
               1,
               &isnull));
         assert(!isnull);
+        // elog(WARNING, "num keys: %d", num_keys);
 
         /* Memory was already freed by MemoryContext stuff, so I don't have to
          * redo it
@@ -92,6 +94,8 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
         key_types = xact_palloc0(CurTransactionContext,
                                   num_keys * sizeof(char*));
 
+        // elog(WARNING, "allocated key types and names");
+        // elog(WARNING, "SPI_processed: %d", SPI_processed);
         for (i = 0; i < SPI_processed; ++i)
         {
             int aid;
@@ -100,17 +104,18 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
             aid = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i],
                                               SPI_tuptable->tupdesc,
                                               1,
-                                              &isnull);
+                                              &isnull));
+            // elog(WARNING, "found aid: %d", aid);
             assert(!isnull);
             name = SPI_getvalue(SPI_tuptable->vals[i],
                                 SPI_tuptable->tupdesc,
-                                1);
+                                2);
             key_names[aid] = xact_palloc0(CurTransactionContext,
                                           strlen(name) + 1);
             strcpy(key_names[aid], name);
             val = SPI_getvalue(SPI_tuptable->vals[i],
                                SPI_tuptable->tupdesc,
-                               2);
+                               3);
             key_types[aid] = xact_palloc0(CurTransactionContext,
                                           strlen(val) + 1);
             strcpy(key_types[aid], val);
@@ -137,7 +142,7 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
         if (ret != SPI_OK_SELECT)
         {
             elog(ERROR,
-                 "document: SPI_execute failed (get_attribute): error code %d"
+                 "document: SPI_execute failed (get_attribute): error code %d",
                  ret);
         }
 
@@ -175,24 +180,26 @@ get_attribute_id(const char *keyname, const char *typename)
 
     attr = palloc0(strlen(keyname) + strlen(typename) + 2);
     sprintf(attr, "%s %s", keyname, typename);
+    // elog(WARNING, "Looking for attr: %s", attr);
 
     if (attr_xid != GetCurrentTransactionId() || !attr_table)
     {
         bool isnull;
+        int i;
 
-        info_xid = GetCurrentTransactionId();
+        attr_xid = GetCurrentTransactionId();
 
         SPI_connect();
 
         initStringInfo(&buf);
         appendStringInfo(&buf,
-                         "select id, key_name, key_type from "
+                         "select _id, key_name, key_type from "
                          "document_schema._attributes");
         ret = SPI_execute(buf.data, false, 0);
         if (ret != SPI_OK_SELECT)
         {
             elog(ERROR,
-                 "document: SPI_execute failed (get_attribute): error code %d"
+                 "document: SPI_execute failed (get_attribute): error code %d",
                  ret);
         }
 
@@ -210,16 +217,17 @@ get_attribute_id(const char *keyname, const char *typename)
             aid = DatumGetInt32(SPI_getbinval(SPI_tuptable->vals[i],
                                               SPI_tuptable->tupdesc,
                                               1,
-                                              &isnull);
+                                              &isnull));
             assert(!isnull);
             name = SPI_getvalue(SPI_tuptable->vals[i],
                                 SPI_tuptable->tupdesc,
-                                1);
+                                2);
             type = SPI_getvalue(SPI_tuptable->vals[i],
                                SPI_tuptable->tupdesc,
-                               2);
-            attr_tmp = palloc0(strlen(name) + strlen(val) + 2);
+                               3);
+            attr_tmp = palloc0(strlen(name) + strlen(type) + 2);
             sprintf(attr_tmp, "%s %s", name, type);
+            // elog(WARNING, "caching value: %s", attr_tmp);
 
             put(attr_table, attr_tmp, aid);
             pfree(attr_tmp);
@@ -228,6 +236,11 @@ get_attribute_id(const char *keyname, const char *typename)
         SPI_finish();
 
         return get(attr_table, attr);
+    }
+    else if ((attr_id = get(attr_table, attr)) >= 0)
+    {
+        // elog(WARNING, "found attr id in table");
+        return attr_id;
     }
     else
     {
@@ -255,9 +268,9 @@ get_attribute_id(const char *keyname, const char *typename)
         SPI_finish();
 
         /* Update table */
-        key = palloc0(strlen(keyname) + strlen(typename) + 2);
-        sprintf(key, "%s %s", keyname, typename);
-        put(attr_table, key, attr_id);
+        attr = palloc0(strlen(keyname) + strlen(typename) + 2);
+        sprintf(attr, "%s %s", keyname, typename);
+        put(attr_table, attr, attr_id);
 
         return attr_id;
     }

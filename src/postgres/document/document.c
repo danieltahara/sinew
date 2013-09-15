@@ -10,9 +10,9 @@
 #include <utils/array.h>
 
 #include "lib/jsmn/jsmn.h"
-#include "utils.h"
-#include "schema.h"
 #include "document.h"
+#include "schema.h"
+#include "utils.h"
 
 /*******************************************************************************
  * String -> Binary

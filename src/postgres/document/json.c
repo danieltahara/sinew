@@ -42,7 +42,7 @@ jsmn_primitive_get_type(char *value_str)
             return INTEGER;
         }
     default:
-        elog(WARNING, "document: doc_insert: Got invalid json: %s", value_str);
+        // elog(WARNING, "document: doc_insert: Got invalid json: %s", value_str);
         return NONE;
     }
 }

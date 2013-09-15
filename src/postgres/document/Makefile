@@ -1,7 +1,7 @@
 # Copyright Hadapt, Inc. 2013
 # All rights reserved.
 
-OBJS = serde.o document.o schema.o accesors.o json.o utils.o hash_table.o
+OBJS = serde.o document.o schema.o accessors.o json.o utils.o hash_table.o
 MODULE_big = document_type
 EXTENSION = document_type
 DATA = document_type--1.0.0.sql

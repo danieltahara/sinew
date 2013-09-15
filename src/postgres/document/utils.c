@@ -67,7 +67,7 @@ parse_attr_path(char *attr_path, char ***path, char **path_arr_index_map)
     path_depth = 0;
     path_max_depth = 8;
     *path = palloc0(path_max_depth * sizeof(char*));
-    elog(WARNING, "after initialization");
+    // elog(WARNING, "after initialization");
 
     tok_start = strtok(attr_path_copy, ".[");
     while (tok_start != NULL)

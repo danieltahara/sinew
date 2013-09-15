@@ -1,5 +1,7 @@
 #include <postgres.h> /* This include must precede all other postgres
                          dependencies */
+#include <access/xact.h>
+#include <utils/memutils.h>
 
 #include <assert.h>
 
@@ -27,51 +29,69 @@ struct table {
 
 //internal helper methods
 #define MULTIPLIER (37)
-static size_t hash(const char* key)
+
+static size_t
+hash(const char* key)
 {
-    unsigned const char* uKey = (unsigned const char*)key;
-    size_t val = 0;
+    unsigned const char *uKey;
+    size_t val;
+
+    uKey = (unsigned const char*)key;
+    val = 0;
 
     while (*uKey) {
         val = val * MULTIPLIER + *uKey;
-        uKey++;
+        ++uKey;
     }
+
+    return val;
 }
 
 #define MAX_LOAD (1)
 // Similar syntax to realloc
-static table_t* resize(table_t* ht, size_t new_size)
+static table_t *
+resize(table_t* ht, size_t new_size)
 {
-    element_t** new_entries = xact_palloc0(CurTransactionContext, new_size * sizeof(element_t*));
+    element_t **new_entries, **old_entries;
+    size_t old_size;
+    size_t i;
 
-    element_t** old_entries = ht->entries;
+    new_entries = xact_palloc0(CurTransactionContext, new_size * sizeof(element_t*));
+
+    old_entries = ht->entries;
     ht->entries = new_entries; // Swap out the underlying array
 
     // Iterate over each element in old entries. Insert into new entries, by
     // putting the elements into a hash table with new entries as the underlying
     // storage.
-    size_t old_size = ht->size;
-    for (size_t i; i < old_size; i++) {
-        element_t* cur_elem = old_entries[i];
+    old_size = ht->size;
+    for (i = 0; i < old_size; i++) {
+        element_t *cur_elem, *temp;
+
+        cur_elem = old_entries[i];
         while (cur_elem) {
-            element_t* temp = cur_elem;
+            temp = cur_elem;
             put(ht, cur_elem->key, cur_elem->value);
             cur_elem = cur_elem->next;
-            free(temp);
+            pfree(temp);
         }
     }
-    free(old_entries);
+    pfree(old_entries);
 
     return ht;
 }
 
-static element_t* make_elem(const char* key, const int val)
+static element_t *
+make_elem(const char* key, const int val)
 {
-    element_t* new_elem = xact_palloc0(CurTransactionContext, sizeof(element_t));
+    element_t *new_elem;
+    size_t keylen;
 
-    size_t keylen = strlen(key);
-    new_elem->key = xact_palloc0(CurTransactionContext, keylen);
-    strncpy(new_elem->key, key, keylen);
+    new_elem = xact_palloc0(CurTransactionContext, sizeof(element_t));
+
+    keylen = strlen(key);
+    new_elem->key = xact_palloc0(CurTransactionContext, keylen + 1);
+    strcpy(new_elem->key, key);
 
     new_elem->value = val;
 
@@ -82,10 +102,12 @@ static element_t* make_elem(const char* key, const int val)
 //Macro to return index
 #define index(ht, key) (hash(key) % ht->size)
 
-table_t* make_table()
+table_t *
+make_table()
 {
-    table_t* new_table = xact_palloc0(CurTransactionContext, sizeof(table_t));
+    table_t* new_table;
 
+    new_table = xact_palloc0(CurTransactionContext, sizeof(table_t));
     new_table->entries = xact_palloc0(CurTransactionContext,
                                       INIT_SIZE * sizeof(element_t*));
     new_table->size = INIT_SIZE;
@@ -94,12 +116,17 @@ table_t* make_table()
     return new_table;
 }
 
-const int get(table_t* ht, char* key)
+const int
+get(table_t* ht, char* key)
 {
-    size_t index = index(ht, key);
-    element_t* cur_elem = ht->entries[index];
+    size_t pos;
+    element_t *cur_elem;
+
+    pos = index(ht, key);
+    cur_elem = ht->entries[pos];
 
     while (cur_elem != NULL) {
+        // elog(WARNING, "key: %s, curelemkey: %s", key, cur_elem->key);
         if (!strcmp(cur_elem->key, key)) {
             return cur_elem->value;
         }
@@ -112,9 +139,13 @@ const int get(table_t* ht, char* key)
 
 const element_t* put(table_t* ht, char* key, int val)
 {
-    size_t index = index(ht, key); 
-    element_t* head = ht->entries[index];
-    element_t* cur_elem = head;
+    size_t pos;
+    element_t *head, *cur_elem;
+    element_t *new_elem;
+
+    pos = index(ht, key);
+    head = ht->entries[pos];
+    cur_elem = head;
 
     while (cur_elem != NULL) {
         if (!strcmp(cur_elem->key, key)) {
@@ -123,35 +154,14 @@ const element_t* put(table_t* ht, char* key, int val)
         }
     }
 
-    element_t* new_elem = make_elem(key, val);
-    if (new_elem == NULL) return NULL; //silent failure
+    new_elem = make_elem(key, val); /* Will elog(ERROR) on failure */
     new_elem->next = head;
-    head = new_elem;
-    ht->num_elem++;
+    ht->entries[pos] = new_elem;
+    ++(ht->num_elem);
 
     if (ht->num_elem == ht->size * MAX_LOAD) {
         resize(ht, ht->size * 2);
     }
 
     return head;
-}
-
-void remove(table_t* ht, char* key)
-{
-    size_t index = index(ht, key); 
-    element_t** prev_elem = &ht->entries[index];
-    element_t* cur_elem = ht->entries[index];
-
-    while (cur_elem != NULL) {
-        if (!strcmp(cur_elem->key, key)) {
-          *prev_elem = cur_elem->next;
-          free(cur_elem->key);
-          free(cur_elem);
-          ht->num_elem--;
-          return;
-        }
-        *prev_elem = cur_elem->next;
-        cur_elem = cur_elem->next;
-    }
-    return;
 }

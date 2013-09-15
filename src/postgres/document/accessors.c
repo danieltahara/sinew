@@ -1,16 +1,14 @@
 #include <postgres.h> /* This include must precede all other postgres
                          dependencies */
 
+#include <fmgr.h>
+#include <funcapi.h>
+
 #include <assert.h>
 
-#include <funcapi.h>
-#include <fmgr.h>
-
 #include "document.h"
-
-#ifdef PG_MODULE_MAGIC
-PG_MODULE_MAGIC;
-#endif
+#include "schema.h"
+#include "utils.h"
 
 /*******************************************************************************
  * Extraction Functions
@@ -285,7 +283,7 @@ document_get_internal(const char *doc,
         memcpy(attr_data, doc + offstart, len);
         attr_data[len] = '\0';
 
-        elog (WARNING, "path depth: %d", path_depth);
+        // elog (WARNING, "path depth: %d", path_depth);
 
         if (path_depth > 1)
         {

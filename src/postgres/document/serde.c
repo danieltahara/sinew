@@ -8,6 +8,7 @@
 #include <fmgr.h>
 
 #include "document.h"
+#include "utils.h"
 
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
