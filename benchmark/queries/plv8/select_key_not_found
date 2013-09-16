@@ -1,0 +1,3 @@
+\timing
+
+SELECT plv8_get(data, 'THISISANONEXISTENTKEY') FROM test;

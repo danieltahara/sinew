@@ -1,0 +1,3 @@
+\timing
+
+SELECT data->'THISISANONEXISTENTKEY' FROM test;

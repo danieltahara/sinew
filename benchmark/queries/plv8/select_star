@@ -1,0 +1,11 @@
+\timing
+
+SELECT plv8_get(data, 'in_reply_to_status_id_str'),
+       plv8_get(data, 'id_str'),
+       plv8_get(data, 'in_reply_to_user_id)::bigint,
+       plv8_get(data, 'text'),
+       plv8_get(data, 'created_at'),
+       plv8_get(data, 'favorited')::bool,
+       plv8_get(data, 'user')::json,
+       plv8_get(data, '{"entities", "user_mentions"}')::json[]
+FROM test;

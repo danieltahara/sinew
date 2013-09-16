@@ -1,0 +1,11 @@
+\timing
+
+SELECT data->'in_reply_to_status_id_str',
+       data->'id_str',
+       (data->'in_reply_to_user_id')::text::bigint,
+       data->'text',
+       data->'created_at',
+       (data->'favorited')::text::bool,
+       data->'user',
+       (data>>'{entities, user_mentions}')::text::json[]
+FROM test;

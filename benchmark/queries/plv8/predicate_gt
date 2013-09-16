@@ -1,0 +1,3 @@
+\timing
+
+SELECT id FROM test where plv8_get(data, 'in_reply_to_user_id')::bigint > 25000000;

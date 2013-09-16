@@ -1,0 +1,3 @@
+\timing
+
+SELECT id FROM test where plv8_get(data, 'retweeted')::bool = true;

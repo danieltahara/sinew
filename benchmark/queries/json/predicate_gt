@@ -1,0 +1,3 @@
+\timing
+
+SELECT id FROM test where (data->'in_reply_to_user_id')::text::bigint > 25000000;

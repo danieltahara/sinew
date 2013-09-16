@@ -1,0 +1,30 @@
+CREATE OR REPLACE FUNCTION
+plv8_get(structure JSON, key TEXT) RETURNS TEXT AS $$
+    var js_object = structure;
+    if (typeof js_object != 'object')
+        return NULL;
+    if (js_object == null)
+        return NULL;
+    else
+        return JSON.stringify(js_object[key]);
+$$ LANGUAGE plv8 IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION
+plv8_get_nested(structure JSON, keys TEXT[]) RETURNS TEXT AS $$
+    var js_object = structure;
+    while (keys.length() > 0) {
+        key = keys.shift()
+        if (typeof js_object != 'object')
+            return NULL;
+        if (Array.isArray(js_object))
+            js_object = js_object[parseInt(key)]
+        else
+            js_object = js_object[key]
+        if (js_object == null)
+            return NULL;
+    }
+    return JSON.stringify(js_object);
+$$ LANGUAGE plv8 IMMUTABLE STRICT;
+-- This will choke on index > sizeof array
+
+CREATE TABLE test(id serial, data json);
