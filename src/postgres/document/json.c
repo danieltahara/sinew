@@ -154,7 +154,7 @@ get_pg_type(json_typeid type, char *value)
             sprintf(buffer, "%s%s", arr_elt_pg_type, ARRAY_TYPE);
             return buffer;
         case NONE:
-            elog(WARNING, "Got a NULL PG type");
+            // elog(WARNING, "Got a NULL PG type");
             return NULL_TYPE;
         default:
             elog(ERROR, "document: invalid type id on serialization");

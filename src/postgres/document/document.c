@@ -372,7 +372,7 @@ binary_to_document(char *binary, document *doc)
         char *type_string;
 
         memcpy(&id, binary + buffpos, sizeof(int));
-        get_attribute(id, &key_string, &type_string);
+        get_attr(id, &key_string, &type_string);
         // elog(WARNING, "Got attribute info for: %d: %s, %s", id, key_string, type_string);
 
         keys[i] = pstrndup(key_string, strlen(key_string));
@@ -448,13 +448,21 @@ binary_document_to_string(char *binary)
         attr_len = strlen(key) + strlen(value) + 5; /* "k":v,\n" */
         attr = palloc0(attr_len + 1);
         sprintf(attr, "\"%s\":%s,\n", key, value);
+        // elog(WARNING, "key: %s", key);
+        // elog(WARNING, "val: %s", value);
+        // elog(WARNING, "attr: %s", attr);
 
         if (result_size + attr_len + 1 >= result_maxsize)
         {
             result_maxsize = 2 * (result_size + attr_len) + 1;
+            //elog(WARNING, "result pre repalloc: %s", result);
             result = repalloc(result, result_maxsize + 1);
+            //elog(WARNING, "result post repalloc: %s", result);
         }
+        //elog(WARNING, "result: %s", result);
         strcat(result, attr);
+        //elog(WARNING, "result: %s", result);
+        result_size += attr_len;
     }
     strcat(result, "}"); /* There is space because we keep adding an extra bit
                             to result_maxsize */
@@ -538,22 +546,27 @@ binary_to_string(json_typeid type, char *binary, int datum_len)
     {
         case STRING:
             temp = pstrndup(binary, datum_len);
-            sprintf(result, "\"%s\"", temp);
             pfree(temp);
+            sprintf(result, "\"%s\"", temp);
+            // elog(WARNING, "%s", result);
             return result;
         case INTEGER:
             assert(datum_len == sizeof(int));
             memcpy(&i, binary, sizeof(int));
             sprintf(result, "%d", i);
+            // elog(WARNING, "%s", result);
             return result;
         case FLOAT:
             assert(datum_len == sizeof(double));
             memcpy(&d, binary, sizeof(double));
+            // sprintf(result, "%f", *(double*)binary)
             sprintf(result, "%f", d);
+            // elog(WARNING, "%s", result);
             return result;
         case BOOLEAN:
             assert(datum_len == 1);
             sprintf(result, "%s", *binary != 0 ? "true" : "false");
+            // elog(WARNING, "%s", result);
             return result;
         case DOCUMENT:
             /* pfree(result); Hack to get rid of segfault: in

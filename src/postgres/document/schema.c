@@ -50,16 +50,16 @@ get_attr_info(int id, char **key_name_ref, char **key_type_ref)
  ******************************************************************************/
 
 void
-get_attribute(int id, char **key_name_ref, char **key_type_ref)
+get_attr(int id, char **key_name_ref, char **key_type_ref)
 {
     StringInfoData buf;
     int ret;
 
     if (info_xid != GetCurrentTransactionId() || !key_names)
     {
-        void *(*xact_palloc0)(MemoryContext, Size);
         bool isnull;
         int i;
+        MemoryContext old_context;
 
         info_xid = GetCurrentTransactionId();
 
@@ -77,22 +77,20 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
                  ret);
         }
 
-        xact_palloc0 = MemoryContextAllocZero;
         num_keys = DatumGetInt32(SPI_getbinval(
               SPI_tuptable->vals[SPI_processed - 1],
               SPI_tuptable->tupdesc,
               1,
-              &isnull));
+              &isnull)) + 1; /* +1 because 0 based index */
         assert(!isnull);
         // elog(WARNING, "num keys: %d", num_keys);
 
+        old_context = MemoryContextSwitchTo(CurTransactionContext);
         /* Memory was already freed by MemoryContext stuff, so I don't have to
          * redo it
          */
-        key_names = xact_palloc0(CurTransactionContext,
-                                 num_keys * sizeof(char*));
-        key_types = xact_palloc0(CurTransactionContext,
-                                  num_keys * sizeof(char*));
+        key_names = palloc0(num_keys * sizeof(char*));
+        key_types = palloc0(num_keys * sizeof(char*));
 
         // elog(WARNING, "allocated key types and names");
         // elog(WARNING, "SPI_processed: %d", SPI_processed);
@@ -110,18 +108,20 @@ get_attribute(int id, char **key_name_ref, char **key_type_ref)
             name = SPI_getvalue(SPI_tuptable->vals[i],
                                 SPI_tuptable->tupdesc,
                                 2);
-            key_names[aid] = xact_palloc0(CurTransactionContext,
-                                          strlen(name) + 1);
-            strcpy(key_names[aid], name);
+            key_names[aid] = pstrndup(name, strlen(name));
+            // key_names[aid] = palloc0(strlen(name) + 1);
+            // strcpy(key_names[aid], name);
             val = SPI_getvalue(SPI_tuptable->vals[i],
                                SPI_tuptable->tupdesc,
                                3);
-            key_types[aid] = xact_palloc0(CurTransactionContext,
-                                          strlen(val) + 1);
+            key_types[aid] = pstrndup(val, strlen(val));
+            //key_types[aid] = palloc0(strlen(val) + 1);
             strcpy(key_types[aid], val);
         }
 
         SPI_finish();
+
+        MemoryContextSwitchTo(old_context);
 
         get_attr_info(id, key_name_ref, key_type_ref);
         return;
@@ -180,12 +180,13 @@ get_attribute_id(const char *keyname, const char *typename)
 
     attr = palloc0(strlen(keyname) + strlen(typename) + 2);
     sprintf(attr, "%s %s", keyname, typename);
-    // elog(WARNING, "Looking for attr: %s", attr);
+    //elog(WARNING, "Looking for attr: %s", attr);
 
     if (attr_xid != GetCurrentTransactionId() || !attr_table)
     {
         bool isnull;
         int i;
+        MemoryContext old_context;
 
         attr_xid = GetCurrentTransactionId();
 
@@ -206,6 +207,7 @@ get_attribute_id(const char *keyname, const char *typename)
         /* Memory was already freed by MemoryContext stuff, so I don't have to
          * redo it
          */
+        old_context = MemoryContextSwitchTo(CurTransactionContext);
         attr_table = make_table();
 
         for (i = 0; i < SPI_processed; ++i)
@@ -227,23 +229,28 @@ get_attribute_id(const char *keyname, const char *typename)
                                3);
             attr_tmp = palloc0(strlen(name) + strlen(type) + 2);
             sprintf(attr_tmp, "%s %s", name, type);
-            // elog(WARNING, "caching value: %s", attr_tmp);
+            //elog(WARNING, "caching value: %s", attr_tmp);
 
             put(attr_table, attr_tmp, aid);
+            //elog(WARNING, "cached");
             pfree(attr_tmp);
         }
 
         SPI_finish();
 
+        MemoryContextSwitchTo(old_context);
+
         return get(attr_table, attr);
     }
     else if ((attr_id = get(attr_table, attr)) >= 0)
     {
-        // elog(WARNING, "found attr id in table");
+        //elog(WARNING, "found attr id in table");
         return attr_id;
     }
     else
     {
+        MemoryContext old_context;
+
         SPI_connect();
 
         initStringInfo(&buf);
@@ -270,7 +277,10 @@ get_attribute_id(const char *keyname, const char *typename)
         /* Update table */
         attr = palloc0(strlen(keyname) + strlen(typename) + 2);
         sprintf(attr, "%s %s", keyname, typename);
+
+        old_context = MemoryContextSwitchTo(CurTransactionContext);
         put(attr_table, attr, attr_id);
+        MemoryContextSwitchTo(old_context);
 
         return attr_id;
     }

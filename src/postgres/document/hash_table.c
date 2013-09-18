@@ -13,8 +13,6 @@
  * http://pine.cs.yale.edu/pinewiki/C/HashTables
  */
 
-static void *(*xact_palloc0)(MemoryContext, Size) = MemoryContextAllocZero;
-
 struct element {
     char* key;
     int value;
@@ -56,7 +54,7 @@ resize(table_t* ht, size_t new_size)
     size_t old_size;
     size_t i;
 
-    new_entries = xact_palloc0(CurTransactionContext, new_size * sizeof(element_t*));
+    new_entries = palloc0(new_size * sizeof(element_t*));
 
     old_entries = ht->entries;
     ht->entries = new_entries; // Swap out the underlying array
@@ -87,10 +85,10 @@ make_elem(const char* key, const int val)
     element_t *new_elem;
     size_t keylen;
 
-    new_elem = xact_palloc0(CurTransactionContext, sizeof(element_t));
+    new_elem = palloc0(sizeof(element_t));
 
     keylen = strlen(key);
-    new_elem->key = xact_palloc0(CurTransactionContext, keylen + 1);
+    new_elem->key = palloc0(keylen + 1);
     strcpy(new_elem->key, key);
 
     new_elem->value = val;
@@ -107,9 +105,8 @@ make_table()
 {
     table_t* new_table;
 
-    new_table = xact_palloc0(CurTransactionContext, sizeof(table_t));
-    new_table->entries = xact_palloc0(CurTransactionContext,
-                                      INIT_SIZE * sizeof(element_t*));
+    new_table = palloc0(sizeof(table_t));
+    new_table->entries = palloc0(INIT_SIZE * sizeof(element_t*));
     new_table->size = INIT_SIZE;
     new_table->num_elem = 0;
 
@@ -125,13 +122,17 @@ get(table_t* ht, char* key)
     pos = index(ht, key);
     cur_elem = ht->entries[pos];
 
+    //elog(WARNING, "pos: %d", pos);
+    //elog(WARNING, "size: %d", ht->size);
     while (cur_elem != NULL) {
         // elog(WARNING, "key: %s, curelemkey: %s", key, cur_elem->key);
         if (!strcmp(cur_elem->key, key)) {
+            //elog(WARNING, "after loop");
             return cur_elem->value;
         }
         cur_elem = cur_elem->next;
     }
+    //elog(WARNING, "after loop");
 
     //no entry; whether because index was empty or not in chain
     return -1;
@@ -152,6 +153,7 @@ const element_t* put(table_t* ht, char* key, int val)
             cur_elem->value = val;
             return cur_elem;
         }
+        cur_elem = cur_elem->next;
     }
 
     new_elem = make_elem(key, val); /* Will elog(ERROR) on failure */
