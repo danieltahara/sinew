@@ -178,6 +178,8 @@ get_attribute_id(const char *keyname, const char *typename)
     int attr_id;
     char *attr;
 
+    //elog(WARNING, "keyname : %s", keyname);
+    //elog(WARNING, "typename : %s", typename);
     attr = palloc0(strlen(keyname) + strlen(typename) + 2);
     sprintf(attr, "%s %s", keyname, typename);
     //elog(WARNING, "Looking for attr: %s", attr);
@@ -275,9 +277,6 @@ get_attribute_id(const char *keyname, const char *typename)
         SPI_finish();
 
         /* Update table */
-        attr = palloc0(strlen(keyname) + strlen(typename) + 2);
-        sprintf(attr, "%s %s", keyname, typename);
-
         old_context = MemoryContextSwitchTo(CurTransactionContext);
         put(attr_table, attr, attr_id);
         MemoryContextSwitchTo(old_context);

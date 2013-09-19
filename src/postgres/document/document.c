@@ -82,7 +82,7 @@ json_to_document(char *json, document *doc)
 
                 tok = curtok;
                 end = curtok->end;
-                while (tok->start <= end) {
+                while (tok->start <= end && j > 1) {
                     ++i;
                     tok = tokens + i;
                 }
@@ -98,7 +98,7 @@ json_to_document(char *json, document *doc)
 
                 tok = curtok;
                 end = curtok->end;
-                while (tok->start <= end) {
+                while (tok->start <= end && j > 1) {
                     ++i;
                     tok = tokens + i;
                 }
@@ -189,7 +189,8 @@ array_to_binary(char *json_arr, char **outbuff_ref)
             int end;
 
             end = curtok->end;
-            while (curtok->start <= end) ++curtok;
+            /* arrlen - 1 is a hack to find the end of the data */
+            while (curtok->start <= end && i < arrlen - 1) ++curtok;
             /* TODO: DRY with json_to_document */
         }
         else
@@ -265,6 +266,8 @@ document_to_binary(char *json, char **outbuff_ref)
 
         attr_id_ref = attr_id_refs[i];
         orig_pos = attr_id_ref - attr_ids;
+        // elog(WARNING, "pos: %d", orig_pos);
+        // elog(WARNING, "type: %d", doc.types[orig_pos]);
         datum_size = to_binary(doc.types[orig_pos], doc.values[orig_pos],
             &binary);
         if (buffpos + datum_size >= data_size)
