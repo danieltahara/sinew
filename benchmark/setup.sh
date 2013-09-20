@@ -1,7 +1,7 @@
 export SRC_ROOT=`pwd`
 
 # Install Postgres, etc
-SRC_ROOT/install.sh
+SRC_ROOT/../install.sh
 
 # Pl/v8 stuff
 

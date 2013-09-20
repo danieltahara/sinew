@@ -1,0 +1,3 @@
+DROP EXTENSION document_type;
+
+DROP TABLE test;

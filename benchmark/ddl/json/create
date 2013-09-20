@@ -1,0 +1,11 @@
+CREATE TABLE test(id serial, data json);
+
+CREATE OR REPLACE FUNCTION json_to_text(val json) RETURNS text AS $$
+BEGIN
+  IF val::text = 'null' THEN
+    RETURN null;
+  ELSE
+    RETURN val::text;
+  END IF;
+END
+$$ LANGUAGE plpgsql STRICT;

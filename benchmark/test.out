@@ -1,5 +1,4 @@
-\timing
-
+Timing is on.
 SELECT document_get_text(data, 'in_reply_to_status_id_str'),
        document_get_text(data, 'id_str'),
        document_get_int(data, 'in_reply_to_user_id'),

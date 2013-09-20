@@ -1,5 +1,5 @@
 \timing
 
-SELECT id FROM test where (data->'retweeted')::text::bool = true;
+SELECT id FROM test where json_to_text(data->'retweeted')::bool = false;
 
 -- CANT convert json->any type

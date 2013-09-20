@@ -2,10 +2,10 @@
 
 SELECT data->'in_reply_to_status_id_str',
        data->'id_str',
-       (data->'in_reply_to_user_id')::text::bigint,
+       json_to_text(data->'in_reply_to_user_id')::bigint,
        data->'text',
        data->'created_at',
-       (data->'favorited')::text::bool,
+       json_to_text(data->'favorited')::bool,
        data->'user',
-       (data>>'{entities, user_mentions}')::text::json[]
+       data#>>'{entities, user_mentions}'
 FROM test;

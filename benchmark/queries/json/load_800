@@ -1,3 +1,0 @@
-\timing
-
-COPY test(data) FROM '/tmp/data/'
