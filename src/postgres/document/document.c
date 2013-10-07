@@ -495,7 +495,7 @@ binary_array_to_string(char *binary)
     result_size = 2; /* '[]' */
     result_maxsize = 64;
     result = palloc0(result_maxsize + 1);
-    strcat(result, "[");
+    strcat(result, "{");
 
     // elog(WARNING, "converting binary array to str with natts:%d", natts);
     for (i = 0; i < natts; i++) {
@@ -523,7 +523,7 @@ binary_array_to_string(char *binary)
         result_size += elt_size;
         buffpos += elt_size;
     }
-    strcat(result, "]"); /* There is space because we keep adding an extra bit
+    strcat(result, "}"); /* There is space because we keep adding an extra bit
                             to result_maxsize */
 
     return result;
