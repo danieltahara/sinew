@@ -1,0 +1,3 @@
+\timing
+
+SELECT document_get_text(data, 'user.screen_name') FROM test ORDER BY document_get_int(data, 'user.friends_count') DESC;

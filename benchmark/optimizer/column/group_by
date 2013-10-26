@@ -1,0 +1,12 @@
+\timing
+
+select sum(document_get_int(data, 'retweet_count')) from test group by user__id;
+
+-- QUERY PLAN                                  
+-- -----------------------------------------------------------------------------
+-- GroupAggregate  (cost=4273306.95..4375170.97 rows=590066 width=40)
+-- ->  Sort  (cost=4273306.95..4297297.79 rows=9596336 width=40)
+-- Sort Key: user__id
+-- ->  Seq Scan on test  (cost=0.00..2110809.36 rows=9596336 width=40)
+-- (4 rows)
+

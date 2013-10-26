@@ -1,0 +1,8 @@
+\timing
+
+SELECT t1.user.screen_name,
+       t2.user.screen_name
+FROM (tweets) t1, (tweets) t2, (tweets) t3
+WHERE t1.user.screen_name = t2.in_reply_to_screen_name AND
+      t2.user.screen_name = t3.in_reply_to_screen_name AND
+      t1.user.screen_name = t3.user.screen_name;

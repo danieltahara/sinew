@@ -1,0 +1,2 @@
+\timing
+SELECT data#>>'{nested_obj, str}', data#>>'{nested_obj, num}' FROM test2;

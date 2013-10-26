@@ -1,0 +1,16 @@
+\timing
+
+SELECT DISTINCT user.id FROM tweets;
+
+-- test=# explain select distinct id from num;
+--                                QUERY PLAN
+-- -------------------------------------------------------------------------
+--  Unique  (cost=141388.84..146388.84 rows=373539 width=8)
+--    ->  Sort  (cost=141388.84..143888.84 rows=1000000 width=8)
+--          Sort Key: id
+--          ->  Seq Scan on num  (cost=0.00..14382.00 rows=1000000 width=8)
+-- test=# explain select distinct document_get_int(data, 'user.id') from test;
+--                               QUERY PLAN
+-- -----------------------------------------------------------------------
+--  HashAggregate  (cost=2169462.98..2169465.48 rows=200 width=32)
+--    ->  Seq Scan on test  (cost=0.00..2144666.65 rows=9918532 width=32)

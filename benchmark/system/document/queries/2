@@ -1,0 +1,3 @@
+\timing
+SELECT document_get_text(nested_obj, 'str'),
+       document_get_int(nested_obj, 'num') FROM test2;

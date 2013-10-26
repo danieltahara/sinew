@@ -1,0 +1,1 @@
+SELECT * FROM test WHERE (dyn1 >= 10000) AND (dyn1 <= 50000);

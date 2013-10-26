@@ -1,0 +1,2 @@
+\timing
+SELECT * FROM test WHERE data->>'nested_arr' LIKE '%times%';

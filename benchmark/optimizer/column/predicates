@@ -1,0 +1,3 @@
+\timing
+
+SELECT location FROM test WHERE user__lang = 'en' AND location IS NOT NULL;

@@ -1,0 +1,2 @@
+\timing
+SELECT * FROM test WHERE data->>'sparse_333' = 'GBRDCMA=' ;

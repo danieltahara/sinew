@@ -1,0 +1,26 @@
+\timing
+
+ALTER TABLE test ADD COLUMN str1 text;
+ALTER TABLE test ADD COLUMN num bigint;
+ALTER TABLE test ADD COLUMN nested_obj document;
+ALTER TABLE test ADD COLUMN nested_arr text[];
+ALTER TABLE test ADD COLUMN thousandth bigint;
+
+UPDATE test SET str1 = document_get_text(data, 'str1'),
+                num = document_get_int(data, 'num'),
+                nested_obj = document_get_doc(data, 'nested_obj'),
+                nested_arr = document_get(data, 'nested_arr', 'text[]')::text[],
+                thousandth = document_get_int(data, 'thousandth');
+
+UPDATE test SET data =
+                document_delete(
+                document_delete(
+                document_delete(
+                document_delete(
+                document_delete(data, 'str1', 'text'),
+                                      'num', 'bigint'),
+                                      'nested_obj', 'document'),
+                                      'nested_arr', 'text[]'),
+                                      'thousandth', 'bigint');
+
+vacuum full;

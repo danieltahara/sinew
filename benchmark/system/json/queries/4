@@ -1,0 +1,2 @@
+\timing
+SELECT data->'sparse_110', data->'sparse_220' FROM test;

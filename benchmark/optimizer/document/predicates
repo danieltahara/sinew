@@ -1,0 +1,3 @@
+\timing
+
+SELECT document_get_text(data, 'location') FROM test WHERE document_get_text(data, 'user.lang') = 'en' AND document_get_text(data, 'location') IS NOT NULL;

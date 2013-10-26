@@ -1,0 +1,5 @@
+\timing
+SELECT *
+FROM test t1 INNER JOIN test t2
+  ON t1.data#>>'{nested_obj, str}' = t2.data->>'str1'
+WHERE (t1.data->>'num')::bigint BETWEEN 10000 AND 5000000;

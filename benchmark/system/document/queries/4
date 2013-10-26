@@ -1,0 +1,3 @@
+\timing
+SELECT document_get_text(data, 'sparse_110'),
+       document_get_text(data, 'sparse_220') FROM test4;

@@ -1,0 +1,5 @@
+\timing
+SELECT *
+FROM test4 t1 INNER JOIN test4 t2
+  ON (document_get_text(t1.nested_obj, 'str') = t2.str1)
+WHERE left.num BETWEEN 10000 AND 5000000;  

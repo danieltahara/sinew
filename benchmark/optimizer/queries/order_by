@@ -1,0 +1,3 @@
+\timing
+
+SELECT user.screen_name FROM tweets ORDER BY user.friends_count DESC;

@@ -1,0 +1,2 @@
+\timing
+SELECT * FROM test4 WHERE 'times' = ANY(nested_arr);

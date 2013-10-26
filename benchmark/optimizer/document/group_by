@@ -1,0 +1,3 @@
+\timing
+
+select sum(document_get_int(data, 'retweet_count')) from test3 group by document_get_int(data, 'user.id');

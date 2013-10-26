@@ -1,0 +1,2 @@
+\timing
+SELECT * FROM test4 WHERE document_get_int(data, 'dyn1') BETWEEN 10000 AND 50000;

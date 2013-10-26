@@ -1,0 +1,8 @@
+\timing
+
+SELECT document_get_text(t1.data, 'user.screen_name'),
+       document_get_text(t2.data, 'user.screen_name')
+FROM test t1, test t2, test t3
+WHERE document_get_text(t1.data, 'user.screen_name') = document_get_text(t3.data, 'user.screen_name') AND
+      document_get_text(t1.data, 'user.screen_name') = document_get_text(t2.data, 'in_reply_to_screen_name') AND
+      document_get_text(t2.data, 'user.screen_name') = document_get_text(t3.data, 'in_reply_to_screen_name');

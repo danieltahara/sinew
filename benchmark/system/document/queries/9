@@ -1,0 +1,2 @@
+\timing
+SELECT * FROM test4 WHERE document_get_text(data, 'sparse_333') = 'GBRDCMA=' ;

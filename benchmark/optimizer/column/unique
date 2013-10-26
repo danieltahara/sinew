@@ -1,0 +1,3 @@
+\timing
+
+SELECT DISTINCT user__id FROM test;

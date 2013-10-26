@@ -1,0 +1,28 @@
+ALTER TABLE test ADD COLUMN user__friends_count bigint;
+ALTER TABLE test ADD COLUMN user__screen_name text;
+ALTER TABLE test ADD COLUMN location text;
+ALTER TABLE test ADD COLUMN user__lang text;
+ALTER TABLE test ADD COLUMN in_reply_to_screen_name text;
+ALTER TABLE test ADD COLUMN user__id bigint;
+
+UPDATE test SET user__friends_count = document_get_int(data, 'user.friends_count'),
+                user__screen_name = document_get_text(data, 'user.screen_name'),
+                location = document_get_text(data, 'location'),
+                user__lang = document_get_text(data, 'lang'),
+                in_reply_to_screen_name = document_get_text(data, 'in_reply_to_screen_name'),
+                user__id = document_get_int(data, 'user.id');
+
+UPDATE test SET data =
+                document_delete(
+                document_delete(
+                document_delete(
+                document_delete(
+                document_delete(
+                document_delete(data, 'user.friends_count', 'bigint'),
+                                      'user.screen_name', 'text'),
+                                      'location', 'text'),
+                                      'lang', 'text'),
+                                      'in_reply_to_screen_name', 'text'),
+                                      'user.id', 'bigint');
+
+vacuum full;

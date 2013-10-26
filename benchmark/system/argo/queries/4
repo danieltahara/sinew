@@ -1,0 +1,1 @@
+SELECT sparse_110, sparse_220 FROM test;

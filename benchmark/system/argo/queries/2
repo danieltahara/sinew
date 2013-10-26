@@ -1,0 +1,1 @@
+SELECT nested_obj.str1, nested_obj.num FROM test;

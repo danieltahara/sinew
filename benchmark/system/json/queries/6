@@ -1,0 +1,2 @@
+\timing
+SELECT * FROM test WHERE (data->>'num')::bigint BETWEEN 10000 AND 50000;

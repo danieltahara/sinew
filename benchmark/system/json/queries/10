@@ -1,0 +1,2 @@
+\timing
+SELECT COUNT(*) FROM test WHERE (data->>'num')::bigint BETWEEN 10000 AND 20000 GROUP BY data->'thousandth';

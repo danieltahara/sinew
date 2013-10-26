@@ -1,0 +1,3 @@
+\timing
+
+SELECT user__screen_name FROM test ORDER BY user__friends_count DESC;

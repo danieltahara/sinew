@@ -1,0 +1,2 @@
+\timing
+SELECT * FROM test4 WHERE num BETWEEN 10000 AND 50000;

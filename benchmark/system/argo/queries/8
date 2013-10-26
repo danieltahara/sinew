@@ -1,0 +1,1 @@
+SELECT * FROM test WHERE "times" = ANY nested_arr;
