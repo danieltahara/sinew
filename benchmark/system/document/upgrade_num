@@ -1,0 +1,7 @@
+\timing
+
+ALTER TABLE test ADD COLUMN num bigint;
+UPDATE test SET num = document_get_int(data, 'num');
+UPDATE test SET data =
+                document_delete(data, 'num', 'bigint');
+vacuum full;

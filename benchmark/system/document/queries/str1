@@ -1,0 +1,2 @@
+\timing
+SELECT str FROM test;

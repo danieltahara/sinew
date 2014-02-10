@@ -1,0 +1,7 @@
+\timing
+
+ALTER TABLE test ADD COLUMN str1 text;
+
+UPDATE test SET str1 = document_get_text(data, 'str1');
+
+vacuum full;
