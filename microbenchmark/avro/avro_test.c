@@ -13,11 +13,12 @@
 #endif
 #endif
 
+char dbname[] = "avro_test.db";
 avro_schema_t nobench_schema;
 
 int main(int argc, char** argv) {
     char *filename;
-    FILE *infile; // Input JSON Data
+    FILE *infile, *outfile;
     int rval; // Function status codes
     clock_t start, diff;
     int msec;
@@ -31,13 +32,13 @@ int main(int argc, char** argv) {
     infilename = argv[0];
     infile = fopen(infilename, "r");
     outfilename = argv[1];
+    outfile = fopen(outfilename, "w");
     keyname = argv[2];
-    dbname = argv[3]; // TODO: remove
 
     // Measures CPU Time
     // TODO: DRY
     start = clock();
-    if (test_serialize(infile, dbname)) {
+    if (test_serialize(infile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
@@ -45,7 +46,7 @@ int main(int argc, char** argv) {
     printf("Serialize: %d ms", msec);
 
     start = clock();
-    if (test_deserialize(dbname)) {
+    if (test_deserialize(outfile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
@@ -59,6 +60,39 @@ int main(int argc, char** argv) {
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Extract: %d ms", msec);
+
+    fclose(infile);
+    fclose(outfile);
+}
+
+/* Read all the records and print them */
+int test_deserialize(FILE *outfile) {
+    avro_file_reader_t dbreader;
+    avro_value_t avro_value;
+    int rval;
+    char *json;
+
+    rval = avro_file_reader(dbname, &dbreader)
+    if (rval) {
+        fprintf(stderr, "Error opening file: %s\n", avro_strerror());
+        return rval;
+    }
+
+    for (i = 0; i < id; i++) {
+        rval = avro_value_read(dbreader, &avro_value);
+        if (rval) {
+            fprintf(stderr, "Error reading: %s\n", avro_strerror());
+            return rval;
+        }
+        rval = avro_value_to_json(&avro_value, 1, &json);
+        if (rval) {
+            fprintf(stderr, "Error converting to json: %s\n", avro_strerror());
+            return rval;
+        }
+        fprintf(outfile, json);
+        free(json);
+    }
+    avro_file_reader_close(dbreader);
 }
 
 // NOTE: File must be \n terminated
@@ -85,80 +119,107 @@ int test_serialize(FILE* infile) {
     buffer = NULL;
     len = 0;
     while ((read = getline(&buffer, &len, infile)) != -1) {
-        jsmntok_t *tokens;
-        jsmntok_t curtok;
-        int num_keys;
-        char *key, *value, *avro_keyname;
-        json_typeid type;
         avro_value_t avro_value;
-        avro_value_t avro_field;
 
         // Create a new record
         avro_generic_value_new(iface, &value);
+        avro_record_value_fill(&value, buffer);
 
-        tokens = jsmn_tokenize(buffer);
-        curtok = tokens;
-
-        assert(curtok->type == JSMN_OBJECT);
-        num_keys = curtok->size;
-        ++curtok;
-        for (int i = 0; i < num_keys; ++i) {
-            key = jsmntok_to_str(curtok, json);
-            ++curtok;
-
-            type = jsmn_get_type(curtok, json);
-            value = jsmntok_to_str(curtok, json);
-            avro_keyname = to_avro_keyname(key, type);
-            avro_value_get_by_name(&avro_value, avro_keyname, &avro_field, NULL);
-
-            switch (type) {
-                case STRING:
-                    rval = avro_value_set_string(&avro_field, value);
-                    break;
-                case INTEGER:
-                    rval = avro_value_set_int(&avro_field, atoi(value));
-                    break;
-                case FLOAT:
-                    rval = avro_value_set_int(&avro_field, atof(value));
-                    break;
-                case BOOLEAN:
-                    rval =
-                      avro_value_set_boolean(&avro_field,
-                                             !strcmp(value, "true") ? 1 : 0);
-                    break;
-                case DOCUMENT:
-                    // TODO:
-                    // num elts -> recursion
-                case ARRAY:
-                    // TODO:
-                    // num elts -> just curtok++
-                case NONE:
-                default:
-            }
-
-            if (rval) {
-                fprintf(stderr, "Unable to set %s", avro_keyname);
-                return rval;
-            }
-
-            free(key);
-            free(value);
-            free(avro_keyname);
-
-            ++curtok;
-        }
-
-        rval = avro_file_writer_append(db, nobench);
+        // Write the record
+        rval = avro_value_write(db, value);
         if (rval) {
             fprintf(stderr,
                     "Unable to write datum to memory buffer\nMessage: %s\n",
                     avro_strerror());
         }
 
+        // Cleanup
         avro_value_decref(avro_value);
         free(buffer);
         buffer = NULL;
         len = 0;
     }
+
+    avro_file_writer_flush(db);
     avro_value_iface_decref(iface);
+}
+
+// Returns - how many tokens to advance
+int avro_record_value_fill(avro_value_t *avro_value, char *json) {
+    int num_keys;
+
+    jsmntok_t *tokens;
+    jsmntok_t curtok;
+
+    char *key, *value, *avro_keyname;
+    json_typeid type;
+    avro_value_t avro_field;
+
+    int arr_len;
+    avro_value_t avro_arr_element;
+    json_typeid arr_type;
+
+    // Start code
+
+    assert(curtok->type == JSMN_OBJECT);
+    num_keys = curtok->size;
+
+    tokens = jsmn_tokenize(buffer);
+    curtok = tokens;
+    ++curtok;
+    for (int i = 0; i < num_keys; ++i) {
+        key = jsmntok_to_str(curtok, json);
+        ++curtok;
+
+        type = jsmn_get_type(curtok, json);
+        value = jsmntok_to_str(curtok, json);
+        avro_keyname = to_avro_keyname(key, type);
+        avro_value_get_by_name(avro_value, avro_keyname, &avro_field, NULL);
+
+        switch (type) {
+            case STRING:
+                rval = avro_value_set_string(&avro_field, value);
+                break;
+            case INTEGER:
+                rval = avro_value_set_int(&avro_field, atoi(value));
+                break;
+            case FLOAT:
+                rval = avro_value_set_float(&avro_field, atof(value));
+                break;
+            case BOOLEAN:
+                rval =
+                  avro_value_set_boolean(&avro_field,
+                                         !strcmp(value, "true") ? 1 : 0);
+                break;
+            case DOCUMENT:
+                curtok += avro_record_value_fill(&avro_field, value);
+                break;
+            case ARRAY:
+                arr_len = curtok->size;
+                arr_type = jsmn_get_type(curtok + 1, json);
+                for (int j = 0; j < arr_len; ++j) {
+                    // FIXME: I know that it's going to be a string, so I'm
+                    // cheating and saving some code
+                    avro_value_set_string(&avro_arr_element,
+                                          jsmntok_to_str(curtok + 1 + j, json));
+                    avro_value_append(&avro_field, &avro_arr_element, NULL);
+                }
+                curtok += arr_len;
+            case NONE:
+            default:
+        }
+
+        if (rval) {
+            fprintf(stderr, "Unable to set %s", avro_keyname);
+            return rval;
+        }
+
+        free(key);
+        free(value);
+        free(avro_keyname);
+
+        ++curtok;
+    }
+
+    return curtok - tokens;
 }
