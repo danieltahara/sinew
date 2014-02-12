@@ -1,2 +1,2 @@
 \timing
-SELECT str FROM test;
+SELECT document_get_text(data, 'str1') FROM test;

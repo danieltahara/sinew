@@ -1,5 +1,5 @@
 \timing
 
-ALTER TABLE test DROP COLUMN str1 text;
+ALTER TABLE test DROP COLUMN str1;
 
 vacuum full;
