@@ -15,6 +15,7 @@
 
 char dbname[] = "avro_test.db";
 avro_schema_t nobench_schema;
+avro_schema_t projected_schema;
 
 int main(int argc, char** argv) {
     char *filename;
@@ -28,12 +29,17 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Unable to parse person schema\n");
         exit(EXIT_FAILURE);
     }
+    if (avro_schema_from_json_literal(PROJECTED_SCHEMA, &projected_schema)) {
+        fprintf(stderr, "Unable to parse person schema\n");
+        exit(EXIT_FAILURE);
+    }
 
     infilename = argv[0];
     infile = fopen(infilename, "r");
     outfilename = argv[1];
     outfile = fopen(outfilename, "w");
-    keyname = argv[2];
+    extract_outfilename = argv[2];
+    extract_outfile = fopen(extract_outfilename, "w");
 
     // Measures CPU Time
     // TODO: DRY
@@ -54,7 +60,7 @@ int main(int argc, char** argv) {
     printf("Deserialize: %d ms", msec);
 
     start = clock();
-    if (test_extract(keyname, dbname)) {
+    if (test_extract(extract_outfile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
@@ -63,23 +69,72 @@ int main(int argc, char** argv) {
 
     fclose(infile);
     fclose(outfile);
+    fclose(extract_outfile);
 }
 
 /* Read all the records and print them */
 int test_deserialize(FILE *outfile) {
-    avro_file_reader_t dbreader;
+    avro_file_reader_t reader;
+    avro_schema_t schema;
+    avro_value_iface_t *iface;
     avro_value_t avro_value;
-    int rval;
     char *json;
+    int rval;
 
-    rval = avro_file_reader(dbname, &dbreader)
+    rval = avro_file_reader(dbname, &reader);
     if (rval) {
         fprintf(stderr, "Error opening file: %s\n", avro_strerror());
         return rval;
     }
+    schema = avro_file_reader_get_writer_schema(reader);
+    iface = avro_generic_class_from_schema(schema);
+    avro_generic_value_new(iface, &avro_value);
 
-    for (i = 0; i < id; i++) {
-        rval = avro_value_read(dbreader, &avro_value);
+    while (avro_file_reader_read_value(reader, &avro_value) == 0) {
+        rval = avro_value_to_json(&avro_value, 1, &json);
+        if (rval) {
+            fprintf(stderr, "Error converting to json: %s\n", avro_strerror());
+            return rval;
+        }
+        fprintf(outfile, "%s\n", json);
+        free(json);
+    }
+
+    // Cleanup
+    avro_file_reader_close(reader);
+    avro_value_decref(&value);
+    avro_value_iface_decref(iface);
+    avro_schema_decref(schema);
+}
+
+/* See: http://dcreager.github.io/avro-examples/resolved-writer.html */
+int test_projection(FILE *outfile) {
+    avro_file_reader_t dbreader;
+    avro_schema_t  reader_schema;
+    avro_schema_t  writer_schema;
+    avro_value_iface_t  *writer_iface;
+    avro_value_iface_t  *reader_iface;
+    avro_value_t  writer_value;
+    avro_value_t  reader_value;
+    int rval;
+    char *json;
+
+    rval = avro_file_reader(dbname, &dbreader);
+    if (rval) {
+        fprintf(stderr, "Error opening file: %s\n", avro_strerror());
+        return rval;
+    }
+    writer_schema = avro_file_reader_get_writer_schema(dbreader);
+    reader_iface = avro_generic_class_from_schema(projected_schema);
+    avro_generic_value_new(reader_iface, &reader_value);
+    writer_iface = avro_resolved_writer_new(writer_schema, reader_schema);
+    avro_resolved_writer_new_value(writer_iface, &writer_value);
+    avro_resolved_writer_set_dest(&writer_value, &reader_value);
+
+    while (avro_file_reader_read_value(file, &writer_value) == 0) {
+        avro_value_t field;
+
+        avro_value_get_by_name(&reader_value, PROJECTED_KEY, &field, NULL)
         if (rval) {
             fprintf(stderr, "Error reading: %s\n", avro_strerror());
             return rval;
@@ -89,10 +144,17 @@ int test_deserialize(FILE *outfile) {
             fprintf(stderr, "Error converting to json: %s\n", avro_strerror());
             return rval;
         }
-        fprintf(outfile, json);
+        fprintf(outfile, "%s\n", json);
         free(json);
     }
+
     avro_file_reader_close(dbreader);
+    avro_value_decref(&writer_value);
+    avro_value_iface_decref(writer_iface);
+    avro_schema_decref(writer_schema);
+    avro_value_decref(&reader_value);
+    avro_value_iface_decref(reader_iface);
+    avro_schema_decref(reader_schema);
 }
 
 // NOTE: File must be \n terminated

@@ -1,3 +1,13 @@
+const char PROJECTED_KEY = "sparse_987_str";
+
+const char PROJECTED_SCHEMA[] = "{ \
+  \"type\": \"record\", \
+  \"name\": \"NoBench\", \
+  \"fields\" : [ \
+      {\"name\": \"sparse_987_str\", \"type\": [\"string\", \"null\"]} \
+    ] \
+}";
+
 const char NOBENCH_SCHEMA[] = "{ \
   \"type\": \"record\", \
   \"name\": \"NoBench\", \
@@ -1028,4 +1038,4 @@ const char NOBENCH_SCHEMA[] = "{ \
  \
       {\"name\": \"thousandth\", \"type\": [\"long\", \"null\"]} \
   ] \
-}"
+}";
