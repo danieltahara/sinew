@@ -9,11 +9,11 @@ typedef enum { STRING = 1,
                NONE
              } json_typeid;
 
-#define STRING_TYPE "text"
-#define INTEGER_TYPE "bigint"
-#define FLOAT_TYPE "double precision"
-#define BOOLEAN_TYPE "boolean"
-#define DOCUMENT_TYPE "document"
+#define STRING_TYPE "str"
+#define INTEGER_TYPE "int"
+#define FLOAT_TYPE "double"
+#define BOOLEAN_TYPE "bool"
+#define DOCUMENT_TYPE "obj"
 #define ARRAY_TYPE "[]" /* The only non-terminal type we have */
 #define NULL_TYPE "null"
 
