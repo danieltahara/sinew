@@ -67,7 +67,7 @@ int test_deserialize(FILE *outfile) {
 
     fread(&bsize, sizeof(int), 1, dbfile);
     while (!feof(dbfile)) {
-        binary = calloc(bsize, 1);
+        binary = malloc(bsize);
         fread(binary, bsize, 1, dbfile);
 
         json = binary_document_to_string(binary);
@@ -96,7 +96,7 @@ int test_projection(FILE *outfile) {
 
     fread(&bsize, sizeof(int), 1, dbfile);
     while (!feof(dbfile)) {
-        binary = calloc(bsize, 1);
+        binary = malloc(bsize);
         fread(binary, bsize, 1, dbfile);
 
         // NOTE: Hardcoded because I'm just testing one extraction

@@ -302,18 +302,18 @@ to_binary(json_typeid typeid, char *value, char **outbuff_ref)
         /* NOTE: I don't think that throwing everything into a char* matters,
          * as long as the length is correct and I've stored the number in its
          * binary form */
-        outbuff = calloc(sizeof(int), 1);
+        outbuff = malloc(sizeof(int));
         *((int*)outbuff) = atoi(value);
         *outbuff_ref = outbuff;
         // elog(WARNING, "%d", *outbuff);
         return sizeof(int);
     case FLOAT:
-        outbuff = calloc(sizeof(double), 1);
+        outbuff = malloc(sizeof(double));
         *((double*)outbuff) = atof(value);
         *outbuff_ref = outbuff;
         return sizeof(double);
     case BOOLEAN:
-        outbuff = calloc(1, 1);
+        outbuff = malloc(1);
         if (!strcmp(value, "true")) {
             *outbuff = 1;
         } else if (!strcmp(value, "false")) {

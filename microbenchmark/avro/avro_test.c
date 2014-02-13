@@ -287,3 +287,14 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
 
     return curtok - tokens;
 }
+
+char *to_avro_keyname(char *key, json_typeid type) {
+    char *pg_type;
+    char *avro_keyname;
+
+    pg_type = get_pg_type(type, key);
+    avro_keyname = malloc(sizeof(key) + 1 + size_of(pg_type) + 1);
+    sprintf(avro_keyname, "%s_%s", key, pg_type);
+
+    return avro_keyname;
+}
