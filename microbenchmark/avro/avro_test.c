@@ -117,7 +117,8 @@ int test_projection(FILE *outfile) {
     avro_value_t  writer_value;
     avro_value_t  reader_value;
     int rval;
-    char *json;
+    char *value;
+    size_t size;
 
     rval = avro_file_reader(dbname, &dbreader);
     if (rval) {
@@ -139,13 +140,14 @@ int test_projection(FILE *outfile) {
             fprintf(stderr, "Error reading: %s\n", avro_strerror());
             return rval;
         }
-        rval = avro_value_to_json(&avro_value, 1, &json);
+
+        rval = avro_value_get_string(&avro_value, &value, &size);
         if (rval) {
-            fprintf(stderr, "Error converting to json: %s\n", avro_strerror());
+            fprintf(stderr, "Error converting to string: %s\n", avro_strerror());
             return rval;
         }
-        fprintf(outfile, "%s\n", json);
-        free(json);
+        fprintf(outfile, "%s\n", value);
+        free(value);
     }
 
     avro_file_reader_close(dbreader);
