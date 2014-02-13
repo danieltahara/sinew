@@ -45,9 +45,9 @@ json_to_document(char *json, document *doc)
             assert(curtok->type == JSMN_OBJECT);
 
             capacity = curtok->size;
-            doc->keys = calloc(capacity * sizeof(char*));
-            doc->types = calloc(capacity * sizeof(int));
-            doc->values = calloc(capacity * sizeof(char*));
+            doc->keys = calloc(capacity, sizeof(char*));
+            doc->types = calloc(capacity, sizeof(int));
+            doc->values = calloc(capacity, sizeof(char*));
 
             j += capacity;
             state = KEY;
@@ -140,7 +140,7 @@ array_to_binary(char *json_arr, char **outbuff_ref)
     arrtype = jsmn_get_type(tokens + 1, json_arr);
 
     data_size = 2 * arrlen * sizeof(int) + 1024;
-    outbuff = calloc(data_size);
+    outbuff = calloc(data_size, 1);
     buffpos = 0;
 
     memcpy(outbuff + buffpos, &arrlen, sizeof(int));
@@ -212,8 +212,8 @@ document_to_binary(char *json, char **outbuff_ref)
 
     json_to_document(json, &doc);
     natts = doc.natts;
-    attr_ids = calloc(natts * sizeof(int));
-    attr_id_refs = calloc(natts * sizeof(int*));
+    attr_ids = calloc(natts, sizeof(int));
+    attr_id_refs = calloc(natts, sizeof(int*));
 
     outbuff = *outbuff_ref;
 
@@ -237,7 +237,7 @@ document_to_binary(char *json, char **outbuff_ref)
 
     data_size = 2 * natts * sizeof(int) + 1024; /* arbitrary initial value */
     buffpos = 0;
-    outbuff = calloc(data_size);
+    outbuff = calloc(data_size, 1);
     memcpy(outbuff, &natts, sizeof(int));
     buffpos += sizeof(int);
     for (i = 0; i < natts; i++)
@@ -302,18 +302,18 @@ to_binary(json_typeid typeid, char *value, char **outbuff_ref)
         /* NOTE: I don't think that throwing everything into a char* matters,
          * as long as the length is correct and I've stored the number in its
          * binary form */
-        outbuff = calloc(sizeof(int));
+        outbuff = calloc(sizeof(int), 1);
         *((int*)outbuff) = atoi(value);
         *outbuff_ref = outbuff;
         // elog(WARNING, "%d", *outbuff);
         return sizeof(int);
     case FLOAT:
-        outbuff = calloc(sizeof(double));
+        outbuff = calloc(sizeof(double), 1);
         *((double*)outbuff) = atof(value);
         *outbuff_ref = outbuff;
         return sizeof(double);
     case BOOLEAN:
-        outbuff = calloc(1);
+        outbuff = calloc(1, 1);
         if (!strcmp(value, "true")) {
             *outbuff = 1;
         } else if (!strcmp(value, "false")) {
@@ -356,9 +356,9 @@ binary_to_document(char *binary, document *doc)
     // elog(WARNING, "Natts: %d", natts);
     buffpos = sizeof(int);
 
-    keys = calloc(natts * sizeof(char*));
-    values = calloc(natts * sizeof(char*));
-    types = calloc(natts * sizeof(json_typeid));
+    keys = calloc(natts, sizeof(char*));
+    values = calloc(natts, sizeof(char*));
+    types = calloc(natts, sizeof(json_typeid));
     for (i = 0; i < natts; i++)
     {
         int id;
@@ -388,7 +388,7 @@ binary_to_document(char *binary, document *doc)
         memcpy(&start, binary + buffpos, sizeof(int));
         memcpy(&end, binary + buffpos + sizeof(int), sizeof(int));
 
-        value_data = calloc(end - start);
+        value_data = calloc(end - start, 1);
         memcpy(value_data, binary + start, end - start);
         // elog(WARNING, "converting value to binary");
         // elog(WARNING, "start: %d, end: %d", start, end);
@@ -426,7 +426,7 @@ binary_document_to_string(char *binary)
 
     result_size = 3; /* {\n} */
     result_maxsize = 64; // TODO: #define
-    result = calloc(result_maxsize + 1);
+    result = calloc(result_maxsize + 1, 1);
     strcat(result, "{\n");
 
     for (i = 0; i < natts; i++)
@@ -440,7 +440,7 @@ binary_document_to_string(char *binary)
         value = doc.values[i];
 
         attr_len = strlen(key) + strlen(value) + 5; /* "k":v,\n" */
-        attr = calloc(attr_len + 1);
+        attr = calloc(attr_len + 1, 1);
         sprintf(attr, "\"%s\":%s,\n", key, value);
         // elog(WARNING, "key: %s", key);
         // elog(WARNING, "val: %s", value);
@@ -485,7 +485,7 @@ binary_array_to_string(char *binary)
 
     result_size = 2; /* '[]' */
     result_maxsize = 64;
-    result = calloc(result_maxsize + 1);
+    result = calloc(result_maxsize + 1, 1);
     strcat(result, "{");
 
     // elog(WARNING, "converting binary array to str with natts:%d", natts);
@@ -506,7 +506,7 @@ binary_array_to_string(char *binary)
            strcat(result, ", ");
         }
 
-        elt = calloc(elt_size);
+        elt = calloc(elt_size, 1);
         memcpy(elt, binary + buffpos, elt_size);
         strcat(result, binary_to_string(type, elt, elt_size));
         free(elt);
@@ -534,7 +534,7 @@ binary_to_string(json_typeid type, char *binary, int datum_len)
     // elog(WARNING, "type: %d", type);
     // elog(WARNING, "len: %d", datum_len);
     // elog(WARNING, "prod = %d", datum_len * 8 + 2 + 1);
-    result = calloc(datum_len * 8 + 2 + 1); /* Guaranteed to be enough base 10 */
+    result = calloc(datum_len * 8 + 2 + 1, 1); /* Guaranteed to be enough base 10 */
 
     switch (type)
     {
