@@ -237,7 +237,7 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
 
         type = jsmn_get_type(curtok, json);
         value = jsmntok_to_str(curtok, json);
-        avro_keyname = to_avro_keyname(key, type);
+        avro_keyname = to_avro_keyname(key, type, value);
         avro_value_get_by_name(avro_value, avro_keyname, &avro_field, NULL);
 
         switch (type) {
@@ -288,11 +288,14 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
     return curtok - tokens;
 }
 
-char *to_avro_keyname(char *key, json_typeid type) {
+char *to_avro_keyname(char *key, json_typeid type, char *value) {
     char *pg_type;
     char *avro_keyname;
 
-    pg_type = get_pg_type(type, key);
+    pg_type = get_pg_type(type, value);
+    if (type == ARRAY) {
+        pg_type = strtok(pg_type, "[");
+    }
     avro_keyname = malloc(sizeof(key) + 1 + size_of(pg_type) + 1);
     sprintf(avro_keyname, "%s_%s", key, pg_type);
 
