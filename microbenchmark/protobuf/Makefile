@@ -1,6 +1,6 @@
 all: protobuf_test
 
-sinew_test: ../json.o protobuf_test.o nobench.pb.o
+protobuf_test: ../json.o protobuf_test.o nobench.pb.o ../lib/jsmn/libjsmn.a
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@

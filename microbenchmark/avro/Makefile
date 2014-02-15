@@ -1,6 +1,6 @@
 all: avro_test
 
-avro_test.o: avro_test.c nobench_schema.h ../json.o
+avro_test: avro_test.o nobench_schema.h ../json.o ../lib/jsmn/libjsmn.a
 	$(CC) -c $(CFLAGS) $< -o $@ -Llibavro
 
 %.o: %.c

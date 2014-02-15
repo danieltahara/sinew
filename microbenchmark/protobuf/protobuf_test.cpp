@@ -28,11 +28,11 @@ int main(int argc, char** argv) {
     //   // compatible with the version of the headers we compiled against.
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    infilename = argv[0];
+    infilename = argv[1];
     infile = fopen(infilename, "r");
-    outfilename = argv[1];
+    outfilename = argv[2];
     outfile = fopen(outfilename, "w");
-    extract_outfilename = argv[2];
+    extract_outfilename = argv[3];
     extract_outfile = fopen(extract_outfilename, "w");
 
     // Measures CPU Time

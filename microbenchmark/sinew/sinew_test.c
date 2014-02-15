@@ -22,11 +22,11 @@ int main(int argc, char** argv) {
     clock_t start, diff;
     int msec;
 
-    infilename = argv[0];
+    infilename = argv[1];
     infile = fopen(infilename, "r");
-    outfilename = argv[1];
+    outfilename = argv[2];
     outfile = fopen(outfilename, "w");
-    extract_outfilename = argv[2];
+    extract_outfilename = argv[3];
     extract_outfile = fopen(extract_outfilename, "w");
 
     // Measures CPU Time
