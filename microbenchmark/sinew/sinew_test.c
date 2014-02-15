@@ -32,28 +32,32 @@ int main(int argc, char** argv) {
     // Measures CPU Time
     // TODO: DRY
     start = clock();
-    if (test_serialize(infile)) {
+    if (!test_serialize(infile)) {
         exit(EXIT_FAILURE);
     }
+    fprintf(stderr, "%s\n", "made it here");
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("Serialize: %d ms", msec);
+    printf("Serialize: %d ms\n", msec);
+    fflush(stdout);
 
     start = clock();
-    if (test_deserialize(outfile)) {
+    if (!test_deserialize(outfile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("Deserialize: %d ms", msec);
+    printf("Deserialize: %d ms\n", msec);
+    fflush(stdout);
 
     start = clock();
-    if (test_projection(extract_outfile)) {
+    if (!test_projection(extract_outfile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("Extract: %d ms", msec);
+    printf("Extract: %d ms\n", msec);
+    fflush(stdout);
 
     fclose(infile);
     fclose(outfile);
@@ -63,21 +67,25 @@ int main(int argc, char** argv) {
 /* Read all the records and print them */
 int test_deserialize(FILE *outfile) {
     FILE *dbfile, *schemafile;
-    int bsize;
+    size_t bsize;
     char *binary, *json;
 
     dbfile = fopen(dbname, "r");
     schemafile = fopen(schemafname, "r");
 
     read_schema(schemafile);
+    fprintf(stderr, "read schema\n");
 
-    fread(&bsize, sizeof(int), 1, dbfile);
+    fread(&bsize, sizeof(bsize), 1, dbfile);
     while (!feof(dbfile)) {
         binary = malloc(bsize);
         fread(binary, bsize, 1, dbfile);
 
+        fprintf(stderr, "read object\n");
         json = binary_document_to_string(binary);
+        fprintf(stderr, "converted to json\n");
         fprintf(outfile, "%s\n", json);
+        fflush(outfile);
 
         free(json);
         free(binary);
@@ -91,7 +99,7 @@ int test_deserialize(FILE *outfile) {
 
 int test_projection(FILE *outfile) {
     FILE *dbfile, *schemafile;
-    int attr_id, bsize;
+    size_t attr_id, bsize;
     char *binary, *value;
     char *attr_listing;
     int natts, buffpos, pos, len;
@@ -102,7 +110,7 @@ int test_projection(FILE *outfile) {
 
     read_schema(schemafile);
 
-    fread(&bsize, sizeof(int), 1, dbfile);
+    fread(&bsize, sizeof(bsize), 1, dbfile);
     while (!feof(dbfile)) {
         binary = malloc(bsize);
         fread(binary, bsize, 1, dbfile);
@@ -144,7 +152,7 @@ int test_projection(FILE *outfile) {
 int test_serialize(FILE* infile) {
     char *buffer, *binary;
     size_t len, read;
-    size_t binsize;
+    size_t binsize; // NOTE: Must read in size_t bytes
     FILE *dbfile, *schemafile;
 
     dbfile = fopen(dbname, "w");

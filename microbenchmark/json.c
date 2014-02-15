@@ -112,7 +112,7 @@ jsmn_tokenize(char *json)
         fprintf(stderr, "json_get: jsmn: truncated JSON string");
 
     }
-    fprintf(stderr, "Completed parse");
+    // fprintf(stderr, "Completed parse");
 
     return tokens;
 }

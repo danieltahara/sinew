@@ -167,5 +167,5 @@ const element_t* put(table_t* ht, char* key, int val)
 }
 
 void destroy_table(table_t *table) {
-    fprintf(stderr, "destroy_table: method stub");
+    fprintf(stderr, "destroy_table: method stub\n");
 }

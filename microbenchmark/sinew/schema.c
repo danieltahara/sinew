@@ -65,7 +65,7 @@ add_attribute(const char *keyname, const char *typename)
 
     put(attr_table, attr, num_keys++);
     key_names = realloc(key_names, num_keys * sizeof(char**));
-    key_types = realloc(key_names, num_keys * sizeof(char**));
+    key_types = realloc(key_types, num_keys * sizeof(char**));
     key_names[num_keys - 1] = strndup(keyname, strlen(keyname));
     key_types[num_keys - 1] = strndup(typename, strlen(typename));
 
@@ -89,6 +89,7 @@ dump_schema(FILE* outfile)
         fwrite(attr, 1, strlen(attr), outfile);
         free(attr);
     }
+    fflush(outfile);
 }
 
 int
@@ -110,12 +111,15 @@ read_schema(FILE* infile)
     len = 0;
     for (i = 0; i < num_keys; ++i) {
         getline(&attr, &len, infile);
+        // fprintf(stderr, "%s", attr);
 
         // Add to hash table
         put(attr_table, attr, i);
 
         keyname = strtok(attr, " ");
-        typename = strtok(NULL, " ");
+        typename = strtok(NULL, "\n");
+        // fprintf(stderr, "%s\n", keyname);
+        // fprintf(stderr, "%s\n", typename);
         // Add to array
         key_names[i] = strndup(keyname, strlen(keyname));
         key_types[i] = strndup(typename, strlen(typename));
