@@ -1,10 +1,11 @@
 #include <assert.h>
 
-#include "lib/jsmn/jsmn.h"
-#include "utils.h"
-#include "json.h"
+#include "../json.h"
 #include "hash_table.h"
 #include "schema.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /* Globals */
 static int num_keys = 0; /* Length of key_names and key_types */
@@ -14,7 +15,7 @@ static char **key_types = NULL;
 static table_t *attr_table = NULL;
 
 /* NOTE: Assumes that key_names, key_types are valid */
-static void
+void
 get_attr(int id, char **key_name_ref, char **key_type_ref)
 {
     // elog(WARNING, "get attr info: %d", id);
@@ -44,6 +45,9 @@ get_attribute_id(const char *keyname, const char *typename)
     if (attr_table) {
         attr_id = get(attr_table, attr);
         return attr_id;
+    } else {
+        fprintf(stderr, "Attr table not initialized");
+        return -1;
     }
 }
 
@@ -60,11 +64,12 @@ add_attribute(const char *keyname, const char *typename)
     }
 
     put(attr_table, attr, num_keys++);
-    key_names = realloc(key_names, num_keys, sizeof(char**));
-    key_types = realloc(key_names, num_keys, sizeof(char**));
+    key_names = realloc(key_names, num_keys * sizeof(char**));
+    key_types = realloc(key_names, num_keys * sizeof(char**));
     key_names[num_keys - 1] = strndup(keyname, strlen(keyname));
     key_types[num_keys - 1] = strndup(typename, strlen(typename));
 
+    return num_keys - 1;
 }
 
 void
@@ -90,7 +95,7 @@ int
 read_schema(FILE* infile)
 {
     char *keyname, *typename, *attr;
-    int i, len;
+    size_t i, len;
 
     if (attr_table) {
         destroy_table(attr_table);
@@ -104,7 +109,7 @@ read_schema(FILE* infile)
     attr = NULL;
     len = 0;
     for (i = 0; i < num_keys; ++i) {
-        getline(attr, &len, infile);
+        getline(&attr, &len, infile);
 
         // Add to hash table
         put(attr_table, attr, i);
@@ -119,4 +124,6 @@ read_schema(FILE* infile)
         attr = NULL;
         len = 0;
     }
+
+    return 1;
 }

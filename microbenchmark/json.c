@@ -1,8 +1,9 @@
-#include <postgres.h>
 #include <assert.h>
 
 #include "json.h"
-#include "utils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 char *
 jsmntok_to_str(jsmntok_t *tok, char *json)
@@ -13,7 +14,7 @@ jsmntok_to_str(jsmntok_t *tok, char *json)
     assert(tok && json);
 
     len = tok->end - tok->start;
-    retval = pstrndup(&json[tok->start], len);
+    retval = strndup(&json[tok->start], len);
 
     return retval;
 }
@@ -83,38 +84,35 @@ jsmn_tokenize(char *json)
 
     jsmn_init(&parser);
     maxToks = 256;
-    tokens = palloc0(sizeof(jsmntok_t) * maxToks);
+    tokens = calloc(sizeof(jsmntok_t), maxToks);
     assert(tokens);
 
     if (json == NULL)
     {
-        jsmntok_t *nulltok;
-
-        elog(DEBUG5, "Null json");
-        nulltok = palloc0(sizeof(json));
-        nulltok->type = NONE;
-        return nulltok;
+        assert(0);
+        fprintf(stderr, "null JSON string");
+        return NULL;
     }
     status = jsmn_parse(&parser, json, tokens, maxToks);
     while (status == JSMN_ERROR_NOMEM)
     {
         maxToks = maxToks * 2 + 1;
-        tokens = repalloc(tokens, sizeof(jsmntok_t) * maxToks);
+        tokens = realloc(tokens, sizeof(jsmntok_t) * maxToks);
         assert(tokens);
         status = jsmn_parse(&parser, json, tokens, maxToks);
     }
 
     if (status == JSMN_ERROR_INVAL)
     {
-        elog(ERROR, "json_get: jsmn: invalid JSON string");
+        fprintf(stderr, "json_get: jsmn: invalid JSON string");
     }
 
     if (status == JSMN_ERROR_PART)
     {
-        elog(ERROR, "json_get: jsmn: truncated JSON string");
+        fprintf(stderr, "json_get: jsmn: truncated JSON string");
 
     }
-    elog(DEBUG5, "Completed parse");
+    fprintf(stderr, "Completed parse");
 
     return tokens;
 }
@@ -149,7 +147,7 @@ get_pg_type(json_typeid type, char *value)
             assert(tokens->type == JSMN_ARRAY);
             arr_elt_type = jsmn_get_type(tokens + 1, value);
             arr_elt_pg_type = get_pg_type(arr_elt_type, jsmntok_to_str(tokens + 1, value));
-            buffer = palloc0(strlen(arr_elt_pg_type) + 2 + 1);
+            buffer = calloc(1, strlen(arr_elt_pg_type) + 2 + 1);
             /* NOTE: 'leaks' memory for nested arrays */
             sprintf(buffer, "%s%s", arr_elt_pg_type, ARRAY_TYPE);
             return buffer;
@@ -157,7 +155,7 @@ get_pg_type(json_typeid type, char *value)
             // elog(WARNING, "Got a NULL PG type");
             return NULL_TYPE;
         default:
-            elog(ERROR, "document: invalid type id on serialization");
+            fprintf(stderr, "document: invalid type id on serialization");
     }
 }
 
@@ -182,7 +180,7 @@ get_pg_type_for_path(char **path,
                                                  path_arr_index_map + 1,
                                                  --depth,
                                                  base_type);
-            buffer = palloc0(strlen(array_pg_type) + 2 + 1);
+            buffer = calloc(1, strlen(array_pg_type) + 2 + 1);
             sprintf(buffer, "%s%s", array_pg_type, ARRAY_TYPE);
 
             // elog(WARNING, "type: %s", buffer);
@@ -228,7 +226,8 @@ get_json_type(const char *pg_type)
         }
         else
         {
-            elog(ERROR, "document: invalid type id on deserialization");
+            fprintf(stderr, "document: invalid type id on deserialization");
+            return NONE;
         }
     }
 }

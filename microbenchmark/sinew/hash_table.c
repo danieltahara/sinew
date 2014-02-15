@@ -1,11 +1,9 @@
-#include <postgres.h> /* This include must precede all other postgres
-                         dependencies */
-#include <access/xact.h>
-#include <utils/memutils.h>
-
 #include <assert.h>
 
 #include "hash_table.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 /* Hash Table with Chaining
  *
@@ -54,7 +52,7 @@ resize(table_t* ht, size_t new_size)
     size_t old_size;
     size_t i;
 
-    new_entries = palloc0(new_size * sizeof(element_t*));
+    new_entries = calloc(new_size, sizeof(element_t*));
 
     old_entries = ht->entries;
     ht->entries = new_entries; // Swap out the underlying array
@@ -71,10 +69,10 @@ resize(table_t* ht, size_t new_size)
             temp = cur_elem;
             put(ht, cur_elem->key, cur_elem->value);
             cur_elem = cur_elem->next;
-            pfree(temp);
+            free(temp);
         }
     }
-    pfree(old_entries);
+    free(old_entries);
 
     return ht;
 }
@@ -85,10 +83,10 @@ make_elem(const char* key, const int val)
     element_t *new_elem;
     size_t keylen;
 
-    new_elem = palloc0(sizeof(element_t));
+    new_elem = calloc(1, sizeof(element_t));
 
     keylen = strlen(key);
-    new_elem->key = palloc0(keylen + 1);
+    new_elem->key = calloc(1, keylen + 1);
     strcpy(new_elem->key, key);
 
     new_elem->value = val;
@@ -105,8 +103,8 @@ make_table()
 {
     table_t* new_table;
 
-    new_table = palloc0(sizeof(table_t));
-    new_table->entries = palloc0(INIT_SIZE * sizeof(element_t*));
+    new_table = calloc(1, sizeof(table_t));
+    new_table->entries = calloc(INIT_SIZE, sizeof(element_t*));
     new_table->size = INIT_SIZE;
     new_table->num_elem = 0;
 
@@ -166,4 +164,8 @@ const element_t* put(table_t* ht, char* key, int val)
     }
 
     return head;
+}
+
+void destroy_table(table_t *table) {
+    fprintf(stderr, "destroy_table: method stub");
 }

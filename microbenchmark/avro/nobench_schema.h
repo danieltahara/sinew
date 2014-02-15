@@ -1,4 +1,4 @@
-const char PROJECTED_KEY = "sparse_987_str";
+const char PROJECTED_KEY[] = "sparse_987_str";
 
 const char PROJECTED_SCHEMA[] = "{ \
   \"type\": \"record\", \

@@ -1,4 +1,7 @@
-#include "json.h"
+#ifndef DOCUMENT_H
+#define DOCUMENT_H
+
+#include "../json.h"
 
 typedef struct {
     int        natts;
@@ -21,3 +24,13 @@ void binary_to_document(char *binary, document *doc);
 char *binary_document_to_string(char *binary);
 char *binary_array_to_string(char *binary);
 char *binary_to_string(json_typeid type, char *binary, int datum_len);
+
+// Utilities
+
+int
+int_comparator(const void *v1, const void *v2);
+int
+intref_comparator(const void *v1, const void *v2);
+
+
+#endif

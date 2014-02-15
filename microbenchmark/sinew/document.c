@@ -1,9 +1,9 @@
 #include <assert.h>
 
-#include "lib/jsmn/jsmn.h"
+#include <string.h>
+#include <stdlib.h>
 #include "document.h"
 #include "schema.h"
-#include "utils.h"
 
 /*******************************************************************************
  * String -> Binary
@@ -294,7 +294,7 @@ to_binary(json_typeid typeid, char *value, char **outbuff_ref)
     switch (typeid)
     {
     case STRING:
-        outbuff = pstrndup(value, strlen(value));
+        outbuff = strndup(value, strlen(value));
         *outbuff_ref = outbuff;
         // elog(WARNING, "%s", outbuff);
         return strlen(value);
@@ -319,7 +319,7 @@ to_binary(json_typeid typeid, char *value, char **outbuff_ref)
         } else if (!strcmp(value, "false")) {
             *outbuff = 0;
         } else {
-            elog(WARNING, "document: boolean has invalid value");
+            fprintf(stderr, "document: boolean has invalid value");
             return -1;
         }
         *outbuff_ref = outbuff;
@@ -330,7 +330,7 @@ to_binary(json_typeid typeid, char *value, char **outbuff_ref)
         return array_to_binary(value, outbuff_ref);
     case NONE:
     default:
-        elog(WARNING, "document: invalid data type");
+        fprintf(stderr, "document: invalid data type");
         return -1;
     }
     return -1; /* To shut up compiler warnings */
@@ -369,7 +369,7 @@ binary_to_document(char *binary, document *doc)
         get_attr(id, &key_string, &type_string);
         // elog(WARNING, "Got attribute info for: %d: %s, %s", id, key_string, type_string);
 
-        keys[i] = pstrndup(key_string, strlen(key_string));
+        keys[i] = strndup(key_string, strlen(key_string));
         types[i] = get_json_type(type_string);
 
         free(key_string);
@@ -539,7 +539,7 @@ binary_to_string(json_typeid type, char *binary, int datum_len)
     switch (type)
     {
         case STRING:
-            temp = pstrndup(binary, datum_len);
+            temp = strndup(binary, datum_len);
             free(temp);
             sprintf(result, "\"%s\"", temp);
             // elog(WARNING, "%s", result);
@@ -574,7 +574,41 @@ binary_to_string(json_typeid type, char *binary, int datum_len)
             return binary_array_to_string(binary);
         case NONE:
         default:
-            elog(ERROR, "document: invalid binary");
+            fprintf(stderr, "document: invalid binary");
+            return NULL;
     }
 
+}
+
+int
+int_comparator(const void *v1, const void *v2)
+{
+    int i1, i2;
+
+    i1 = *(int*)v1;
+    i2 = *(int*)v2;
+
+    if (i1 < i2)
+    {
+        return -1;
+    }
+    else if (i1 == i2)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+int
+intref_comparator(const void *v1, const void *v2)
+{
+    int *i1, *i2;
+
+    i1 = *(int**)v1;
+    i2 = *(int**)v2;
+
+    return int_comparator((void*)i1, (void*)i2);
 }

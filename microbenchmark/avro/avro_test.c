@@ -1,25 +1,31 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
 #include "avro.h"
 #include "nobench_schema.h"
-#include "json.h"
+#include "../json.h"
 
 #ifdef DEFLATE_CODEC
 #define NOBENCH_CODEC  "deflate"
 #else
 #define NOBENCH_CODEC  "null"
 #endif
-#endif
 
 char dbname[] = "avro_test.db";
 avro_schema_t nobench_schema;
 avro_schema_t projected_schema;
 
+char *to_avro_keyname(char *key, json_typeid type, char *value);
+int avro_record_value_fill(avro_value_t *avro_value, char *json);
+int test_serialize(FILE* infile);
+int test_deserialize(FILE *outfile);
+int test_project(FILE *outfile);
+
 int main(int argc, char** argv) {
-    char *filename;
-    FILE *infile, *outfile;
+    char *infilename, *outfilename, *extract_outfilename;
+    FILE *infile, *outfile, *extract_outfile;
     int rval; // Function status codes
     clock_t start, diff;
     int msec;
@@ -60,7 +66,7 @@ int main(int argc, char** argv) {
     printf("Deserialize: %d ms", msec);
 
     start = clock();
-    if (test_extract(extract_outfile)) {
+    if (test_project(extract_outfile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
@@ -102,13 +108,15 @@ int test_deserialize(FILE *outfile) {
 
     // Cleanup
     avro_file_reader_close(reader);
-    avro_value_decref(&value);
+    avro_value_decref(&avro_value);
     avro_value_iface_decref(iface);
     avro_schema_decref(schema);
+
+    return 1;
 }
 
 /* See: http://dcreager.github.io/avro-examples/resolved-writer.html */
-int test_projection(FILE *outfile) {
+int test_project(FILE *outfile) {
     avro_file_reader_t dbreader;
     avro_schema_t  reader_schema;
     avro_schema_t  writer_schema;
@@ -132,16 +140,16 @@ int test_projection(FILE *outfile) {
     avro_resolved_writer_new_value(writer_iface, &writer_value);
     avro_resolved_writer_set_dest(&writer_value, &reader_value);
 
-    while (avro_file_reader_read_value(file, &writer_value) == 0) {
+    while (avro_file_reader_read_value(dbreader, &writer_value) == 0) {
         avro_value_t field;
 
-        avro_value_get_by_name(&reader_value, PROJECTED_KEY, &field, NULL)
+        avro_value_get_by_name(&reader_value, PROJECTED_KEY, &field, NULL);
         if (rval) {
             fprintf(stderr, "Error reading: %s\n", avro_strerror());
             return rval;
         }
 
-        rval = avro_value_get_string(&avro_value, &value, &size);
+        rval = avro_value_get_string(&field, &value, &size);
         if (rval) {
             fprintf(stderr, "Error converting to string: %s\n", avro_strerror());
             return rval;
@@ -157,12 +165,14 @@ int test_projection(FILE *outfile) {
     avro_value_decref(&reader_value);
     avro_value_iface_decref(reader_iface);
     avro_schema_decref(reader_schema);
+
+    return 1;
 }
 
 // NOTE: File must be \n terminated
 int test_serialize(FILE* infile) {
     char *buffer;
-    size_t len;
+    size_t len, read;
     avro_file_writer_t db;
     avro_value_iface_t *iface;
     int rval;
@@ -186,11 +196,11 @@ int test_serialize(FILE* infile) {
         avro_value_t avro_value;
 
         // Create a new record
-        avro_generic_value_new(iface, &value);
-        avro_record_value_fill(&value, buffer);
+        avro_generic_value_new(iface, &avro_value);
+        avro_record_value_fill(&avro_value, buffer);
 
         // Write the record
-        rval = avro_value_write(db, value);
+        rval = avro_value_write(db, &avro_value);
         if (rval) {
             fprintf(stderr,
                     "Unable to write datum to memory buffer\nMessage: %s\n",
@@ -198,7 +208,7 @@ int test_serialize(FILE* infile) {
         }
 
         // Cleanup
-        avro_value_decref(avro_value);
+        avro_value_decref(&avro_value);
         free(buffer);
         buffer = NULL;
         len = 0;
@@ -206,14 +216,16 @@ int test_serialize(FILE* infile) {
 
     avro_file_writer_flush(db);
     avro_value_iface_decref(iface);
+
+    return 1;
 }
 
 // Returns - how many tokens to advance
 int avro_record_value_fill(avro_value_t *avro_value, char *json) {
-    int num_keys;
+    int num_keys, rval;
 
     jsmntok_t *tokens;
-    jsmntok_t curtok;
+    jsmntok_t *curtok;
 
     char *key, *value, *avro_keyname;
     json_typeid type;
@@ -224,12 +236,10 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
     json_typeid arr_type;
 
     // Start code
-
+    tokens = jsmn_tokenize(json);
+    curtok = tokens;
     assert(curtok->type == JSMN_OBJECT);
     num_keys = curtok->size;
-
-    tokens = jsmn_tokenize(buffer);
-    curtok = tokens;
     ++curtok;
     for (int i = 0; i < num_keys; ++i) {
         key = jsmntok_to_str(curtok, json);
@@ -271,6 +281,7 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
                 curtok += arr_len;
             case NONE:
             default:
+                break;
         }
 
         if (rval) {
@@ -296,7 +307,7 @@ char *to_avro_keyname(char *key, json_typeid type, char *value) {
     if (type == ARRAY) {
         pg_type = strtok(pg_type, "[");
     }
-    avro_keyname = malloc(sizeof(key) + 1 + size_of(pg_type) + 1);
+    avro_keyname = malloc(sizeof(key) + 1 + sizeof(pg_type) + 1);
     sprintf(avro_keyname, "%s_%s", key, pg_type);
 
     return avro_keyname;

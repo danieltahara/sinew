@@ -1,3 +1,6 @@
+#ifndef JSON_H
+#define JSON_H
+
 #include "lib/jsmn/jsmn.h"
 
 typedef enum { STRING = 1,
@@ -32,3 +35,5 @@ char *get_pg_type_for_path(char **path,
                            char *path_arr_index_map,
                            int depth,
                            char *base_type);
+
+#endif

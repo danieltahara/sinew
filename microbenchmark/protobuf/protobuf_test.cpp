@@ -4,13 +4,22 @@
 #include <fstream>
 #include <cstdlib>
 #include <cstdio>
+#include <cstring>
+#include "../json.h"
 
 char dbname[] = "protobuf_test.db";
 char projected_key[] = "sparse_987_str";
 
+int test_serialize(FILE* infile);
+int test_deserialize(FILE *outfile);
+int test_project(FILE *outfile);
+int protobuf_fill(NoBench *protobuf, char *json);
+
+using namespace std;
+
 int main(int argc, char** argv) {
-    char *filename;
-    FILE *infile, *outfile;
+    char *infilename, *outfilename, *extract_outfilename;
+    FILE *infile, *outfile, *extract_outfile;
     int rval; // Function status codes
     clock_t start, diff;
     int msec;
@@ -45,7 +54,7 @@ int main(int argc, char** argv) {
     printf("Deserialize: %d ms", msec);
 
     start = clock();
-    if (test_extract(extract_outfile)) {
+    if (test_project(extract_outfile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
@@ -61,49 +70,58 @@ int main(int argc, char** argv) {
 int test_deserialize(FILE *outfile) {
     NoBench nb;
     char *json;
+    char buffer[10000];
     fstream input(dbname, ios::in | ios::binary);
 
     while (nb.ParseFromIstream(&input)) {
-        json = calloc(10000, 1);
+        json = (char*)calloc(10000, 1);
         strcat(json, "{");
-        strcat(json, "\"%s\":\"%s\"", "str1", nb.get_str1_str());
-        strcat(json, "\"%s\":\"%s\"", "str2", nb.get_str2_str());
-        strcat(json, "\"%s\":%d", "num", nb.get_num_int());
-        strcat(json, "\"%s\":%d", "bool", nb.get_bool_bool(());
-        strcat(json, "\"%s\":\"%s\"", "dyn1", nb.get_dyn1_str());
-        strcat(json, "\"%s\":\"%s\"", "dyn2", nb.get_dyn2_str());
-        // Junk just for the sake of I/O
-        strcat(json, "\"%s\":\"%s\"", "str1", nb.get_str1_str());
-        strcat(json, "\"%s\":\"%s\"", "str2", nb.get_str2_str());
-        strcat(json, "\"%s\":%d", "num", nb.get_num_int());
-        strcat(json, "\"%s\":%d", "bool", nb.get_bool_bool(());
-        strcat(json, "\"%s\":\"%s\"", "dyn1", nb.get_dyn1_str());
-        strcat(json, "\"%s\":\"%s\"", "dyn2", nb.get_dyn2_str());
-        strcat(json, "\"%s\":\"%s\"", "str1", nb.get_str1_str());
-        strcat(json, "\"%s\":\"%s\"", "str2", nb.get_str2_str());
-        strcat(json, "\"%s\":%d", "num", nb.get_num_int());
-        strcat(json, "\"%s\":%d", "bool", nb.get_bool_bool(());
-        strcat(json, "\"%s\":\"%s\"", "dyn1", nb.get_dyn1_str());
-        strcat(json, "\"%s\":\"%s\"", "dyn2", nb.get_dyn2_str());
+        sprintf(buffer, "\"%s\":\"%s\"", "str1", nb.str1_str().c_str());
+        strcat(json, buffer);
+        sprintf(buffer, "\"%s\":\"%s\"", "str2", nb.str1_str().c_str());
+        strcat(json, buffer);
+        sprintf(buffer, "\"%s\": %lld", "num", nb.num_int());
+        strcat(json, buffer);
+        sprintf(buffer, "\"%s\":%d", "bool", nb.bool_bool());
+        strcat(json, buffer);
+        sprintf(buffer, "\"%s\":\"%s\"", "dyn1", nb.dyn1_str().c_str());
+        strcat(json, buffer);
+        sprintf(buffer, "\"%s\":\"%s\"", "dyn2", nb.dyn2_str().c_str());
+        strcat(json, buffer);
+        // /Junk just for the sake of I/O
+        sprintf(buffer, "\"%s\":\"%s\"", "str1", nb.str1_str().c_str());
+        strcat(json, buffer);
+        sprintf(buffer, "\"%s\":\"%s\"", "str2", nb.str1_str().c_str());
+        strcat(json, buffer);
+        sprintf(buffer, "\"%s\": %lld", "num", nb.num_int());
+        strcat(json, buffer);
+        sprintf(buffer, "\"%s\":%d", "bool", nb.bool_bool());
+        strcat(json, buffer);
+        sprintf(buffer, "\"%s\":\"%s\"", "dyn1", nb.dyn1_str().c_str());
+        strcat(json, buffer);
+        sprintf(buffer, "\"%s\":\"%s\"", "dyn2", nb.dyn2_str().c_str());
+        strcat(json, buffer);
+        // \junk
+
         fprintf(outfile, "%s\n", json);
         free(json);
     }
 }
 
 /* See: http://dcreager.github.io/avro-examples/resolved-writer.html */
-int test_projection(FILE *outfile) {
+int test_project(FILE *outfile) {
     NoBench nb;
     fstream input(dbname, ios::in | ios::binary);
 
     while (nb.ParseFromIstream(&input)) {
-        fprintf(outfile, "%s\n", nb.get_sparse_987_str());
+        fprintf(outfile, "%s\n", nb.sparse_987_str().c_str());
     }
 }
 
 // NOTE: File must be \n terminated
 int test_serialize(FILE* infile) {
     char *buffer;
-    size_t len;
+    size_t len, read;
     fstream output(dbname, ios::out | ios::trunc | ios::binary);
 
     buffer = NULL;
@@ -111,7 +129,7 @@ int test_serialize(FILE* infile) {
     while ((read = getline(&buffer, &len, infile)) != -1) {
         NoBench nb;
 
-        protobuf_fill(&nb, json);
+        protobuf_fill(&nb, buffer);
         if (!nb.SerializeToOstream(&output)) {
             cerr << "Failed to write datum." << endl;
             return -1;
@@ -128,7 +146,7 @@ int protobuf_fill(NoBench *protobuf, char *json) {
     int num_keys;
 
     jsmntok_t *tokens;
-    jsmntok_t curtok;
+    jsmntok_t *curtok;
 
     char *key, *value, *protobuf_keyname;
     json_typeid type;
@@ -142,7 +160,7 @@ int protobuf_fill(NoBench *protobuf, char *json) {
     assert(curtok->type == JSMN_OBJECT);
     num_keys = curtok->size;
 
-    tokens = jsmn_tokenize(buffer);
+    tokens = jsmn_tokenize(json);
     curtok = tokens;
     ++curtok;
     for (int i = 0; i < num_keys; ++i) {
@@ -190,16 +208,16 @@ int protobuf_fill(NoBench *protobuf, char *json) {
                 }
                 break;
             case DOCUMENT:
-                for (j = 0; j < 2; ++j) {
+                for (int j = 0; j < 2; ++j) {
                     free(key);
                     free(value);
                     key = jsmntok_to_str(++curtok, json);
                     if (!strcmp(key, "str")) {
                         value = jsmntok_to_str(++curtok, json);
-                        protobuf->set_nested_obj_str_str(value);
+                        protobuf->mutable_nested_obj_obj()->set_str_str(value);
                     } else if (!strcmp(key, "num")) {
                         value = jsmntok_to_str(++curtok, json);
-                        protobuf->set_nested_obj_num_int(atoi(value));
+                        protobuf->mutable_nested_obj_obj()->set_num_int(atoi(value));
                     }
                 }
                 break;
@@ -212,6 +230,7 @@ int protobuf_fill(NoBench *protobuf, char *json) {
                 }
             case NONE:
             default:
+                break;
         }
 
         free(key);

@@ -1,18 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 #include "document.h"
-#include "json.h"
+#include "schema.h"
+#include "../json.h"
 
-char dbname[] = "sinew_test.db"
-char schemafname[] = "sinew_test.schema"
+char dbname[] = "sinew_test.db";
+char schemafname[] = "sinew_test.schema";
 const char projected_keyname[] = "sparse_987";
 const char projected_typename[] = STRING_TYPE;
 
+int test_serialize(FILE* infile);
+int test_deserialize(FILE *outfile);
+int test_projection(FILE *outfile);
+
 int main(int argc, char** argv) {
-    char *filename;
-    FILE *infile, *outfile;
+    char *infilename, *outfilename, *extract_outfilename;
+    FILE *infile, *outfile, *extract_outfile;
     clock_t start, diff;
     int msec;
 
@@ -42,7 +48,7 @@ int main(int argc, char** argv) {
     printf("Deserialize: %d ms", msec);
 
     start = clock();
-    if (test_extract(extract_outfile)) {
+    if (test_projection(extract_outfile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
@@ -79,6 +85,8 @@ int test_deserialize(FILE *outfile) {
     }
 
     fclose(schemafile);
+
+    return 1;
 }
 
 int test_projection(FILE *outfile) {
@@ -106,18 +114,18 @@ int test_projection(FILE *outfile) {
         buffpos = sizeof(int);
         attr_listing = NULL;
         attr_listing = bsearch(&attr_id,
-                               doc + buffpos,
+                               binary + buffpos,
                                natts,
                                sizeof(int),
                                int_comparator);
-        pos = (attr_listing - buffpos - doc) / sizeof(int);
+        pos = (attr_listing - buffpos - binary) / sizeof(int);
         buffpos += natts * sizeof(int);
-        memcpy(&offstart, doc + buffpos + pos * sizeof(int), sizeof(int));
-        memcpy(&offend, doc + buffpos + (pos + 1) * sizeof(int), sizeof(int));
+        memcpy(&offstart, binary + buffpos + pos * sizeof(int), sizeof(int));
+        memcpy(&offend, binary + buffpos + (pos + 1) * sizeof(int), sizeof(int));
         len = offend - offstart;
 
         value = malloc(len + 1);
-        memcpy(value, doc + offstart, len);
+        memcpy(value, binary + offstart, len);
         value[len] = '\0';
 
         fprintf(outfile, "%s\n", value);
@@ -128,12 +136,14 @@ int test_projection(FILE *outfile) {
     }
 
     fclose(schemafile);
+
+    return 1;
 }
 
 // NOTE: File must be \n terminated
 int test_serialize(FILE* infile) {
-    char *buffer;
-    size_t len;
+    char *buffer, *binary;
+    size_t len, read;
     size_t binsize;
     FILE *dbfile, *schemafile;
 
@@ -154,25 +164,9 @@ int test_serialize(FILE* infile) {
         len = 0;
     }
 
-    dump_schema(schema_file);
+    dump_schema(schemafile);
 
     fclose(dbfile);
-}
 
-
-int
-int_comparator(const void *v1, const void *v2)
-{
-    int i1, i2;
-
-    i1 = *(int*)v1;
-    i2 = *(int*)v2;
-
-    if (i1 < i2) {
-        return -1;
-    } else if (i1 == i2) {
-        return 0;
-    } else {
-        return 1;
-    }
+    return 1;
 }
