@@ -7,12 +7,6 @@
 #include "nobench_schema.h"
 #include "../json.h"
 
-#ifdef DEFLATE_CODEC
-#define NOBENCH_CODEC  "deflate"
-#else
-#define NOBENCH_CODEC  "null"
-#endif
-
 char dbname[] = "avro_test.db";
 avro_schema_t nobench_schema;
 avro_schema_t projected_schema;
@@ -125,7 +119,7 @@ int test_project(FILE *outfile) {
     avro_value_t  writer_value;
     avro_value_t  reader_value;
     int rval;
-    char *value;
+    const char *value;
     size_t size;
 
     rval = avro_file_reader(dbname, &dbreader);
@@ -155,7 +149,7 @@ int test_project(FILE *outfile) {
             return rval;
         }
         fprintf(outfile, "%s\n", value);
-        free(value);
+        // free(value);
     }
 
     avro_file_reader_close(dbreader);
@@ -177,11 +171,8 @@ int test_serialize(FILE* infile) {
     avro_value_iface_t *iface;
     int rval;
 
-    rval = avro_file_writer_create_with_codec(dbname,
-                                              nobench_schema,
-                                              &db,
-                                              NOBENCH_CODEC,
-                                              0);
+    rval = avro_file_writer_create(dbname, nobench_schema, &db);
+
     if (rval) {
         fprintf(stderr, "There was an error creating %s\n", dbname);
         fprintf(stderr, " error message: %s\n", avro_strerror());
@@ -200,7 +191,7 @@ int test_serialize(FILE* infile) {
         avro_record_value_fill(&avro_value, buffer);
 
         // Write the record
-        rval = avro_value_write(db, &avro_value);
+        rval = avro_file_writer_append_value(db, &avro_value);
         if (rval) {
             fprintf(stderr,
                     "Unable to write datum to memory buffer\nMessage: %s\n",
