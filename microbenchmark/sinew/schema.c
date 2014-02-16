@@ -109,20 +109,23 @@ read_schema(FILE* infile)
 
     attr = NULL;
     len = 0;
+    fprintf(stderr, "Num keys: %d\n", num_keys);
     for (i = 0; i < num_keys; ++i) {
         getline(&attr, &len, infile);
-        // fprintf(stderr, "%s", attr);
-
-        // Add to hash table
-        put(attr_table, attr, i);
 
         keyname = strtok(attr, " ");
         typename = strtok(NULL, "\n");
-        // fprintf(stderr, "%s\n", keyname);
-        // fprintf(stderr, "%s\n", typename);
         // Add to array
         key_names[i] = strndup(keyname, strlen(keyname));
         key_types[i] = strndup(typename, strlen(typename));
+        // Add to hash table
+        free(attr);
+        // FIXME: this is a bit hacky but w/e
+        attr = malloc(strlen(keyname) + strlen(typename) + 2);
+        sprintf(attr, "%s %s", keyname, typename);
+
+        put(attr_table, attr, i);
+
 
         free(attr);
         attr = NULL;

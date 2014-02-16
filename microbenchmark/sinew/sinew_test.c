@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
 /* Read all the records and print them */
 int test_deserialize(FILE *outfile) {
     FILE *dbfile, *schemafile;
-    size_t bsize;
+    size_t binsize;
     char *binary, *json;
 
     dbfile = fopen(dbname, "r");
@@ -76,20 +77,20 @@ int test_deserialize(FILE *outfile) {
     read_schema(schemafile);
     fprintf(stderr, "read schema\n");
 
-    fread(&bsize, sizeof(bsize), 1, dbfile);
+    fread(&binsize, sizeof(binsize), 1, dbfile);
     while (!feof(dbfile)) {
-        binary = malloc(bsize);
-        fread(binary, bsize, 1, dbfile);
+        binary = malloc(binsize);
+        fread(binary, binsize, 1, dbfile);
 
-        fprintf(stderr, "read object\n");
+        // fprintf(stderr, "read object\n");
         json = binary_document_to_string(binary);
-        fprintf(stderr, "converted to json\n");
+        // fprintf(stderr, "converted to json\n");
         fprintf(outfile, "%s\n", json);
         fflush(outfile);
 
         free(json);
         free(binary);
-        fread(&bsize, sizeof(int), 1, dbfile);
+        fread(&binsize, sizeof(binsize), 1, dbfile);
     }
 
     fclose(schemafile);
@@ -99,7 +100,7 @@ int test_deserialize(FILE *outfile) {
 
 int test_projection(FILE *outfile) {
     FILE *dbfile, *schemafile;
-    size_t attr_id, bsize;
+    size_t attr_id, binsize;
     char *binary, *value;
     char *attr_listing;
     int natts, buffpos, pos, len;
@@ -109,14 +110,17 @@ int test_projection(FILE *outfile) {
     schemafile = fopen(schemafname, "r");
 
     read_schema(schemafile);
+    fprintf(stderr, "read schema\n");
 
-    fread(&bsize, sizeof(bsize), 1, dbfile);
+    fread(&binsize, sizeof(binsize), 1, dbfile);
     while (!feof(dbfile)) {
-        binary = malloc(bsize);
-        fread(binary, bsize, 1, dbfile);
+        binary = malloc(binsize);
+        fread(binary, binsize, 1, dbfile);
 
         // NOTE: Hardcoded because I'm just testing one extraction
         attr_id = get_attribute_id(projected_keyname, projected_typename);
+        // fprintf(stderr, "Got attr id: %ld for: %s %s\n", attr_id, projected_keyname,
+        //     projected_typename);
 
         memcpy(&natts, binary, sizeof(int));
         buffpos = sizeof(int);
@@ -126,21 +130,28 @@ int test_projection(FILE *outfile) {
                                natts,
                                sizeof(int),
                                int_comparator);
-        pos = (attr_listing - buffpos - binary) / sizeof(int);
-        buffpos += natts * sizeof(int);
-        memcpy(&offstart, binary + buffpos + pos * sizeof(int), sizeof(int));
-        memcpy(&offend, binary + buffpos + (pos + 1) * sizeof(int), sizeof(int));
-        len = offend - offstart;
+        if (attr_listing) {
+            pos = (attr_listing - buffpos - binary) / sizeof(int);
+            // fprintf(stderr, "attr_listing: %p\n", attr_listing);
+            // fprintf(stderr, "binary: %p\n", binary);
+            // fprintf(stderr, "Position: %d\n", pos);
+            buffpos += natts * sizeof(int);
+            memcpy(&offstart, binary + buffpos + pos * sizeof(int), sizeof(int));
+            memcpy(&offend, binary + buffpos + (pos + 1) * sizeof(int), sizeof(int));
+            len = offend - offstart;
+            // fprintf(stderr, "Len: %d\n", len);
 
-        value = malloc(len + 1);
-        memcpy(value, binary + offstart, len);
-        value[len] = '\0';
+            value = malloc(len + 1);
+            memcpy(value, binary + offstart, len);
+            value[len] = '\0';
 
-        fprintf(outfile, "%s\n", value);
+            fprintf(outfile, "%s\n", value);
 
-        free(value);
+            free(value);
+        }
         free(binary);
-        fread(&bsize, sizeof(int), 1, dbfile);
+
+        fread(&binsize, sizeof(binsize), 1, dbfile);
     }
 
     fclose(schemafile);
