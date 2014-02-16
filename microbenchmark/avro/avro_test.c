@@ -26,11 +26,11 @@ int main(int argc, char** argv) {
 
     // Parse schema into a schema data structure
     if (avro_schema_from_json_literal(NOBENCH_SCHEMA, &nobench_schema)) {
-        fprintf(stderr, "Unable to parse person schema\n");
+        fprintf(stderr, "Unable to parse nobench schema\n");
         exit(EXIT_FAILURE);
     }
     if (avro_schema_from_json_literal(PROJECTED_SCHEMA, &projected_schema)) {
-        fprintf(stderr, "Unable to parse person schema\n");
+        fprintf(stderr, "Unable to parse projected schema\n");
         exit(EXIT_FAILURE);
     }
 

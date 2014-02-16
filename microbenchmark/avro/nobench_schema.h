@@ -25,7 +25,7 @@ const char NOBENCH_SCHEMA[] = "{ \
       {\"name\": \"dyn2_bool\", \"type\": [\"boolean\", \"null\"]}, \
  \
       {\"name\": \"nested_arr_str\", \
-       \"type\":[{\"type\": \"array\", \"items\": \"string\"}, null]}, \
+       \"type\":[{\"type\": \"array\", \"items\": \"string\"}, \"null\"]}, \
  \
       {\"name\": \"nested_obj_obj\", \
        \"type\":[{\"type\": \"record\", \
