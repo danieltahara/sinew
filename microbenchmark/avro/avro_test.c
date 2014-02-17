@@ -8,12 +8,14 @@
 #include "../json.h"
 
 char dbname[] = "avro_test.db";
-const char codec[] = "null"; // Compression?? = deflate
+const char codec[] = "null"; // Compression?? = null, deflate
 char *to_avro_keyname(char *key, json_typeid type, char *value);
 int avro_record_value_fill(avro_value_t *avro_value, char *json);
 int test_serialize(FILE* infile);
 int test_deserialize(FILE *outfile);
-int test_project(FILE *outfile);
+int test_project(FILE *outfile) {
+    return 0;
+}
 
 int main(int argc, char** argv) {
     char *infilename, *outfilename, *extract_outfilename;
@@ -23,41 +25,38 @@ int main(int argc, char** argv) {
     int msec;
     avro_schema_error_t error;
 
+    // TODO: DRY
     infilename = argv[1];
     infile = fopen(infilename, "r");
-    outfilename = argv[2];
-    outfile = fopen(outfilename, "w");
-    extract_outfilename = argv[3];
-    extract_outfile = fopen(extract_outfilename, "w");
-
-    // Measures CPU Time
-    // TODO: DRY
     start = clock();
-    if (test_serialize(infile)) {
+    if (!test_serialize(infile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Serialize: %d ms", msec);
+    fclose(infile);
 
+    outfilename = argv[2];
+    outfile = fopen(outfilename, "w");
     start = clock();
-    if (test_deserialize(outfile)) {
+    if (!test_deserialize(outfile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Deserialize: %d ms", msec);
+    fclose(outfile);
 
+    extract_outfilename = argv[3];
+    extract_outfile = fopen(extract_outfilename, "w");
     start = clock();
-    if (test_project(extract_outfile)) {
+    if (!test_project(extract_outfile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Extract: %d ms", msec);
-
-    fclose(infile);
-    fclose(outfile);
     fclose(extract_outfile);
 }
 
@@ -99,6 +98,7 @@ int test_deserialize(FILE *outfile) {
 }
 
 /* See: http://dcreager.github.io/avro-examples/resolved-writer.html */
+/*
 int test_project(FILE *outfile) {
     avro_file_reader_t dbreader;
     avro_schema_t  reader_schema;
@@ -151,6 +151,7 @@ int test_project(FILE *outfile) {
 
     return 1;
 }
+*/
 
 // NOTE: File must be \n terminated
 int test_serialize(FILE* infile) {
@@ -172,13 +173,12 @@ int test_serialize(FILE* infile) {
 
     iface = avro_generic_class_from_schema(schema);
     rval = avro_generic_value_new(iface, &avro_value);
-    fprintf(stderr, "rval:%d error message: %s\n", rval, avro_strerror());
 
-    if ((rval = avro_file_writer_create_with_codec(dbname, schema, &db, codec, 1024000))) {
-        fprintf(stderr, "There was an error creating %s\n", dbname);
-        fprintf(stderr, " error message: %s\n", avro_strerror());
+    if ((rval = avro_file_writer_create_with_codec(dbname, schema, &db, codec, 13000 * 1024))) {
+        fprintf(stderr, "Error creating %s: %s\n", dbname, avro_strerror());
         return rval;
     }
+    avro_file_writer_flush(db);
 
     buffer = NULL;
     len = 0;
@@ -201,13 +201,13 @@ int test_serialize(FILE* infile) {
         */
         // Create a new record
         avro_record_value_fill(&avro_value, buffer);
+        // avro_value_get_size(&avro_value, &index);
+        // fprintf(stderr, "record has %zu attr\n", index);
 
         // Write the record
         rval = avro_file_writer_append_value(db, &avro_value);
         if (rval) {
-            fprintf(stderr,
-                    "Unable to write datum to memory buffer\nMessage: %s\n",
-                    avro_strerror());
+            fprintf(stderr, "Unable to write datum: %d: %s\n", rval, avro_strerror());
         }
 
         // Cleanup
@@ -216,8 +216,10 @@ int test_serialize(FILE* infile) {
         buffer = NULL;
         len = 0;
     }
+    fprintf(stderr, "Finished serialization\n");
 
     avro_file_writer_flush(db);
+    avro_file_writer_close(db);
     avro_value_decref(&avro_value);
     avro_value_iface_decref(iface);
 
@@ -234,6 +236,9 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
     char *key, *value, *avro_keyname;
     avro_value_t avro_field, avro_subfield, avro_subsubfield;
     json_typeid type;
+
+    // avro_value_iface_t *iface = avro_generic_class_from_schema(avro_schema_string());
+    // avro_generic_value_new(iface, &avro_subsubfield);
 
     int arr_len;
     size_t index; // Index of field; just for debugging
@@ -254,13 +259,17 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
         avro_keyname = to_avro_keyname(key, type, value);
         avro_value_get_by_name(avro_value, avro_keyname, &avro_field, &index);
 
-        fprintf(stderr, "Got to assignment for key: %s, value: %s type:%d\n", avro_keyname, value, type);
+        // fprintf(stderr, "Got to assignment for key: %s, value: %s type:%d\n", avro_keyname, value, type);
         switch (type) {
             case STRING:
                 rval = avro_value_set_branch(&avro_field, 0, &avro_subfield);
                 if (!strcmp(avro_keyname, "sparse_str")) {
-                    avro_value_set_string(&avro_subsubfield, value);
-                    rval = avro_value_append(&avro_subfield, &avro_subsubfield, NULL);
+                    avro_value_append(&avro_subfield, &avro_subsubfield, &index);
+                    rval = avro_value_set_string(&avro_subsubfield, value);
+                    // avro_value_get_string(&avro_subsubfield, &fname, &index);
+                    // fprintf(stderr, "str: %s\n", fname);
+                    // avro_value_get_size(&avro_subfield, &index);
+                    // fprintf(stderr, "Sparse_str: new size: %zu\n", index);
                 } else {
                     rval = avro_value_set_string(&avro_subfield, value);
                 }
@@ -271,12 +280,12 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
                 break;
             case FLOAT:
                 rval = avro_value_set_branch(&avro_field, 0, &avro_subfield);
-                rval = avro_value_set_float(&avro_field, atof(value));
+                rval = avro_value_set_float(&avro_subfield, atof(value));
                 break;
             case BOOLEAN:
                 rval = avro_value_set_branch(&avro_field, 0, &avro_subfield);
                 rval =
-                  avro_value_set_boolean(&avro_field,
+                  avro_value_set_boolean(&avro_subfield,
                                          !strcmp(value, "true") ? 1 : 0);
                 break;
             case DOCUMENT:
@@ -284,12 +293,12 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
                 for (int j = 0; j < 2; ++j) {
                     free(key);
                     free(value);
-                    index = 20001;
                     key = jsmntok_to_str(++curtok, json);
                     avro_value_get_size(&avro_subfield, &index);
                     //fprintf(stderr, "Size: %ld\n", index);
                     if (!strcmp(key, "str")) {
                         value = jsmntok_to_str(++curtok, json);
+                        // TODO: see if i got this right
                         avro_value_get_by_name(&avro_subfield, "str_str", &avro_subsubfield, &index);
                         avro_value_set_string(&avro_subsubfield, value);
                     } else if (!strcmp(key, "num")) {
@@ -314,7 +323,7 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
             default:
                 break;
         }
-        fprintf(stderr, "after switch\n");
+        // fprintf(stderr, "after switch\n");
 
         if (rval) {
             fprintf(stderr, "Unable to set %s\n", avro_keyname);
@@ -324,10 +333,7 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
         free(key);
         free(value);
         free(avro_keyname);
-        avro_value_reset(&avro_field);
-        avro_value_reset(&avro_subfield);
-        avro_value_reset(&avro_subsubfield);
-        fprintf(stderr, "on to next token\n");
+        // fprintf(stderr, "on to next token\n");
 
         ++curtok;
     }

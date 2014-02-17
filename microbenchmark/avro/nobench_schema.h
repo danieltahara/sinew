@@ -31,8 +31,8 @@ const char NOBENCH_SCHEMA[] = "{ \
        \"type\":[{\"type\": \"record\", \
                 \"name\": \"nested_object\", \
                 \"fields\": [ \
-                    {\"name\" : \"str_str\", \"type\": [\"string\", \"null\"]}, \
-                    {\"name\" : \"num_int\", \"type\": [\"int\", \"null\"]} \
+                    {\"name\" : \"str_str\", \"type\": \"string\"}, \
+                    {\"name\" : \"num_int\", \"type\": \"int\"} \
                 ]}, \"null\"]}, \
  \
       {\"name\": \"sparse_000_str\", \"type\": [\"string\", \"null\"]}, \
