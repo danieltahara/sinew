@@ -35,6 +35,14 @@ const char NOBENCH_SCHEMA[] = "{ \
                     {\"name\" : \"num_int\", \"type\": \"int\"} \
                 ]}, \"null\"]}, \
  \
+      {\"name\": \"sparse_str\", \
+       \"type\":[{\"type\": \"array\", \"items\": \"string\"}, \"null\"]}, \
+ \
+      {\"name\": \"sparse_987_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"thousandth_int\", \"type\": [\"int\", \"null\"]} \
+  ] \
+}";
+/*
       {\"name\": \"sparse_000_str\", \"type\": [\"string\", \"null\"]}, \
       {\"name\": \"sparse_001_str\", \"type\": [\"string\", \"null\"]}, \
       {\"name\": \"sparse_002_str\", \"type\": [\"string\", \"null\"]}, \
@@ -1035,8 +1043,4 @@ const char NOBENCH_SCHEMA[] = "{ \
       {\"name\": \"sparse_997_str\", \"type\": [\"string\", \"null\"]}, \
       {\"name\": \"sparse_998_str\", \"type\": [\"string\", \"null\"]}, \
       {\"name\": \"sparse_999_str\", \"type\": [\"string\", \"null\"]}, \
- \
-      {\"name\": \"sparse_987_str\", \"type\": [\"string\", \"null\"]}, \
-      {\"name\": \"thousandth_int\", \"type\": [\"int\", \"null\"]} \
-  ] \
-}";
+*/

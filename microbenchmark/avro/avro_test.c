@@ -236,7 +236,7 @@ int test_serialize(FILE* infile) {
         buffer = NULL;
         len = 0;
     }
-    fprintf(stderr, "Finished serialization\n");
+    // fprintf(stderr, "Finished serialization\n");
 
     avro_file_writer_flush(db);
     avro_file_writer_close(db);
