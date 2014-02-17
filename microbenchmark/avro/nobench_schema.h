@@ -14,13 +14,13 @@ const char NOBENCH_SCHEMA[] = "{ \
   \"fields\" : [ \
       {\"name\": \"str1_str\", \"type\": [\"string\", \"null\"]}, \
       {\"name\": \"str2_str\", \"type\": [\"string\", \"null\"]}, \
-      {\"name\": \"num_int\", \"type\": [\"long\", \"null\"]}, \
+      {\"name\": \"num_int\", \"type\": [\"int\", \"null\"]}, \
       {\"name\": \"bool_bool\", \"type\": [\"boolean\", \"null\"]}, \
  \
-      {\"name\": \"dyn1_int\", \"type\": [\"long\", \"null\"]}, \
+      {\"name\": \"dyn1_int\", \"type\": [\"int\", \"null\"]}, \
       {\"name\": \"dyn1_str\", \"type\": [\"string\", \"null\"]}, \
  \
-      {\"name\": \"dyn2_int\", \"type\": [\"long\", \"null\"]}, \
+      {\"name\": \"dyn2_int\", \"type\": [\"int\", \"null\"]}, \
       {\"name\": \"dyn2_str\", \"type\": [\"string\", \"null\"]}, \
       {\"name\": \"dyn2_bool\", \"type\": [\"boolean\", \"null\"]}, \
  \
@@ -32,7 +32,7 @@ const char NOBENCH_SCHEMA[] = "{ \
                 \"name\": \"nested_object\", \
                 \"fields\": [ \
                     {\"name\" : \"str_str\", \"type\": [\"string\", \"null\"]}, \
-                    {\"name\" : \"num_int\", \"type\": [\"long\", \"null\"]} \
+                    {\"name\" : \"num_int\", \"type\": [\"int\", \"null\"]} \
                 ]}, \"null\"]}, \
  \
       {\"name\": \"sparse_000_str\", \"type\": [\"string\", \"null\"]}, \
@@ -1036,6 +1036,7 @@ const char NOBENCH_SCHEMA[] = "{ \
       {\"name\": \"sparse_998_str\", \"type\": [\"string\", \"null\"]}, \
       {\"name\": \"sparse_999_str\", \"type\": [\"string\", \"null\"]}, \
  \
-      {\"name\": \"thousandth\", \"type\": [\"long\", \"null\"]} \
+      {\"name\": \"sparse_987_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"thousandth_int\", \"type\": [\"int\", \"null\"]} \
   ] \
 }";
