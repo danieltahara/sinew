@@ -8,14 +8,12 @@
 #include "../json.h"
 
 char dbname[] = "avro_test.db";
-const char codec[] = "null"; // Compression?? = null, deflate
+const char codec[] = "deflate"; // Compression?? = null, deflate
 char *to_avro_keyname(char *key, json_typeid type, char *value);
 int avro_record_value_fill(avro_value_t *avro_value, char *json);
 int test_serialize(FILE* infile);
 int test_deserialize(FILE *outfile);
-int test_project(FILE *outfile) {
-    return 0;
-}
+int test_project(FILE *outfile);
 
 int main(int argc, char** argv) {
     char *infilename, *outfilename, *extract_outfilename;
@@ -34,7 +32,7 @@ int main(int argc, char** argv) {
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("Serialize: %d ms", msec);
+    printf("Serialize: %d ms\n", msec);
     fclose(infile);
 
     outfilename = argv[2];
@@ -45,7 +43,7 @@ int main(int argc, char** argv) {
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("Deserialize: %d ms", msec);
+    printf("Deserialize: %d ms\n", msec);
     fclose(outfile);
 
     extract_outfilename = argv[3];
@@ -56,7 +54,7 @@ int main(int argc, char** argv) {
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("Extract: %d ms", msec);
+    printf("Extract: %d ms\n", msec);
     fclose(extract_outfile);
 }
 
@@ -98,9 +96,9 @@ int test_deserialize(FILE *outfile) {
 }
 
 /* See: http://dcreager.github.io/avro-examples/resolved-writer.html */
-/*
 int test_project(FILE *outfile) {
     avro_file_reader_t dbreader;
+    avro_schema_error_t error;
     avro_schema_t  reader_schema;
     avro_schema_t  writer_schema;
     avro_value_iface_t  *writer_iface;
@@ -108,23 +106,30 @@ int test_project(FILE *outfile) {
     avro_value_t  writer_value;
     avro_value_t  reader_value;
     int rval;
-    const char *value;
-    size_t size;
+    // Parse schema into a schema data structure
+    if ((rval = avro_schema_from_json(PROJECTED_SCHEMA, 0, &reader_schema, &error))) {
+        fprintf(stderr, "Unable to parse nobench schema\n");
+        return rval;
+    }
 
     rval = avro_file_reader(dbname, &dbreader);
     if (rval) {
         fprintf(stderr, "Error opening file: %s\n", avro_strerror());
         return rval;
     }
+
     writer_schema = avro_file_reader_get_writer_schema(dbreader);
-    reader_iface = avro_generic_class_from_schema(projected_schema);
+    reader_iface = avro_generic_class_from_schema(reader_schema);
     avro_generic_value_new(reader_iface, &reader_value);
     writer_iface = avro_resolved_writer_new(writer_schema, reader_schema);
     avro_resolved_writer_new_value(writer_iface, &writer_value);
     avro_resolved_writer_set_dest(&writer_value, &reader_value);
 
     while (avro_file_reader_read_value(dbreader, &writer_value) == 0) {
-        avro_value_t field;
+        avro_value_t field, subfield;
+        int branch;
+        const char *value;
+        size_t size;
 
         avro_value_get_by_name(&reader_value, PROJECTED_KEY, &field, NULL);
         if (rval) {
@@ -132,13 +137,17 @@ int test_project(FILE *outfile) {
             return rval;
         }
 
-        rval = avro_value_get_string(&field, &value, &size);
-        if (rval) {
-            fprintf(stderr, "Error converting to string: %s\n", avro_strerror());
-            return rval;
+        avro_value_get_discriminant(&field, &branch);
+        if (branch == 0) {
+            avro_value_get_current_branch(&field, &subfield);
+            rval = avro_value_get_string(&subfield, &value, &size);
+            if (rval) {
+                fprintf(stderr, "Error converting to string: %s\n", avro_strerror());
+                return rval;
+            }
+            fprintf(outfile, "%s\n", value);
+        } else if (branch == 1) {
         }
-        fprintf(outfile, "%s\n", value);
-        // free(value);
     }
 
     avro_file_reader_close(dbreader);
@@ -151,7 +160,6 @@ int test_project(FILE *outfile) {
 
     return 1;
 }
-*/
 
 // NOTE: File must be \n terminated
 int test_serialize(FILE* infile) {
