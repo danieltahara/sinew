@@ -183,26 +183,38 @@ int test_serialize(FILE* infile) {
     buffer = NULL;
     len = 0;
     while ((read = getline(&buffer, &len, infile)) != -1) {
-        avro_value_t field;
+        avro_value_t field, subfield;
         size_t index;
         const char *dummy;
 
-        /*
-        avro_value_get_by_name(&avro_value, "num_int", &field, &index);
-        fprintf(stderr, "rval: %d at index %ld\n", rval, index);
-        rval = avro_value_set_int(&field, 64);
-        rval = avro_value_get_int(&field, &index);
-        fprintf(stderr, "rval: %d\n value: %ld\n", rval, index);
-        avro_value_get_by_name(&avro_value, "str1_str", &field, &index);
-        rval = avro_value_set_string(&field, "hello");
-        rval = avro_value_get_string(&field, &dummy, NULL);
-        fprintf(stderr, "rval: %d\n value: %s\n", rval, dummy);
-        index = -1;
-        */
+        // Initialize the values that can be null (hardcoded)
+        avro_value_get_by_name(&avro_value, "dyn1_int", &field, NULL);
+        avro_value_set_branch(&field, 1, &subfield);
+        avro_value_set_null(&subfield);
+        avro_value_get_by_name(&avro_value, "dyn1_str", &field, NULL);
+        avro_value_set_branch(&field, 1, &subfield);
+        avro_value_set_null(&subfield);
+        avro_value_get_by_name(&avro_value, "dyn2_int", &field, NULL);
+        avro_value_set_branch(&field, 1, &subfield);
+        avro_value_set_null(&subfield);
+        avro_value_get_by_name(&avro_value, "dyn2_str", &field, NULL);
+        avro_value_set_branch(&field, 1, &subfield);
+        avro_value_set_null(&subfield);
+        avro_value_get_by_name(&avro_value, "dyn2_bool", &field, NULL);
+        avro_value_set_branch(&field, 1, &subfield);
+        avro_value_set_null(&subfield);
+        avro_value_get_by_name(&avro_value, "sparse_987_str", &field, NULL);
+        avro_value_set_branch(&field, 1, &subfield);
+        avro_value_set_null(&subfield);
+
         // Create a new record
         avro_record_value_fill(&avro_value, buffer);
         // avro_value_get_size(&avro_value, &index);
         // fprintf(stderr, "record has %zu attr\n", index);
+        // avro_value_get_by_name(&avro_value, "str1_str", &field, NULL);
+        // avro_value_set_branch(&field, 0, &subfield);
+        // avro_value_get_string(&subfield, &dummy, &index);
+        // fprintf(stderr, "got string %s, len %zu\n", dummy, index);
 
         // Write the record
         rval = avro_file_writer_append_value(db, &avro_value);
@@ -236,13 +248,9 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
     char *key, *value, *avro_keyname;
     avro_value_t avro_field, avro_subfield, avro_subsubfield;
     json_typeid type;
-
-    // avro_value_iface_t *iface = avro_generic_class_from_schema(avro_schema_string());
-    // avro_generic_value_new(iface, &avro_subsubfield);
-
     int arr_len;
     size_t index; // Index of field; just for debugging
-    const char *fname;
+    const char *fname; // Just for debugging
 
     // Start code
     tokens = jsmn_tokenize(json);
@@ -265,13 +273,13 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
                 rval = avro_value_set_branch(&avro_field, 0, &avro_subfield);
                 if (!strcmp(avro_keyname, "sparse_str")) {
                     avro_value_append(&avro_subfield, &avro_subsubfield, &index);
-                    rval = avro_value_set_string(&avro_subsubfield, value);
+                    rval = avro_value_set_string_len(&avro_subsubfield, value, strlen(value) + 1);
                     // avro_value_get_string(&avro_subsubfield, &fname, &index);
                     // fprintf(stderr, "str: %s\n", fname);
                     // avro_value_get_size(&avro_subfield, &index);
                     // fprintf(stderr, "Sparse_str: new size: %zu\n", index);
                 } else {
-                    rval = avro_value_set_string(&avro_subfield, value);
+                    rval = avro_value_set_string_len(&avro_subfield, value, strlen(value) + 1);
                 }
                 break;
             case INTEGER:
@@ -294,13 +302,13 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
                     free(key);
                     free(value);
                     key = jsmntok_to_str(++curtok, json);
-                    avro_value_get_size(&avro_subfield, &index);
-                    //fprintf(stderr, "Size: %ld\n", index);
+                    // avro_value_get_size(&avro_subfield, &index);
+                    // fprintf(stderr, "Size: %ld\n", index);
                     if (!strcmp(key, "str")) {
                         value = jsmntok_to_str(++curtok, json);
                         // TODO: see if i got this right
                         avro_value_get_by_name(&avro_subfield, "str_str", &avro_subsubfield, &index);
-                        avro_value_set_string(&avro_subsubfield, value);
+                        avro_value_set_string_len(&avro_subsubfield, value, strlen(value) + 1);
                     } else if (!strcmp(key, "num")) {
                         value = jsmntok_to_str(++curtok, json);
                         avro_value_get_by_name(&avro_subfield, "num_int", &avro_subsubfield, &index);
@@ -314,9 +322,10 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json) {
                 for (int j = 0; j < arr_len; ++j) {
                     // FIXME: I know that it's going to be a string, so I'm
                     // cheating and saving some code
-                    avro_value_set_string(&avro_subsubfield,
-                                          jsmntok_to_str(curtok + 1 + j, json));
+                    free(value);
+                    value = jsmntok_to_str(curtok + 1 + j, json);
                     avro_value_append(&avro_subfield, &avro_subsubfield, NULL);
+                    avro_value_set_string_len(&avro_subsubfield, value, strlen(value) + 1);
                 }
                 curtok += arr_len;
             case NONE:
