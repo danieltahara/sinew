@@ -74,7 +74,6 @@ int test_deserialize(FILE *outfile) {
     Database db;
     Database::NoBench *nb;
     char *json;
-    char buffer[10000];
     fstream input(dbname, ios::in | ios::binary);
 
     fprintf(stderr, "In test deser\n");
@@ -84,35 +83,16 @@ int test_deserialize(FILE *outfile) {
         nb = db.mutable_nb(i);
 
         json = (char*)calloc(10000, 1);
-        strcat(json, "{");
-        sprintf(buffer, "\"ID\":%d", i);
-        strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "str1", nb->str1_str().c_str());
-        strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "str2", nb->str1_str().c_str());
-        strcat(json, buffer);
-        sprintf(buffer, "\"%s\": %lld", "num", nb->num_int());
-        strcat(json, buffer);
-        sprintf(buffer, "\"%s\":%d", "bool", nb->bool_bool());
-        strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "dyn1", nb->dyn1_str().c_str());
-        strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "dyn2", nb->dyn2_str().c_str());
-        strcat(json, buffer);
-        // /Junk just for the sake of I/O
-        sprintf(buffer, "\"%s\":\"%s\"", "str1", nb->str1_str().c_str());
-        strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "str2", nb->str1_str().c_str());
-        strcat(json, buffer);
-        sprintf(buffer, "\"%s\": %lld", "num", nb->num_int());
-        strcat(json, buffer);
-        sprintf(buffer, "\"%s\":%d", "bool", nb->bool_bool());
-        strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "dyn1", nb->dyn1_str().c_str());
-        strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "dyn2", nb->dyn2_str().c_str());
-        strcat(json, buffer);
-        // \junk
+        sprintf(json, "{ \"ID\" : %d", i);
+        for (int j = 0; j < 5; ++j) {
+            // /Junk just for the sake of I/O
+            sprintf(json, "%s, \"%s\":\"%s\"", json, "str1", nb->str1_str().c_str());
+            sprintf(json, "%s, \"%s\":\"%s\"", json, "str2", nb->str2_str().c_str());
+            sprintf(json, "%s, \"%s\":%ld", json, "num", nb->num_int());
+            sprintf(json, "%s, \"%s\":%d", json, "bool", nb->bool_bool());
+            sprintf(json, "%s, \"%s\":\"%s\"", json, "dyn1", nb->dyn1_str().c_str());
+            sprintf(json, "%s, \"%s\":\"%s\"", json, "dyn2", nb->dyn2_str().c_str());
+        }
 
         fprintf(outfile, "%s\n", json);
         free(json);
@@ -130,7 +110,9 @@ int test_project(FILE *outfile) {
     db.ParseFromIstream(&input);
     for (int i = 0; i < db.nb_size(); ++i) {
         nb = db.mutable_nb(i);
-        fprintf(outfile, "%s\n", nb->sparse_987_str().c_str());
+        if (nb->has_sparse_987_str()) {
+            fprintf(outfile, "%s\n", nb->sparse_987_str().c_str());
+        }
     }
 
     return 1;
