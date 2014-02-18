@@ -1,26 +1,30 @@
-message NoBench {
-    optional string str1_str = 1;
-    optional string str2_str = 2;
-    optional int64 num_int = 3;
-    optional bool bool_bool = 4;
+message Database {
+    message NoBench {
+        optional string str1_str = 1;
+        optional string str2_str = 2;
+        optional int64 num_int = 3;
+        optional bool bool_bool = 4;
 
-    optional int64 dyn1_int = 5;
-    optional string dyn1_str = 6;
+        optional int64 dyn1_int = 5;
+        optional string dyn1_str = 6;
 
-    optional int64 dyn2_int = 7;
-    optional string dyn2_str = 8;
-    optional bool dyn2_bool = 9;
+        optional int64 dyn2_int = 7;
+        optional string dyn2_str = 8;
+        optional bool dyn2_bool = 9;
 
-    repeated string nested_arr_str = 10;
+        repeated string nested_arr_str = 10;
 
-    message NestedObj {
-         optional string str_str = 1;
-         optional int64 num_int = 2;
+        message NestedObj {
+             optional string str_str = 1;
+             optional int64 num_int = 2;
+        }
+        optional NestedObj nested_obj_obj = 11;
+
+        repeated string sparse_str = 12;
+        optional string sparse_987_str = 13;
+
+        optional int64 thousandth = 1012;
     }
-    optional NestedObj nested_obj_obj = 11;
 
-    repeated string sparse_str = 12;
-    optional string sparse_987_str = 13;
-
-    optional int64 thousandth = 1012;
+    repeated NoBench nb = 1;
 }

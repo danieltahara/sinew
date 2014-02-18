@@ -31,19 +31,20 @@ void  protobuf_AddDesc_nobench_2eproto();
 void protobuf_AssignDesc_nobench_2eproto();
 void protobuf_ShutdownFile_nobench_2eproto();
 
-class NoBench;
-class NoBench_NestedObj;
+class Database;
+class Database_NoBench;
+class Database_NoBench_NestedObj;
 
 // ===================================================================
 
-class NoBench_NestedObj : public ::google::protobuf::Message {
+class Database_NoBench_NestedObj : public ::google::protobuf::Message {
  public:
-  NoBench_NestedObj();
-  virtual ~NoBench_NestedObj();
+  Database_NoBench_NestedObj();
+  virtual ~Database_NoBench_NestedObj();
 
-  NoBench_NestedObj(const NoBench_NestedObj& from);
+  Database_NoBench_NestedObj(const Database_NoBench_NestedObj& from);
 
-  inline NoBench_NestedObj& operator=(const NoBench_NestedObj& from) {
+  inline Database_NoBench_NestedObj& operator=(const Database_NoBench_NestedObj& from) {
     CopyFrom(from);
     return *this;
   }
@@ -57,17 +58,17 @@ class NoBench_NestedObj : public ::google::protobuf::Message {
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const NoBench_NestedObj& default_instance();
+  static const Database_NoBench_NestedObj& default_instance();
 
-  void Swap(NoBench_NestedObj* other);
+  void Swap(Database_NoBench_NestedObj* other);
 
   // implements Message ----------------------------------------------
 
-  NoBench_NestedObj* New() const;
+  Database_NoBench_NestedObj* New() const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const NoBench_NestedObj& from);
-  void MergeFrom(const NoBench_NestedObj& from);
+  void CopyFrom(const Database_NoBench_NestedObj& from);
+  void MergeFrom(const Database_NoBench_NestedObj& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -109,7 +110,7 @@ class NoBench_NestedObj : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 num_int() const;
   inline void set_num_int(::google::protobuf::int64 value);
 
-  // @@protoc_insertion_point(class_scope:NoBench.NestedObj)
+  // @@protoc_insertion_point(class_scope:Database.NoBench.NestedObj)
  private:
   inline void set_has_str_str();
   inline void clear_has_str_str();
@@ -129,18 +130,18 @@ class NoBench_NestedObj : public ::google::protobuf::Message {
   friend void protobuf_ShutdownFile_nobench_2eproto();
 
   void InitAsDefaultInstance();
-  static NoBench_NestedObj* default_instance_;
+  static Database_NoBench_NestedObj* default_instance_;
 };
 // -------------------------------------------------------------------
 
-class NoBench : public ::google::protobuf::Message {
+class Database_NoBench : public ::google::protobuf::Message {
  public:
-  NoBench();
-  virtual ~NoBench();
+  Database_NoBench();
+  virtual ~Database_NoBench();
 
-  NoBench(const NoBench& from);
+  Database_NoBench(const Database_NoBench& from);
 
-  inline NoBench& operator=(const NoBench& from) {
+  inline Database_NoBench& operator=(const Database_NoBench& from) {
     CopyFrom(from);
     return *this;
   }
@@ -154,17 +155,17 @@ class NoBench : public ::google::protobuf::Message {
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const NoBench& default_instance();
+  static const Database_NoBench& default_instance();
 
-  void Swap(NoBench* other);
+  void Swap(Database_NoBench* other);
 
   // implements Message ----------------------------------------------
 
-  NoBench* New() const;
+  Database_NoBench* New() const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const NoBench& from);
-  void MergeFrom(const NoBench& from);
+  void CopyFrom(const Database_NoBench& from);
+  void MergeFrom(const Database_NoBench& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -185,7 +186,7 @@ class NoBench : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
-  typedef NoBench_NestedObj NestedObj;
+  typedef Database_NoBench_NestedObj NestedObj;
 
   // accessors -------------------------------------------------------
 
@@ -288,14 +289,14 @@ class NoBench : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& nested_arr_str() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_nested_arr_str();
 
-  // optional .NoBench.NestedObj nested_obj_obj = 11;
+  // optional .Database.NoBench.NestedObj nested_obj_obj = 11;
   inline bool has_nested_obj_obj() const;
   inline void clear_nested_obj_obj();
   static const int kNestedObjObjFieldNumber = 11;
-  inline const ::NoBench_NestedObj& nested_obj_obj() const;
-  inline ::NoBench_NestedObj* mutable_nested_obj_obj();
-  inline ::NoBench_NestedObj* release_nested_obj_obj();
-  inline void set_allocated_nested_obj_obj(::NoBench_NestedObj* nested_obj_obj);
+  inline const ::Database_NoBench_NestedObj& nested_obj_obj() const;
+  inline ::Database_NoBench_NestedObj* mutable_nested_obj_obj();
+  inline ::Database_NoBench_NestedObj* release_nested_obj_obj();
+  inline void set_allocated_nested_obj_obj(::Database_NoBench_NestedObj* nested_obj_obj);
 
   // repeated string sparse_str = 12;
   inline int sparse_str_size() const;
@@ -332,7 +333,7 @@ class NoBench : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 thousandth() const;
   inline void set_thousandth(::google::protobuf::int64 value);
 
-  // @@protoc_insertion_point(class_scope:NoBench)
+  // @@protoc_insertion_point(class_scope:Database.NoBench)
  private:
   inline void set_has_str1_str();
   inline void clear_has_str1_str();
@@ -369,7 +370,7 @@ class NoBench : public ::google::protobuf::Message {
   ::google::protobuf::int64 dyn2_int_;
   ::std::string* dyn2_str_;
   ::google::protobuf::RepeatedPtrField< ::std::string> nested_arr_str_;
-  ::NoBench_NestedObj* nested_obj_obj_;
+  ::Database_NoBench_NestedObj* nested_obj_obj_;
   ::google::protobuf::RepeatedPtrField< ::std::string> sparse_str_;
   ::std::string* sparse_987_str_;
   ::google::protobuf::int64 thousandth_;
@@ -384,63 +385,150 @@ class NoBench : public ::google::protobuf::Message {
   friend void protobuf_ShutdownFile_nobench_2eproto();
 
   void InitAsDefaultInstance();
-  static NoBench* default_instance_;
+  static Database_NoBench* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class Database : public ::google::protobuf::Message {
+ public:
+  Database();
+  virtual ~Database();
+
+  Database(const Database& from);
+
+  inline Database& operator=(const Database& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Database& default_instance();
+
+  void Swap(Database* other);
+
+  // implements Message ----------------------------------------------
+
+  Database* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Database& from);
+  void MergeFrom(const Database& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef Database_NoBench NoBench;
+
+  // accessors -------------------------------------------------------
+
+  // repeated .Database.NoBench nb = 1;
+  inline int nb_size() const;
+  inline void clear_nb();
+  static const int kNbFieldNumber = 1;
+  inline const ::Database_NoBench& nb(int index) const;
+  inline ::Database_NoBench* mutable_nb(int index);
+  inline ::Database_NoBench* add_nb();
+  inline const ::google::protobuf::RepeatedPtrField< ::Database_NoBench >&
+      nb() const;
+  inline ::google::protobuf::RepeatedPtrField< ::Database_NoBench >*
+      mutable_nb();
+
+  // @@protoc_insertion_point(class_scope:Database)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedPtrField< ::Database_NoBench > nb_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_nobench_2eproto();
+  friend void protobuf_AssignDesc_nobench_2eproto();
+  friend void protobuf_ShutdownFile_nobench_2eproto();
+
+  void InitAsDefaultInstance();
+  static Database* default_instance_;
 };
 // ===================================================================
 
 
 // ===================================================================
 
-// NoBench_NestedObj
+// Database_NoBench_NestedObj
 
 // optional string str_str = 1;
-inline bool NoBench_NestedObj::has_str_str() const {
+inline bool Database_NoBench_NestedObj::has_str_str() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void NoBench_NestedObj::set_has_str_str() {
+inline void Database_NoBench_NestedObj::set_has_str_str() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void NoBench_NestedObj::clear_has_str_str() {
+inline void Database_NoBench_NestedObj::clear_has_str_str() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void NoBench_NestedObj::clear_str_str() {
+inline void Database_NoBench_NestedObj::clear_str_str() {
   if (str_str_ != &::google::protobuf::internal::kEmptyString) {
     str_str_->clear();
   }
   clear_has_str_str();
 }
-inline const ::std::string& NoBench_NestedObj::str_str() const {
+inline const ::std::string& Database_NoBench_NestedObj::str_str() const {
   return *str_str_;
 }
-inline void NoBench_NestedObj::set_str_str(const ::std::string& value) {
+inline void Database_NoBench_NestedObj::set_str_str(const ::std::string& value) {
   set_has_str_str();
   if (str_str_ == &::google::protobuf::internal::kEmptyString) {
     str_str_ = new ::std::string;
   }
   str_str_->assign(value);
 }
-inline void NoBench_NestedObj::set_str_str(const char* value) {
+inline void Database_NoBench_NestedObj::set_str_str(const char* value) {
   set_has_str_str();
   if (str_str_ == &::google::protobuf::internal::kEmptyString) {
     str_str_ = new ::std::string;
   }
   str_str_->assign(value);
 }
-inline void NoBench_NestedObj::set_str_str(const char* value, size_t size) {
+inline void Database_NoBench_NestedObj::set_str_str(const char* value, size_t size) {
   set_has_str_str();
   if (str_str_ == &::google::protobuf::internal::kEmptyString) {
     str_str_ = new ::std::string;
   }
   str_str_->assign(reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* NoBench_NestedObj::mutable_str_str() {
+inline ::std::string* Database_NoBench_NestedObj::mutable_str_str() {
   set_has_str_str();
   if (str_str_ == &::google::protobuf::internal::kEmptyString) {
     str_str_ = new ::std::string;
   }
   return str_str_;
 }
-inline ::std::string* NoBench_NestedObj::release_str_str() {
+inline ::std::string* Database_NoBench_NestedObj::release_str_str() {
   clear_has_str_str();
   if (str_str_ == &::google::protobuf::internal::kEmptyString) {
     return NULL;
@@ -450,7 +538,7 @@ inline ::std::string* NoBench_NestedObj::release_str_str() {
     return temp;
   }
 }
-inline void NoBench_NestedObj::set_allocated_str_str(::std::string* str_str) {
+inline void Database_NoBench_NestedObj::set_allocated_str_str(::std::string* str_str) {
   if (str_str_ != &::google::protobuf::internal::kEmptyString) {
     delete str_str_;
   }
@@ -464,79 +552,79 @@ inline void NoBench_NestedObj::set_allocated_str_str(::std::string* str_str) {
 }
 
 // optional int64 num_int = 2;
-inline bool NoBench_NestedObj::has_num_int() const {
+inline bool Database_NoBench_NestedObj::has_num_int() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void NoBench_NestedObj::set_has_num_int() {
+inline void Database_NoBench_NestedObj::set_has_num_int() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void NoBench_NestedObj::clear_has_num_int() {
+inline void Database_NoBench_NestedObj::clear_has_num_int() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void NoBench_NestedObj::clear_num_int() {
+inline void Database_NoBench_NestedObj::clear_num_int() {
   num_int_ = GOOGLE_LONGLONG(0);
   clear_has_num_int();
 }
-inline ::google::protobuf::int64 NoBench_NestedObj::num_int() const {
+inline ::google::protobuf::int64 Database_NoBench_NestedObj::num_int() const {
   return num_int_;
 }
-inline void NoBench_NestedObj::set_num_int(::google::protobuf::int64 value) {
+inline void Database_NoBench_NestedObj::set_num_int(::google::protobuf::int64 value) {
   set_has_num_int();
   num_int_ = value;
 }
 
 // -------------------------------------------------------------------
 
-// NoBench
+// Database_NoBench
 
 // optional string str1_str = 1;
-inline bool NoBench::has_str1_str() const {
+inline bool Database_NoBench::has_str1_str() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void NoBench::set_has_str1_str() {
+inline void Database_NoBench::set_has_str1_str() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void NoBench::clear_has_str1_str() {
+inline void Database_NoBench::clear_has_str1_str() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void NoBench::clear_str1_str() {
+inline void Database_NoBench::clear_str1_str() {
   if (str1_str_ != &::google::protobuf::internal::kEmptyString) {
     str1_str_->clear();
   }
   clear_has_str1_str();
 }
-inline const ::std::string& NoBench::str1_str() const {
+inline const ::std::string& Database_NoBench::str1_str() const {
   return *str1_str_;
 }
-inline void NoBench::set_str1_str(const ::std::string& value) {
+inline void Database_NoBench::set_str1_str(const ::std::string& value) {
   set_has_str1_str();
   if (str1_str_ == &::google::protobuf::internal::kEmptyString) {
     str1_str_ = new ::std::string;
   }
   str1_str_->assign(value);
 }
-inline void NoBench::set_str1_str(const char* value) {
+inline void Database_NoBench::set_str1_str(const char* value) {
   set_has_str1_str();
   if (str1_str_ == &::google::protobuf::internal::kEmptyString) {
     str1_str_ = new ::std::string;
   }
   str1_str_->assign(value);
 }
-inline void NoBench::set_str1_str(const char* value, size_t size) {
+inline void Database_NoBench::set_str1_str(const char* value, size_t size) {
   set_has_str1_str();
   if (str1_str_ == &::google::protobuf::internal::kEmptyString) {
     str1_str_ = new ::std::string;
   }
   str1_str_->assign(reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* NoBench::mutable_str1_str() {
+inline ::std::string* Database_NoBench::mutable_str1_str() {
   set_has_str1_str();
   if (str1_str_ == &::google::protobuf::internal::kEmptyString) {
     str1_str_ = new ::std::string;
   }
   return str1_str_;
 }
-inline ::std::string* NoBench::release_str1_str() {
+inline ::std::string* Database_NoBench::release_str1_str() {
   clear_has_str1_str();
   if (str1_str_ == &::google::protobuf::internal::kEmptyString) {
     return NULL;
@@ -546,7 +634,7 @@ inline ::std::string* NoBench::release_str1_str() {
     return temp;
   }
 }
-inline void NoBench::set_allocated_str1_str(::std::string* str1_str) {
+inline void Database_NoBench::set_allocated_str1_str(::std::string* str1_str) {
   if (str1_str_ != &::google::protobuf::internal::kEmptyString) {
     delete str1_str_;
   }
@@ -560,53 +648,53 @@ inline void NoBench::set_allocated_str1_str(::std::string* str1_str) {
 }
 
 // optional string str2_str = 2;
-inline bool NoBench::has_str2_str() const {
+inline bool Database_NoBench::has_str2_str() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void NoBench::set_has_str2_str() {
+inline void Database_NoBench::set_has_str2_str() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void NoBench::clear_has_str2_str() {
+inline void Database_NoBench::clear_has_str2_str() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void NoBench::clear_str2_str() {
+inline void Database_NoBench::clear_str2_str() {
   if (str2_str_ != &::google::protobuf::internal::kEmptyString) {
     str2_str_->clear();
   }
   clear_has_str2_str();
 }
-inline const ::std::string& NoBench::str2_str() const {
+inline const ::std::string& Database_NoBench::str2_str() const {
   return *str2_str_;
 }
-inline void NoBench::set_str2_str(const ::std::string& value) {
+inline void Database_NoBench::set_str2_str(const ::std::string& value) {
   set_has_str2_str();
   if (str2_str_ == &::google::protobuf::internal::kEmptyString) {
     str2_str_ = new ::std::string;
   }
   str2_str_->assign(value);
 }
-inline void NoBench::set_str2_str(const char* value) {
+inline void Database_NoBench::set_str2_str(const char* value) {
   set_has_str2_str();
   if (str2_str_ == &::google::protobuf::internal::kEmptyString) {
     str2_str_ = new ::std::string;
   }
   str2_str_->assign(value);
 }
-inline void NoBench::set_str2_str(const char* value, size_t size) {
+inline void Database_NoBench::set_str2_str(const char* value, size_t size) {
   set_has_str2_str();
   if (str2_str_ == &::google::protobuf::internal::kEmptyString) {
     str2_str_ = new ::std::string;
   }
   str2_str_->assign(reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* NoBench::mutable_str2_str() {
+inline ::std::string* Database_NoBench::mutable_str2_str() {
   set_has_str2_str();
   if (str2_str_ == &::google::protobuf::internal::kEmptyString) {
     str2_str_ = new ::std::string;
   }
   return str2_str_;
 }
-inline ::std::string* NoBench::release_str2_str() {
+inline ::std::string* Database_NoBench::release_str2_str() {
   clear_has_str2_str();
   if (str2_str_ == &::google::protobuf::internal::kEmptyString) {
     return NULL;
@@ -616,7 +704,7 @@ inline ::std::string* NoBench::release_str2_str() {
     return temp;
   }
 }
-inline void NoBench::set_allocated_str2_str(::std::string* str2_str) {
+inline void Database_NoBench::set_allocated_str2_str(::std::string* str2_str) {
   if (str2_str_ != &::google::protobuf::internal::kEmptyString) {
     delete str2_str_;
   }
@@ -630,119 +718,119 @@ inline void NoBench::set_allocated_str2_str(::std::string* str2_str) {
 }
 
 // optional int64 num_int = 3;
-inline bool NoBench::has_num_int() const {
+inline bool Database_NoBench::has_num_int() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void NoBench::set_has_num_int() {
+inline void Database_NoBench::set_has_num_int() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void NoBench::clear_has_num_int() {
+inline void Database_NoBench::clear_has_num_int() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void NoBench::clear_num_int() {
+inline void Database_NoBench::clear_num_int() {
   num_int_ = GOOGLE_LONGLONG(0);
   clear_has_num_int();
 }
-inline ::google::protobuf::int64 NoBench::num_int() const {
+inline ::google::protobuf::int64 Database_NoBench::num_int() const {
   return num_int_;
 }
-inline void NoBench::set_num_int(::google::protobuf::int64 value) {
+inline void Database_NoBench::set_num_int(::google::protobuf::int64 value) {
   set_has_num_int();
   num_int_ = value;
 }
 
 // optional bool bool_bool = 4;
-inline bool NoBench::has_bool_bool() const {
+inline bool Database_NoBench::has_bool_bool() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void NoBench::set_has_bool_bool() {
+inline void Database_NoBench::set_has_bool_bool() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void NoBench::clear_has_bool_bool() {
+inline void Database_NoBench::clear_has_bool_bool() {
   _has_bits_[0] &= ~0x00000008u;
 }
-inline void NoBench::clear_bool_bool() {
+inline void Database_NoBench::clear_bool_bool() {
   bool_bool_ = false;
   clear_has_bool_bool();
 }
-inline bool NoBench::bool_bool() const {
+inline bool Database_NoBench::bool_bool() const {
   return bool_bool_;
 }
-inline void NoBench::set_bool_bool(bool value) {
+inline void Database_NoBench::set_bool_bool(bool value) {
   set_has_bool_bool();
   bool_bool_ = value;
 }
 
 // optional int64 dyn1_int = 5;
-inline bool NoBench::has_dyn1_int() const {
+inline bool Database_NoBench::has_dyn1_int() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void NoBench::set_has_dyn1_int() {
+inline void Database_NoBench::set_has_dyn1_int() {
   _has_bits_[0] |= 0x00000010u;
 }
-inline void NoBench::clear_has_dyn1_int() {
+inline void Database_NoBench::clear_has_dyn1_int() {
   _has_bits_[0] &= ~0x00000010u;
 }
-inline void NoBench::clear_dyn1_int() {
+inline void Database_NoBench::clear_dyn1_int() {
   dyn1_int_ = GOOGLE_LONGLONG(0);
   clear_has_dyn1_int();
 }
-inline ::google::protobuf::int64 NoBench::dyn1_int() const {
+inline ::google::protobuf::int64 Database_NoBench::dyn1_int() const {
   return dyn1_int_;
 }
-inline void NoBench::set_dyn1_int(::google::protobuf::int64 value) {
+inline void Database_NoBench::set_dyn1_int(::google::protobuf::int64 value) {
   set_has_dyn1_int();
   dyn1_int_ = value;
 }
 
 // optional string dyn1_str = 6;
-inline bool NoBench::has_dyn1_str() const {
+inline bool Database_NoBench::has_dyn1_str() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void NoBench::set_has_dyn1_str() {
+inline void Database_NoBench::set_has_dyn1_str() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void NoBench::clear_has_dyn1_str() {
+inline void Database_NoBench::clear_has_dyn1_str() {
   _has_bits_[0] &= ~0x00000020u;
 }
-inline void NoBench::clear_dyn1_str() {
+inline void Database_NoBench::clear_dyn1_str() {
   if (dyn1_str_ != &::google::protobuf::internal::kEmptyString) {
     dyn1_str_->clear();
   }
   clear_has_dyn1_str();
 }
-inline const ::std::string& NoBench::dyn1_str() const {
+inline const ::std::string& Database_NoBench::dyn1_str() const {
   return *dyn1_str_;
 }
-inline void NoBench::set_dyn1_str(const ::std::string& value) {
+inline void Database_NoBench::set_dyn1_str(const ::std::string& value) {
   set_has_dyn1_str();
   if (dyn1_str_ == &::google::protobuf::internal::kEmptyString) {
     dyn1_str_ = new ::std::string;
   }
   dyn1_str_->assign(value);
 }
-inline void NoBench::set_dyn1_str(const char* value) {
+inline void Database_NoBench::set_dyn1_str(const char* value) {
   set_has_dyn1_str();
   if (dyn1_str_ == &::google::protobuf::internal::kEmptyString) {
     dyn1_str_ = new ::std::string;
   }
   dyn1_str_->assign(value);
 }
-inline void NoBench::set_dyn1_str(const char* value, size_t size) {
+inline void Database_NoBench::set_dyn1_str(const char* value, size_t size) {
   set_has_dyn1_str();
   if (dyn1_str_ == &::google::protobuf::internal::kEmptyString) {
     dyn1_str_ = new ::std::string;
   }
   dyn1_str_->assign(reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* NoBench::mutable_dyn1_str() {
+inline ::std::string* Database_NoBench::mutable_dyn1_str() {
   set_has_dyn1_str();
   if (dyn1_str_ == &::google::protobuf::internal::kEmptyString) {
     dyn1_str_ = new ::std::string;
   }
   return dyn1_str_;
 }
-inline ::std::string* NoBench::release_dyn1_str() {
+inline ::std::string* Database_NoBench::release_dyn1_str() {
   clear_has_dyn1_str();
   if (dyn1_str_ == &::google::protobuf::internal::kEmptyString) {
     return NULL;
@@ -752,7 +840,7 @@ inline ::std::string* NoBench::release_dyn1_str() {
     return temp;
   }
 }
-inline void NoBench::set_allocated_dyn1_str(::std::string* dyn1_str) {
+inline void Database_NoBench::set_allocated_dyn1_str(::std::string* dyn1_str) {
   if (dyn1_str_ != &::google::protobuf::internal::kEmptyString) {
     delete dyn1_str_;
   }
@@ -766,75 +854,75 @@ inline void NoBench::set_allocated_dyn1_str(::std::string* dyn1_str) {
 }
 
 // optional int64 dyn2_int = 7;
-inline bool NoBench::has_dyn2_int() const {
+inline bool Database_NoBench::has_dyn2_int() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
-inline void NoBench::set_has_dyn2_int() {
+inline void Database_NoBench::set_has_dyn2_int() {
   _has_bits_[0] |= 0x00000040u;
 }
-inline void NoBench::clear_has_dyn2_int() {
+inline void Database_NoBench::clear_has_dyn2_int() {
   _has_bits_[0] &= ~0x00000040u;
 }
-inline void NoBench::clear_dyn2_int() {
+inline void Database_NoBench::clear_dyn2_int() {
   dyn2_int_ = GOOGLE_LONGLONG(0);
   clear_has_dyn2_int();
 }
-inline ::google::protobuf::int64 NoBench::dyn2_int() const {
+inline ::google::protobuf::int64 Database_NoBench::dyn2_int() const {
   return dyn2_int_;
 }
-inline void NoBench::set_dyn2_int(::google::protobuf::int64 value) {
+inline void Database_NoBench::set_dyn2_int(::google::protobuf::int64 value) {
   set_has_dyn2_int();
   dyn2_int_ = value;
 }
 
 // optional string dyn2_str = 8;
-inline bool NoBench::has_dyn2_str() const {
+inline bool Database_NoBench::has_dyn2_str() const {
   return (_has_bits_[0] & 0x00000080u) != 0;
 }
-inline void NoBench::set_has_dyn2_str() {
+inline void Database_NoBench::set_has_dyn2_str() {
   _has_bits_[0] |= 0x00000080u;
 }
-inline void NoBench::clear_has_dyn2_str() {
+inline void Database_NoBench::clear_has_dyn2_str() {
   _has_bits_[0] &= ~0x00000080u;
 }
-inline void NoBench::clear_dyn2_str() {
+inline void Database_NoBench::clear_dyn2_str() {
   if (dyn2_str_ != &::google::protobuf::internal::kEmptyString) {
     dyn2_str_->clear();
   }
   clear_has_dyn2_str();
 }
-inline const ::std::string& NoBench::dyn2_str() const {
+inline const ::std::string& Database_NoBench::dyn2_str() const {
   return *dyn2_str_;
 }
-inline void NoBench::set_dyn2_str(const ::std::string& value) {
+inline void Database_NoBench::set_dyn2_str(const ::std::string& value) {
   set_has_dyn2_str();
   if (dyn2_str_ == &::google::protobuf::internal::kEmptyString) {
     dyn2_str_ = new ::std::string;
   }
   dyn2_str_->assign(value);
 }
-inline void NoBench::set_dyn2_str(const char* value) {
+inline void Database_NoBench::set_dyn2_str(const char* value) {
   set_has_dyn2_str();
   if (dyn2_str_ == &::google::protobuf::internal::kEmptyString) {
     dyn2_str_ = new ::std::string;
   }
   dyn2_str_->assign(value);
 }
-inline void NoBench::set_dyn2_str(const char* value, size_t size) {
+inline void Database_NoBench::set_dyn2_str(const char* value, size_t size) {
   set_has_dyn2_str();
   if (dyn2_str_ == &::google::protobuf::internal::kEmptyString) {
     dyn2_str_ = new ::std::string;
   }
   dyn2_str_->assign(reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* NoBench::mutable_dyn2_str() {
+inline ::std::string* Database_NoBench::mutable_dyn2_str() {
   set_has_dyn2_str();
   if (dyn2_str_ == &::google::protobuf::internal::kEmptyString) {
     dyn2_str_ = new ::std::string;
   }
   return dyn2_str_;
 }
-inline ::std::string* NoBench::release_dyn2_str() {
+inline ::std::string* Database_NoBench::release_dyn2_str() {
   clear_has_dyn2_str();
   if (dyn2_str_ == &::google::protobuf::internal::kEmptyString) {
     return NULL;
@@ -844,7 +932,7 @@ inline ::std::string* NoBench::release_dyn2_str() {
     return temp;
   }
 }
-inline void NoBench::set_allocated_dyn2_str(::std::string* dyn2_str) {
+inline void Database_NoBench::set_allocated_dyn2_str(::std::string* dyn2_str) {
   if (dyn2_str_ != &::google::protobuf::internal::kEmptyString) {
     delete dyn2_str_;
   }
@@ -858,100 +946,100 @@ inline void NoBench::set_allocated_dyn2_str(::std::string* dyn2_str) {
 }
 
 // optional bool dyn2_bool = 9;
-inline bool NoBench::has_dyn2_bool() const {
+inline bool Database_NoBench::has_dyn2_bool() const {
   return (_has_bits_[0] & 0x00000100u) != 0;
 }
-inline void NoBench::set_has_dyn2_bool() {
+inline void Database_NoBench::set_has_dyn2_bool() {
   _has_bits_[0] |= 0x00000100u;
 }
-inline void NoBench::clear_has_dyn2_bool() {
+inline void Database_NoBench::clear_has_dyn2_bool() {
   _has_bits_[0] &= ~0x00000100u;
 }
-inline void NoBench::clear_dyn2_bool() {
+inline void Database_NoBench::clear_dyn2_bool() {
   dyn2_bool_ = false;
   clear_has_dyn2_bool();
 }
-inline bool NoBench::dyn2_bool() const {
+inline bool Database_NoBench::dyn2_bool() const {
   return dyn2_bool_;
 }
-inline void NoBench::set_dyn2_bool(bool value) {
+inline void Database_NoBench::set_dyn2_bool(bool value) {
   set_has_dyn2_bool();
   dyn2_bool_ = value;
 }
 
 // repeated string nested_arr_str = 10;
-inline int NoBench::nested_arr_str_size() const {
+inline int Database_NoBench::nested_arr_str_size() const {
   return nested_arr_str_.size();
 }
-inline void NoBench::clear_nested_arr_str() {
+inline void Database_NoBench::clear_nested_arr_str() {
   nested_arr_str_.Clear();
 }
-inline const ::std::string& NoBench::nested_arr_str(int index) const {
+inline const ::std::string& Database_NoBench::nested_arr_str(int index) const {
   return nested_arr_str_.Get(index);
 }
-inline ::std::string* NoBench::mutable_nested_arr_str(int index) {
+inline ::std::string* Database_NoBench::mutable_nested_arr_str(int index) {
   return nested_arr_str_.Mutable(index);
 }
-inline void NoBench::set_nested_arr_str(int index, const ::std::string& value) {
+inline void Database_NoBench::set_nested_arr_str(int index, const ::std::string& value) {
   nested_arr_str_.Mutable(index)->assign(value);
 }
-inline void NoBench::set_nested_arr_str(int index, const char* value) {
+inline void Database_NoBench::set_nested_arr_str(int index, const char* value) {
   nested_arr_str_.Mutable(index)->assign(value);
 }
-inline void NoBench::set_nested_arr_str(int index, const char* value, size_t size) {
+inline void Database_NoBench::set_nested_arr_str(int index, const char* value, size_t size) {
   nested_arr_str_.Mutable(index)->assign(
     reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* NoBench::add_nested_arr_str() {
+inline ::std::string* Database_NoBench::add_nested_arr_str() {
   return nested_arr_str_.Add();
 }
-inline void NoBench::add_nested_arr_str(const ::std::string& value) {
+inline void Database_NoBench::add_nested_arr_str(const ::std::string& value) {
   nested_arr_str_.Add()->assign(value);
 }
-inline void NoBench::add_nested_arr_str(const char* value) {
+inline void Database_NoBench::add_nested_arr_str(const char* value) {
   nested_arr_str_.Add()->assign(value);
 }
-inline void NoBench::add_nested_arr_str(const char* value, size_t size) {
+inline void Database_NoBench::add_nested_arr_str(const char* value, size_t size) {
   nested_arr_str_.Add()->assign(reinterpret_cast<const char*>(value), size);
 }
 inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-NoBench::nested_arr_str() const {
+Database_NoBench::nested_arr_str() const {
   return nested_arr_str_;
 }
 inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-NoBench::mutable_nested_arr_str() {
+Database_NoBench::mutable_nested_arr_str() {
   return &nested_arr_str_;
 }
 
-// optional .NoBench.NestedObj nested_obj_obj = 11;
-inline bool NoBench::has_nested_obj_obj() const {
+// optional .Database.NoBench.NestedObj nested_obj_obj = 11;
+inline bool Database_NoBench::has_nested_obj_obj() const {
   return (_has_bits_[0] & 0x00000400u) != 0;
 }
-inline void NoBench::set_has_nested_obj_obj() {
+inline void Database_NoBench::set_has_nested_obj_obj() {
   _has_bits_[0] |= 0x00000400u;
 }
-inline void NoBench::clear_has_nested_obj_obj() {
+inline void Database_NoBench::clear_has_nested_obj_obj() {
   _has_bits_[0] &= ~0x00000400u;
 }
-inline void NoBench::clear_nested_obj_obj() {
-  if (nested_obj_obj_ != NULL) nested_obj_obj_->::NoBench_NestedObj::Clear();
+inline void Database_NoBench::clear_nested_obj_obj() {
+  if (nested_obj_obj_ != NULL) nested_obj_obj_->::Database_NoBench_NestedObj::Clear();
   clear_has_nested_obj_obj();
 }
-inline const ::NoBench_NestedObj& NoBench::nested_obj_obj() const {
+inline const ::Database_NoBench_NestedObj& Database_NoBench::nested_obj_obj() const {
   return nested_obj_obj_ != NULL ? *nested_obj_obj_ : *default_instance_->nested_obj_obj_;
 }
-inline ::NoBench_NestedObj* NoBench::mutable_nested_obj_obj() {
+inline ::Database_NoBench_NestedObj* Database_NoBench::mutable_nested_obj_obj() {
   set_has_nested_obj_obj();
-  if (nested_obj_obj_ == NULL) nested_obj_obj_ = new ::NoBench_NestedObj;
+  if (nested_obj_obj_ == NULL) nested_obj_obj_ = new ::Database_NoBench_NestedObj;
   return nested_obj_obj_;
 }
-inline ::NoBench_NestedObj* NoBench::release_nested_obj_obj() {
+inline ::Database_NoBench_NestedObj* Database_NoBench::release_nested_obj_obj() {
   clear_has_nested_obj_obj();
-  ::NoBench_NestedObj* temp = nested_obj_obj_;
+  ::Database_NoBench_NestedObj* temp = nested_obj_obj_;
   nested_obj_obj_ = NULL;
   return temp;
 }
-inline void NoBench::set_allocated_nested_obj_obj(::NoBench_NestedObj* nested_obj_obj) {
+inline void Database_NoBench::set_allocated_nested_obj_obj(::Database_NoBench_NestedObj* nested_obj_obj) {
   delete nested_obj_obj_;
   nested_obj_obj_ = nested_obj_obj;
   if (nested_obj_obj) {
@@ -962,97 +1050,97 @@ inline void NoBench::set_allocated_nested_obj_obj(::NoBench_NestedObj* nested_ob
 }
 
 // repeated string sparse_str = 12;
-inline int NoBench::sparse_str_size() const {
+inline int Database_NoBench::sparse_str_size() const {
   return sparse_str_.size();
 }
-inline void NoBench::clear_sparse_str() {
+inline void Database_NoBench::clear_sparse_str() {
   sparse_str_.Clear();
 }
-inline const ::std::string& NoBench::sparse_str(int index) const {
+inline const ::std::string& Database_NoBench::sparse_str(int index) const {
   return sparse_str_.Get(index);
 }
-inline ::std::string* NoBench::mutable_sparse_str(int index) {
+inline ::std::string* Database_NoBench::mutable_sparse_str(int index) {
   return sparse_str_.Mutable(index);
 }
-inline void NoBench::set_sparse_str(int index, const ::std::string& value) {
+inline void Database_NoBench::set_sparse_str(int index, const ::std::string& value) {
   sparse_str_.Mutable(index)->assign(value);
 }
-inline void NoBench::set_sparse_str(int index, const char* value) {
+inline void Database_NoBench::set_sparse_str(int index, const char* value) {
   sparse_str_.Mutable(index)->assign(value);
 }
-inline void NoBench::set_sparse_str(int index, const char* value, size_t size) {
+inline void Database_NoBench::set_sparse_str(int index, const char* value, size_t size) {
   sparse_str_.Mutable(index)->assign(
     reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* NoBench::add_sparse_str() {
+inline ::std::string* Database_NoBench::add_sparse_str() {
   return sparse_str_.Add();
 }
-inline void NoBench::add_sparse_str(const ::std::string& value) {
+inline void Database_NoBench::add_sparse_str(const ::std::string& value) {
   sparse_str_.Add()->assign(value);
 }
-inline void NoBench::add_sparse_str(const char* value) {
+inline void Database_NoBench::add_sparse_str(const char* value) {
   sparse_str_.Add()->assign(value);
 }
-inline void NoBench::add_sparse_str(const char* value, size_t size) {
+inline void Database_NoBench::add_sparse_str(const char* value, size_t size) {
   sparse_str_.Add()->assign(reinterpret_cast<const char*>(value), size);
 }
 inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-NoBench::sparse_str() const {
+Database_NoBench::sparse_str() const {
   return sparse_str_;
 }
 inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-NoBench::mutable_sparse_str() {
+Database_NoBench::mutable_sparse_str() {
   return &sparse_str_;
 }
 
 // optional string sparse_987_str = 13;
-inline bool NoBench::has_sparse_987_str() const {
+inline bool Database_NoBench::has_sparse_987_str() const {
   return (_has_bits_[0] & 0x00001000u) != 0;
 }
-inline void NoBench::set_has_sparse_987_str() {
+inline void Database_NoBench::set_has_sparse_987_str() {
   _has_bits_[0] |= 0x00001000u;
 }
-inline void NoBench::clear_has_sparse_987_str() {
+inline void Database_NoBench::clear_has_sparse_987_str() {
   _has_bits_[0] &= ~0x00001000u;
 }
-inline void NoBench::clear_sparse_987_str() {
+inline void Database_NoBench::clear_sparse_987_str() {
   if (sparse_987_str_ != &::google::protobuf::internal::kEmptyString) {
     sparse_987_str_->clear();
   }
   clear_has_sparse_987_str();
 }
-inline const ::std::string& NoBench::sparse_987_str() const {
+inline const ::std::string& Database_NoBench::sparse_987_str() const {
   return *sparse_987_str_;
 }
-inline void NoBench::set_sparse_987_str(const ::std::string& value) {
+inline void Database_NoBench::set_sparse_987_str(const ::std::string& value) {
   set_has_sparse_987_str();
   if (sparse_987_str_ == &::google::protobuf::internal::kEmptyString) {
     sparse_987_str_ = new ::std::string;
   }
   sparse_987_str_->assign(value);
 }
-inline void NoBench::set_sparse_987_str(const char* value) {
+inline void Database_NoBench::set_sparse_987_str(const char* value) {
   set_has_sparse_987_str();
   if (sparse_987_str_ == &::google::protobuf::internal::kEmptyString) {
     sparse_987_str_ = new ::std::string;
   }
   sparse_987_str_->assign(value);
 }
-inline void NoBench::set_sparse_987_str(const char* value, size_t size) {
+inline void Database_NoBench::set_sparse_987_str(const char* value, size_t size) {
   set_has_sparse_987_str();
   if (sparse_987_str_ == &::google::protobuf::internal::kEmptyString) {
     sparse_987_str_ = new ::std::string;
   }
   sparse_987_str_->assign(reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* NoBench::mutable_sparse_987_str() {
+inline ::std::string* Database_NoBench::mutable_sparse_987_str() {
   set_has_sparse_987_str();
   if (sparse_987_str_ == &::google::protobuf::internal::kEmptyString) {
     sparse_987_str_ = new ::std::string;
   }
   return sparse_987_str_;
 }
-inline ::std::string* NoBench::release_sparse_987_str() {
+inline ::std::string* Database_NoBench::release_sparse_987_str() {
   clear_has_sparse_987_str();
   if (sparse_987_str_ == &::google::protobuf::internal::kEmptyString) {
     return NULL;
@@ -1062,7 +1150,7 @@ inline ::std::string* NoBench::release_sparse_987_str() {
     return temp;
   }
 }
-inline void NoBench::set_allocated_sparse_987_str(::std::string* sparse_987_str) {
+inline void Database_NoBench::set_allocated_sparse_987_str(::std::string* sparse_987_str) {
   if (sparse_987_str_ != &::google::protobuf::internal::kEmptyString) {
     delete sparse_987_str_;
   }
@@ -1076,25 +1164,54 @@ inline void NoBench::set_allocated_sparse_987_str(::std::string* sparse_987_str)
 }
 
 // optional int64 thousandth = 1012;
-inline bool NoBench::has_thousandth() const {
+inline bool Database_NoBench::has_thousandth() const {
   return (_has_bits_[0] & 0x00002000u) != 0;
 }
-inline void NoBench::set_has_thousandth() {
+inline void Database_NoBench::set_has_thousandth() {
   _has_bits_[0] |= 0x00002000u;
 }
-inline void NoBench::clear_has_thousandth() {
+inline void Database_NoBench::clear_has_thousandth() {
   _has_bits_[0] &= ~0x00002000u;
 }
-inline void NoBench::clear_thousandth() {
+inline void Database_NoBench::clear_thousandth() {
   thousandth_ = GOOGLE_LONGLONG(0);
   clear_has_thousandth();
 }
-inline ::google::protobuf::int64 NoBench::thousandth() const {
+inline ::google::protobuf::int64 Database_NoBench::thousandth() const {
   return thousandth_;
 }
-inline void NoBench::set_thousandth(::google::protobuf::int64 value) {
+inline void Database_NoBench::set_thousandth(::google::protobuf::int64 value) {
   set_has_thousandth();
   thousandth_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// Database
+
+// repeated .Database.NoBench nb = 1;
+inline int Database::nb_size() const {
+  return nb_.size();
+}
+inline void Database::clear_nb() {
+  nb_.Clear();
+}
+inline const ::Database_NoBench& Database::nb(int index) const {
+  return nb_.Get(index);
+}
+inline ::Database_NoBench* Database::mutable_nb(int index) {
+  return nb_.Mutable(index);
+}
+inline ::Database_NoBench* Database::add_nb() {
+  return nb_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::Database_NoBench >&
+Database::nb() const {
+  return nb_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::Database_NoBench >*
+Database::mutable_nb() {
+  return &nb_;
 }
 
 

@@ -18,12 +18,15 @@
 
 namespace {
 
-const ::google::protobuf::Descriptor* NoBench_descriptor_ = NULL;
+const ::google::protobuf::Descriptor* Database_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-  NoBench_reflection_ = NULL;
-const ::google::protobuf::Descriptor* NoBench_NestedObj_descriptor_ = NULL;
+  Database_reflection_ = NULL;
+const ::google::protobuf::Descriptor* Database_NoBench_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-  NoBench_NestedObj_reflection_ = NULL;
+  Database_NoBench_reflection_ = NULL;
+const ::google::protobuf::Descriptor* Database_NoBench_NestedObj_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  Database_NoBench_NestedObj_reflection_ = NULL;
 
 }  // namespace
 
@@ -34,50 +37,65 @@ void protobuf_AssignDesc_nobench_2eproto() {
     ::google::protobuf::DescriptorPool::generated_pool()->FindFileByName(
       "nobench.proto");
   GOOGLE_CHECK(file != NULL);
-  NoBench_descriptor_ = file->message_type(0);
-  static const int NoBench_offsets_[14] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, str1_str_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, str2_str_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, num_int_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, bool_bool_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, dyn1_int_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, dyn1_str_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, dyn2_int_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, dyn2_str_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, dyn2_bool_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, nested_arr_str_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, nested_obj_obj_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, sparse_str_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, sparse_987_str_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, thousandth_),
+  Database_descriptor_ = file->message_type(0);
+  static const int Database_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database, nb_),
   };
-  NoBench_reflection_ =
+  Database_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
-      NoBench_descriptor_,
-      NoBench::default_instance_,
-      NoBench_offsets_,
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, _has_bits_[0]),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench, _unknown_fields_),
+      Database_descriptor_,
+      Database::default_instance_,
+      Database_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database, _unknown_fields_),
       -1,
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
-      sizeof(NoBench));
-  NoBench_NestedObj_descriptor_ = NoBench_descriptor_->nested_type(0);
-  static const int NoBench_NestedObj_offsets_[2] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench_NestedObj, str_str_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench_NestedObj, num_int_),
+      sizeof(Database));
+  Database_NoBench_descriptor_ = Database_descriptor_->nested_type(0);
+  static const int Database_NoBench_offsets_[14] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, str1_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, str2_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, num_int_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, bool_bool_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, dyn1_int_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, dyn1_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, dyn2_int_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, dyn2_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, dyn2_bool_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, nested_arr_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, nested_obj_obj_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, sparse_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, sparse_987_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, thousandth_),
   };
-  NoBench_NestedObj_reflection_ =
+  Database_NoBench_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
-      NoBench_NestedObj_descriptor_,
-      NoBench_NestedObj::default_instance_,
-      NoBench_NestedObj_offsets_,
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench_NestedObj, _has_bits_[0]),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NoBench_NestedObj, _unknown_fields_),
+      Database_NoBench_descriptor_,
+      Database_NoBench::default_instance_,
+      Database_NoBench_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, _unknown_fields_),
       -1,
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
-      sizeof(NoBench_NestedObj));
+      sizeof(Database_NoBench));
+  Database_NoBench_NestedObj_descriptor_ = Database_NoBench_descriptor_->nested_type(0);
+  static const int Database_NoBench_NestedObj_offsets_[2] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench_NestedObj, str_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench_NestedObj, num_int_),
+  };
+  Database_NoBench_NestedObj_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Database_NoBench_NestedObj_descriptor_,
+      Database_NoBench_NestedObj::default_instance_,
+      Database_NoBench_NestedObj_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench_NestedObj, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench_NestedObj, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Database_NoBench_NestedObj));
 }
 
 namespace {
@@ -91,18 +109,22 @@ inline void protobuf_AssignDescriptorsOnce() {
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-    NoBench_descriptor_, &NoBench::default_instance());
+    Database_descriptor_, &Database::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-    NoBench_NestedObj_descriptor_, &NoBench_NestedObj::default_instance());
+    Database_NoBench_descriptor_, &Database_NoBench::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    Database_NoBench_NestedObj_descriptor_, &Database_NoBench_NestedObj::default_instance());
 }
 
 }  // namespace
 
 void protobuf_ShutdownFile_nobench_2eproto() {
-  delete NoBench::default_instance_;
-  delete NoBench_reflection_;
-  delete NoBench_NestedObj::default_instance_;
-  delete NoBench_NestedObj_reflection_;
+  delete Database::default_instance_;
+  delete Database_reflection_;
+  delete Database_NoBench::default_instance_;
+  delete Database_NoBench_reflection_;
+  delete Database_NoBench_NestedObj::default_instance_;
+  delete Database_NoBench_NestedObj_reflection_;
 }
 
 void protobuf_AddDesc_nobench_2eproto() {
@@ -112,22 +134,25 @@ void protobuf_AddDesc_nobench_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\rnobench.proto\"\340\002\n\007NoBench\022\020\n\010str1_str\030"
-    "\001 \001(\t\022\020\n\010str2_str\030\002 \001(\t\022\017\n\007num_int\030\003 \001(\003"
-    "\022\021\n\tbool_bool\030\004 \001(\010\022\020\n\010dyn1_int\030\005 \001(\003\022\020\n"
-    "\010dyn1_str\030\006 \001(\t\022\020\n\010dyn2_int\030\007 \001(\003\022\020\n\010dyn"
-    "2_str\030\010 \001(\t\022\021\n\tdyn2_bool\030\t \001(\010\022\026\n\016nested"
-    "_arr_str\030\n \003(\t\022*\n\016nested_obj_obj\030\013 \001(\0132\022"
-    ".NoBench.NestedObj\022\022\n\nsparse_str\030\014 \003(\t\022\026"
-    "\n\016sparse_987_str\030\r \001(\t\022\023\n\nthousandth\030\364\007 "
-    "\001(\003\032-\n\tNestedObj\022\017\n\007str_str\030\001 \001(\t\022\017\n\007num"
-    "_int\030\002 \001(\003", 370);
+    "\n\rnobench.proto\"\225\003\n\010Database\022\035\n\002nb\030\001 \003(\013"
+    "2\021.Database.NoBench\032\351\002\n\007NoBench\022\020\n\010str1_"
+    "str\030\001 \001(\t\022\020\n\010str2_str\030\002 \001(\t\022\017\n\007num_int\030\003"
+    " \001(\003\022\021\n\tbool_bool\030\004 \001(\010\022\020\n\010dyn1_int\030\005 \001("
+    "\003\022\020\n\010dyn1_str\030\006 \001(\t\022\020\n\010dyn2_int\030\007 \001(\003\022\020\n"
+    "\010dyn2_str\030\010 \001(\t\022\021\n\tdyn2_bool\030\t \001(\010\022\026\n\016ne"
+    "sted_arr_str\030\n \003(\t\0223\n\016nested_obj_obj\030\013 \001"
+    "(\0132\033.Database.NoBench.NestedObj\022\022\n\nspars"
+    "e_str\030\014 \003(\t\022\026\n\016sparse_987_str\030\r \001(\t\022\023\n\nt"
+    "housandth\030\364\007 \001(\003\032-\n\tNestedObj\022\017\n\007str_str"
+    "\030\001 \001(\t\022\017\n\007num_int\030\002 \001(\003", 423);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "nobench.proto", &protobuf_RegisterTypes);
-  NoBench::default_instance_ = new NoBench();
-  NoBench_NestedObj::default_instance_ = new NoBench_NestedObj();
-  NoBench::default_instance_->InitAsDefaultInstance();
-  NoBench_NestedObj::default_instance_->InitAsDefaultInstance();
+  Database::default_instance_ = new Database();
+  Database_NoBench::default_instance_ = new Database_NoBench();
+  Database_NoBench_NestedObj::default_instance_ = new Database_NoBench_NestedObj();
+  Database::default_instance_->InitAsDefaultInstance();
+  Database_NoBench::default_instance_->InitAsDefaultInstance();
+  Database_NoBench_NestedObj::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_nobench_2eproto);
 }
 
@@ -141,36 +166,36 @@ struct StaticDescriptorInitializer_nobench_2eproto {
 // ===================================================================
 
 #ifndef _MSC_VER
-const int NoBench_NestedObj::kStrStrFieldNumber;
-const int NoBench_NestedObj::kNumIntFieldNumber;
+const int Database_NoBench_NestedObj::kStrStrFieldNumber;
+const int Database_NoBench_NestedObj::kNumIntFieldNumber;
 #endif  // !_MSC_VER
 
-NoBench_NestedObj::NoBench_NestedObj()
+Database_NoBench_NestedObj::Database_NoBench_NestedObj()
   : ::google::protobuf::Message() {
   SharedCtor();
 }
 
-void NoBench_NestedObj::InitAsDefaultInstance() {
+void Database_NoBench_NestedObj::InitAsDefaultInstance() {
 }
 
-NoBench_NestedObj::NoBench_NestedObj(const NoBench_NestedObj& from)
+Database_NoBench_NestedObj::Database_NoBench_NestedObj(const Database_NoBench_NestedObj& from)
   : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
 }
 
-void NoBench_NestedObj::SharedCtor() {
+void Database_NoBench_NestedObj::SharedCtor() {
   _cached_size_ = 0;
   str_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   num_int_ = GOOGLE_LONGLONG(0);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-NoBench_NestedObj::~NoBench_NestedObj() {
+Database_NoBench_NestedObj::~Database_NoBench_NestedObj() {
   SharedDtor();
 }
 
-void NoBench_NestedObj::SharedDtor() {
+void Database_NoBench_NestedObj::SharedDtor() {
   if (str_str_ != &::google::protobuf::internal::kEmptyString) {
     delete str_str_;
   }
@@ -178,28 +203,28 @@ void NoBench_NestedObj::SharedDtor() {
   }
 }
 
-void NoBench_NestedObj::SetCachedSize(int size) const {
+void Database_NoBench_NestedObj::SetCachedSize(int size) const {
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* NoBench_NestedObj::descriptor() {
+const ::google::protobuf::Descriptor* Database_NoBench_NestedObj::descriptor() {
   protobuf_AssignDescriptorsOnce();
-  return NoBench_NestedObj_descriptor_;
+  return Database_NoBench_NestedObj_descriptor_;
 }
 
-const NoBench_NestedObj& NoBench_NestedObj::default_instance() {
+const Database_NoBench_NestedObj& Database_NoBench_NestedObj::default_instance() {
   if (default_instance_ == NULL) protobuf_AddDesc_nobench_2eproto();
   return *default_instance_;
 }
 
-NoBench_NestedObj* NoBench_NestedObj::default_instance_ = NULL;
+Database_NoBench_NestedObj* Database_NoBench_NestedObj::default_instance_ = NULL;
 
-NoBench_NestedObj* NoBench_NestedObj::New() const {
-  return new NoBench_NestedObj;
+Database_NoBench_NestedObj* Database_NoBench_NestedObj::New() const {
+  return new Database_NoBench_NestedObj;
 }
 
-void NoBench_NestedObj::Clear() {
+void Database_NoBench_NestedObj::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (has_str_str()) {
       if (str_str_ != &::google::protobuf::internal::kEmptyString) {
@@ -212,7 +237,7 @@ void NoBench_NestedObj::Clear() {
   mutable_unknown_fields()->Clear();
 }
 
-bool NoBench_NestedObj::MergePartialFromCodedStream(
+bool Database_NoBench_NestedObj::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!(EXPRESSION)) return false
   ::google::protobuf::uint32 tag;
@@ -266,7 +291,7 @@ bool NoBench_NestedObj::MergePartialFromCodedStream(
 #undef DO_
 }
 
-void NoBench_NestedObj::SerializeWithCachedSizes(
+void Database_NoBench_NestedObj::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // optional string str_str = 1;
   if (has_str_str()) {
@@ -288,7 +313,7 @@ void NoBench_NestedObj::SerializeWithCachedSizes(
   }
 }
 
-::google::protobuf::uint8* NoBench_NestedObj::SerializeWithCachedSizesToArray(
+::google::protobuf::uint8* Database_NoBench_NestedObj::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
   // optional string str_str = 1;
   if (has_str_str()) {
@@ -312,7 +337,7 @@ void NoBench_NestedObj::SerializeWithCachedSizes(
   return target;
 }
 
-int NoBench_NestedObj::ByteSize() const {
+int Database_NoBench_NestedObj::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
@@ -342,10 +367,10 @@ int NoBench_NestedObj::ByteSize() const {
   return total_size;
 }
 
-void NoBench_NestedObj::MergeFrom(const ::google::protobuf::Message& from) {
+void Database_NoBench_NestedObj::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
-  const NoBench_NestedObj* source =
-    ::google::protobuf::internal::dynamic_cast_if_available<const NoBench_NestedObj*>(
+  const Database_NoBench_NestedObj* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const Database_NoBench_NestedObj*>(
       &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
@@ -354,7 +379,7 @@ void NoBench_NestedObj::MergeFrom(const ::google::protobuf::Message& from) {
   }
 }
 
-void NoBench_NestedObj::MergeFrom(const NoBench_NestedObj& from) {
+void Database_NoBench_NestedObj::MergeFrom(const Database_NoBench_NestedObj& from) {
   GOOGLE_CHECK_NE(&from, this);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from.has_str_str()) {
@@ -367,24 +392,24 @@ void NoBench_NestedObj::MergeFrom(const NoBench_NestedObj& from) {
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
 
-void NoBench_NestedObj::CopyFrom(const ::google::protobuf::Message& from) {
+void Database_NoBench_NestedObj::CopyFrom(const ::google::protobuf::Message& from) {
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-void NoBench_NestedObj::CopyFrom(const NoBench_NestedObj& from) {
+void Database_NoBench_NestedObj::CopyFrom(const Database_NoBench_NestedObj& from) {
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool NoBench_NestedObj::IsInitialized() const {
+bool Database_NoBench_NestedObj::IsInitialized() const {
 
   return true;
 }
 
-void NoBench_NestedObj::Swap(NoBench_NestedObj* other) {
+void Database_NoBench_NestedObj::Swap(Database_NoBench_NestedObj* other) {
   if (other != this) {
     std::swap(str_str_, other->str_str_);
     std::swap(num_int_, other->num_int_);
@@ -394,11 +419,11 @@ void NoBench_NestedObj::Swap(NoBench_NestedObj* other) {
   }
 }
 
-::google::protobuf::Metadata NoBench_NestedObj::GetMetadata() const {
+::google::protobuf::Metadata Database_NoBench_NestedObj::GetMetadata() const {
   protobuf_AssignDescriptorsOnce();
   ::google::protobuf::Metadata metadata;
-  metadata.descriptor = NoBench_NestedObj_descriptor_;
-  metadata.reflection = NoBench_NestedObj_reflection_;
+  metadata.descriptor = Database_NoBench_NestedObj_descriptor_;
+  metadata.reflection = Database_NoBench_NestedObj_reflection_;
   return metadata;
 }
 
@@ -406,38 +431,38 @@ void NoBench_NestedObj::Swap(NoBench_NestedObj* other) {
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
-const int NoBench::kStr1StrFieldNumber;
-const int NoBench::kStr2StrFieldNumber;
-const int NoBench::kNumIntFieldNumber;
-const int NoBench::kBoolBoolFieldNumber;
-const int NoBench::kDyn1IntFieldNumber;
-const int NoBench::kDyn1StrFieldNumber;
-const int NoBench::kDyn2IntFieldNumber;
-const int NoBench::kDyn2StrFieldNumber;
-const int NoBench::kDyn2BoolFieldNumber;
-const int NoBench::kNestedArrStrFieldNumber;
-const int NoBench::kNestedObjObjFieldNumber;
-const int NoBench::kSparseStrFieldNumber;
-const int NoBench::kSparse987StrFieldNumber;
-const int NoBench::kThousandthFieldNumber;
+const int Database_NoBench::kStr1StrFieldNumber;
+const int Database_NoBench::kStr2StrFieldNumber;
+const int Database_NoBench::kNumIntFieldNumber;
+const int Database_NoBench::kBoolBoolFieldNumber;
+const int Database_NoBench::kDyn1IntFieldNumber;
+const int Database_NoBench::kDyn1StrFieldNumber;
+const int Database_NoBench::kDyn2IntFieldNumber;
+const int Database_NoBench::kDyn2StrFieldNumber;
+const int Database_NoBench::kDyn2BoolFieldNumber;
+const int Database_NoBench::kNestedArrStrFieldNumber;
+const int Database_NoBench::kNestedObjObjFieldNumber;
+const int Database_NoBench::kSparseStrFieldNumber;
+const int Database_NoBench::kSparse987StrFieldNumber;
+const int Database_NoBench::kThousandthFieldNumber;
 #endif  // !_MSC_VER
 
-NoBench::NoBench()
+Database_NoBench::Database_NoBench()
   : ::google::protobuf::Message() {
   SharedCtor();
 }
 
-void NoBench::InitAsDefaultInstance() {
-  nested_obj_obj_ = const_cast< ::NoBench_NestedObj*>(&::NoBench_NestedObj::default_instance());
+void Database_NoBench::InitAsDefaultInstance() {
+  nested_obj_obj_ = const_cast< ::Database_NoBench_NestedObj*>(&::Database_NoBench_NestedObj::default_instance());
 }
 
-NoBench::NoBench(const NoBench& from)
+Database_NoBench::Database_NoBench(const Database_NoBench& from)
   : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
 }
 
-void NoBench::SharedCtor() {
+void Database_NoBench::SharedCtor() {
   _cached_size_ = 0;
   str1_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   str2_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
@@ -454,11 +479,11 @@ void NoBench::SharedCtor() {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-NoBench::~NoBench() {
+Database_NoBench::~Database_NoBench() {
   SharedDtor();
 }
 
-void NoBench::SharedDtor() {
+void Database_NoBench::SharedDtor() {
   if (str1_str_ != &::google::protobuf::internal::kEmptyString) {
     delete str1_str_;
   }
@@ -479,28 +504,28 @@ void NoBench::SharedDtor() {
   }
 }
 
-void NoBench::SetCachedSize(int size) const {
+void Database_NoBench::SetCachedSize(int size) const {
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* NoBench::descriptor() {
+const ::google::protobuf::Descriptor* Database_NoBench::descriptor() {
   protobuf_AssignDescriptorsOnce();
-  return NoBench_descriptor_;
+  return Database_NoBench_descriptor_;
 }
 
-const NoBench& NoBench::default_instance() {
+const Database_NoBench& Database_NoBench::default_instance() {
   if (default_instance_ == NULL) protobuf_AddDesc_nobench_2eproto();
   return *default_instance_;
 }
 
-NoBench* NoBench::default_instance_ = NULL;
+Database_NoBench* Database_NoBench::default_instance_ = NULL;
 
-NoBench* NoBench::New() const {
-  return new NoBench;
+Database_NoBench* Database_NoBench::New() const {
+  return new Database_NoBench;
 }
 
-void NoBench::Clear() {
+void Database_NoBench::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (has_str1_str()) {
       if (str1_str_ != &::google::protobuf::internal::kEmptyString) {
@@ -530,7 +555,7 @@ void NoBench::Clear() {
   if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
     dyn2_bool_ = false;
     if (has_nested_obj_obj()) {
-      if (nested_obj_obj_ != NULL) nested_obj_obj_->::NoBench_NestedObj::Clear();
+      if (nested_obj_obj_ != NULL) nested_obj_obj_->::Database_NoBench_NestedObj::Clear();
     }
     if (has_sparse_987_str()) {
       if (sparse_987_str_ != &::google::protobuf::internal::kEmptyString) {
@@ -545,7 +570,7 @@ void NoBench::Clear() {
   mutable_unknown_fields()->Clear();
 }
 
-bool NoBench::MergePartialFromCodedStream(
+bool Database_NoBench::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!(EXPRESSION)) return false
   ::google::protobuf::uint32 tag;
@@ -717,7 +742,7 @@ bool NoBench::MergePartialFromCodedStream(
         break;
       }
 
-      // optional .NoBench.NestedObj nested_obj_obj = 11;
+      // optional .Database.NoBench.NestedObj nested_obj_obj = 11;
       case 11: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
@@ -799,7 +824,7 @@ bool NoBench::MergePartialFromCodedStream(
 #undef DO_
 }
 
-void NoBench::SerializeWithCachedSizes(
+void Database_NoBench::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // optional string str1_str = 1;
   if (has_str1_str()) {
@@ -871,7 +896,7 @@ void NoBench::SerializeWithCachedSizes(
       10, this->nested_arr_str(i), output);
   }
 
-  // optional .NoBench.NestedObj nested_obj_obj = 11;
+  // optional .Database.NoBench.NestedObj nested_obj_obj = 11;
   if (has_nested_obj_obj()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       11, this->nested_obj_obj(), output);
@@ -906,7 +931,7 @@ void NoBench::SerializeWithCachedSizes(
   }
 }
 
-::google::protobuf::uint8* NoBench::SerializeWithCachedSizesToArray(
+::google::protobuf::uint8* Database_NoBench::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
   // optional string str1_str = 1;
   if (has_str1_str()) {
@@ -982,7 +1007,7 @@ void NoBench::SerializeWithCachedSizes(
       WriteStringToArray(10, this->nested_arr_str(i), target);
   }
 
-  // optional .NoBench.NestedObj nested_obj_obj = 11;
+  // optional .Database.NoBench.NestedObj nested_obj_obj = 11;
   if (has_nested_obj_obj()) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
@@ -1020,7 +1045,7 @@ void NoBench::SerializeWithCachedSizes(
   return target;
 }
 
-int NoBench::ByteSize() const {
+int Database_NoBench::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
@@ -1085,7 +1110,7 @@ int NoBench::ByteSize() const {
       total_size += 1 + 1;
     }
 
-    // optional .NoBench.NestedObj nested_obj_obj = 11;
+    // optional .Database.NoBench.NestedObj nested_obj_obj = 11;
     if (has_nested_obj_obj()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
@@ -1132,10 +1157,10 @@ int NoBench::ByteSize() const {
   return total_size;
 }
 
-void NoBench::MergeFrom(const ::google::protobuf::Message& from) {
+void Database_NoBench::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
-  const NoBench* source =
-    ::google::protobuf::internal::dynamic_cast_if_available<const NoBench*>(
+  const Database_NoBench* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const Database_NoBench*>(
       &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
@@ -1144,7 +1169,7 @@ void NoBench::MergeFrom(const ::google::protobuf::Message& from) {
   }
 }
 
-void NoBench::MergeFrom(const NoBench& from) {
+void Database_NoBench::MergeFrom(const Database_NoBench& from) {
   GOOGLE_CHECK_NE(&from, this);
   nested_arr_str_.MergeFrom(from.nested_arr_str_);
   sparse_str_.MergeFrom(from.sparse_str_);
@@ -1179,7 +1204,7 @@ void NoBench::MergeFrom(const NoBench& from) {
       set_dyn2_bool(from.dyn2_bool());
     }
     if (from.has_nested_obj_obj()) {
-      mutable_nested_obj_obj()->::NoBench_NestedObj::MergeFrom(from.nested_obj_obj());
+      mutable_nested_obj_obj()->::Database_NoBench_NestedObj::MergeFrom(from.nested_obj_obj());
     }
     if (from.has_sparse_987_str()) {
       set_sparse_987_str(from.sparse_987_str());
@@ -1191,24 +1216,24 @@ void NoBench::MergeFrom(const NoBench& from) {
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
 
-void NoBench::CopyFrom(const ::google::protobuf::Message& from) {
+void Database_NoBench::CopyFrom(const ::google::protobuf::Message& from) {
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-void NoBench::CopyFrom(const NoBench& from) {
+void Database_NoBench::CopyFrom(const Database_NoBench& from) {
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool NoBench::IsInitialized() const {
+bool Database_NoBench::IsInitialized() const {
 
   return true;
 }
 
-void NoBench::Swap(NoBench* other) {
+void Database_NoBench::Swap(Database_NoBench* other) {
   if (other != this) {
     std::swap(str1_str_, other->str1_str_);
     std::swap(str2_str_, other->str2_str_);
@@ -1230,11 +1255,214 @@ void NoBench::Swap(NoBench* other) {
   }
 }
 
-::google::protobuf::Metadata NoBench::GetMetadata() const {
+::google::protobuf::Metadata Database_NoBench::GetMetadata() const {
   protobuf_AssignDescriptorsOnce();
   ::google::protobuf::Metadata metadata;
-  metadata.descriptor = NoBench_descriptor_;
-  metadata.reflection = NoBench_reflection_;
+  metadata.descriptor = Database_NoBench_descriptor_;
+  metadata.reflection = Database_NoBench_reflection_;
+  return metadata;
+}
+
+
+// -------------------------------------------------------------------
+
+#ifndef _MSC_VER
+const int Database::kNbFieldNumber;
+#endif  // !_MSC_VER
+
+Database::Database()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void Database::InitAsDefaultInstance() {
+}
+
+Database::Database(const Database& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void Database::SharedCtor() {
+  _cached_size_ = 0;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+Database::~Database() {
+  SharedDtor();
+}
+
+void Database::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void Database::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* Database::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return Database_descriptor_;
+}
+
+const Database& Database::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_nobench_2eproto();
+  return *default_instance_;
+}
+
+Database* Database::default_instance_ = NULL;
+
+Database* Database::New() const {
+  return new Database;
+}
+
+void Database::Clear() {
+  nb_.Clear();
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool Database::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // repeated .Database.NoBench nb = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_nb:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_nb()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(10)) goto parse_nb;
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void Database::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // repeated .Database.NoBench nb = 1;
+  for (int i = 0; i < this->nb_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      1, this->nb(i), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* Database::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // repeated .Database.NoBench nb = 1;
+  for (int i = 0; i < this->nb_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        1, this->nb(i), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int Database::ByteSize() const {
+  int total_size = 0;
+
+  // repeated .Database.NoBench nb = 1;
+  total_size += 1 * this->nb_size();
+  for (int i = 0; i < this->nb_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->nb(i));
+  }
+
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Database::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const Database* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const Database*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void Database::MergeFrom(const Database& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  nb_.MergeFrom(from.nb_);
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void Database::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void Database::CopyFrom(const Database& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Database::IsInitialized() const {
+
+  return true;
+}
+
+void Database::Swap(Database* other) {
+  if (other != this) {
+    nb_.Swap(&other->nb_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata Database::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = Database_descriptor_;
+  metadata.reflection = Database_reflection_;
   return metadata;
 }
 

@@ -15,7 +15,7 @@ char projected_key[] = "sparse_987_str";
 int test_serialize(FILE* infile);
 int test_deserialize(FILE *outfile);
 int test_project(FILE *outfile);
-int protobuf_fill(NoBench *protobuf, char *json);
+int protobuf_fill(Database::NoBench *protobuf, char *json);
 
 using namespace std;
 
@@ -41,6 +41,7 @@ int main(int argc, char** argv) {
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Serialize: %d ms", msec);
+    fflush(stdout);
     fclose(infile);
 
     outfilename = argv[2];
@@ -52,6 +53,7 @@ int main(int argc, char** argv) {
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Deserialize: %d ms", msec);
+    fflush(stdout);
     fclose(outfile);
 
     extract_outfilename = argv[3];
@@ -63,43 +65,52 @@ int main(int argc, char** argv) {
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Extract: %d ms", msec);
+    fflush(stdout);
     fclose(extract_outfile);
 }
 
 /* Read all the records and print them */
 int test_deserialize(FILE *outfile) {
-    NoBench nb;
+    Database db;
+    Database::NoBench *nb;
     char *json;
     char buffer[10000];
     fstream input(dbname, ios::in | ios::binary);
 
-    while (nb.ParseFromIstream(&input)) {
+    fprintf(stderr, "In test deser\n");
+
+    db.ParseFromIstream(&input);
+    for (int i = 0; i < db.nb_size(); ++i) {
+        nb = db.mutable_nb(i);
+
         json = (char*)calloc(10000, 1);
         strcat(json, "{");
-        sprintf(buffer, "\"%s\":\"%s\"", "str1", nb.str1_str().c_str());
+        sprintf(buffer, "\"ID\":%d", i);
         strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "str2", nb.str1_str().c_str());
+        sprintf(buffer, "\"%s\":\"%s\"", "str1", nb->str1_str().c_str());
         strcat(json, buffer);
-        sprintf(buffer, "\"%s\": %lld", "num", nb.num_int());
+        sprintf(buffer, "\"%s\":\"%s\"", "str2", nb->str1_str().c_str());
         strcat(json, buffer);
-        sprintf(buffer, "\"%s\":%d", "bool", nb.bool_bool());
+        sprintf(buffer, "\"%s\": %lld", "num", nb->num_int());
         strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "dyn1", nb.dyn1_str().c_str());
+        sprintf(buffer, "\"%s\":%d", "bool", nb->bool_bool());
         strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "dyn2", nb.dyn2_str().c_str());
+        sprintf(buffer, "\"%s\":\"%s\"", "dyn1", nb->dyn1_str().c_str());
+        strcat(json, buffer);
+        sprintf(buffer, "\"%s\":\"%s\"", "dyn2", nb->dyn2_str().c_str());
         strcat(json, buffer);
         // /Junk just for the sake of I/O
-        sprintf(buffer, "\"%s\":\"%s\"", "str1", nb.str1_str().c_str());
+        sprintf(buffer, "\"%s\":\"%s\"", "str1", nb->str1_str().c_str());
         strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "str2", nb.str1_str().c_str());
+        sprintf(buffer, "\"%s\":\"%s\"", "str2", nb->str1_str().c_str());
         strcat(json, buffer);
-        sprintf(buffer, "\"%s\": %lld", "num", nb.num_int());
+        sprintf(buffer, "\"%s\": %lld", "num", nb->num_int());
         strcat(json, buffer);
-        sprintf(buffer, "\"%s\":%d", "bool", nb.bool_bool());
+        sprintf(buffer, "\"%s\":%d", "bool", nb->bool_bool());
         strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "dyn1", nb.dyn1_str().c_str());
+        sprintf(buffer, "\"%s\":\"%s\"", "dyn1", nb->dyn1_str().c_str());
         strcat(json, buffer);
-        sprintf(buffer, "\"%s\":\"%s\"", "dyn2", nb.dyn2_str().c_str());
+        sprintf(buffer, "\"%s\":\"%s\"", "dyn2", nb->dyn2_str().c_str());
         strcat(json, buffer);
         // \junk
 
@@ -112,11 +123,14 @@ int test_deserialize(FILE *outfile) {
 
 /* See: http://dcreager.github.io/avro-examples/resolved-writer.html */
 int test_project(FILE *outfile) {
-    NoBench nb;
+    Database db;
+    Database::NoBench *nb;
     fstream input(dbname, ios::in | ios::binary);
 
-    while (nb.ParseFromIstream(&input)) {
-        fprintf(outfile, "%s\n", nb.sparse_987_str().c_str());
+    db.ParseFromIstream(&input);
+    for (int i = 0; i < db.nb_size(); ++i) {
+        nb = db.mutable_nb(i);
+        fprintf(outfile, "%s\n", nb->sparse_987_str().c_str());
     }
 
     return 1;
@@ -127,28 +141,32 @@ int test_serialize(FILE* infile) {
     char *buffer;
     size_t len, read;
     fstream output(dbname, ios::out | ios::trunc | ios::binary);
+    Database db;
 
     buffer = NULL;
     len = 0;
     while ((read = getline(&buffer, &len, infile)) != -1) {
-        NoBench nb;
+        Database::NoBench *nb;
 
-        protobuf_fill(&nb, buffer);
-        if (!nb.SerializeToOstream(&output)) {
-            cerr << "Failed to write datum." << endl;
-            return -1;
-        }
+        nb = db.add_nb();
+        protobuf_fill(nb, buffer);
 
         free(buffer);
         buffer = NULL;
         len = 0;
     }
 
+    if (!db.SerializeToOstream(&output)) {
+        cerr << "Failed to write datum." << endl;
+        return -1;
+    }
+    fprintf(stderr, "Finished serialize\n");
+
     return 1;
 }
 
 // Returns - how many tokens to advance
-int protobuf_fill(NoBench *protobuf, char *json) {
+int protobuf_fill(Database::NoBench *protobuf, char *json) {
     int num_keys;
 
     jsmntok_t *tokens;
@@ -162,12 +180,10 @@ int protobuf_fill(NoBench *protobuf, char *json) {
     json_typeid arr_type;
 
     // Start code
-
-    assert(curtok->type == JSMN_OBJECT);
-    num_keys = curtok->size;
-
     tokens = jsmn_tokenize(json);
     curtok = tokens;
+    assert(curtok->type == JSMN_OBJECT);
+    num_keys = curtok->size;
     ++curtok;
     for (int i = 0; i < num_keys; ++i) {
         key = jsmntok_to_str(curtok, json);
@@ -175,6 +191,7 @@ int protobuf_fill(NoBench *protobuf, char *json) {
 
         type = jsmn_get_type(curtok, json);
         value = jsmntok_to_str(curtok, json);
+        // fprintf(stderr, "Got to assignment for key: %s, value: %s type:%d\n", key, value, type);
 
         switch (type) {
             case STRING:
