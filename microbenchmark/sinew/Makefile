@@ -5,6 +5,9 @@ sinew_test: ../json.o sinew_test.o document.o schema.o hash_table.o ../lib/jsmn/
 %.o: %.c
 	$(CC) -c $(CFLAGS) $^ -o $@
 
+test: clean-test
+	./sinew_test ~/Downloads/nobench/nb.out deser.out project.out
+
 clean: clean-build clean-test
 
 clean-build:
