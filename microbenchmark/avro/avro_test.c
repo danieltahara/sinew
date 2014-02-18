@@ -166,9 +166,9 @@ int test_multiple_project(FILE *outfile) {
                     fprintf(stderr, "Error converting to string: %s\n", avro_strerror());
                     return rval;
                 }
-                sprintf(buffer, "%s, %s", buffer, value);
+                sprintf(buffer, "%s%s, ", buffer, value);
             } else if (branch == 1) {
-                sprintf(buffer, "%s, %s", buffer, "");
+                sprintf(buffer, "%s%s, ", buffer, "");
             }
         }
         fprintf(outfile, "%s\n", buffer);
