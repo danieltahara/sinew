@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("Serialize: %d ms", msec);
+    printf("Serialize: %d ms\n", msec);
     fflush(stdout);
     fclose(infile);
 
@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("Deserialize: %d ms", msec);
+    printf("Deserialize: %d ms\n", msec);
     fflush(stdout);
     fclose(outfile);
 
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("Extract: %d ms", msec);
+    printf("Extract: %d ms\n", msec);
     fflush(stdout);
     fclose(extract_outfile);
 }
