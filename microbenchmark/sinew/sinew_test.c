@@ -137,10 +137,10 @@ int test_multiple_projection(FILE *outfile) {
         for (int i = 0; i < num_projected_keys; ++i) {
             value = extract_key(binary, multiple_projected_keyname[i], multiple_projected_typename[i]);
             if (value) {
-                sprintf(buffer, "%s, %s", buffer, value);
+                sprintf(buffer, "%s%s,", buffer, value);
                 free(value);
             } else {
-                sprintf(buffer, "%s, %s", buffer, "");
+                sprintf(buffer, "%s%s, ", buffer, "");
             }
         }
         fprintf(outfile, "%s\n", buffer);
