@@ -1,11 +1,13 @@
-#include "nobench.pb.h"
-
 #include <iostream>
 #include <fstream>
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#include "../json.h"
+
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include "nobench.pb.h"
+#include "json.h"
 
 char dbname[] = "protobuf_test.db";
 char projected_key[] = "sparse_987_str";
@@ -30,39 +32,37 @@ int main(int argc, char** argv) {
 
     infilename = argv[1];
     infile = fopen(infilename, "r");
-    outfilename = argv[2];
-    outfile = fopen(outfilename, "w");
-    extract_outfilename = argv[3];
-    extract_outfile = fopen(extract_outfilename, "w");
-
     // Measures CPU Time
     // TODO: DRY
     start = clock();
-    if (test_serialize(infile)) {
+    if (!test_serialize(infile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Serialize: %d ms", msec);
+    fclose(infile);
 
+    outfilename = argv[2];
+    outfile = fopen(outfilename, "w");
     start = clock();
-    if (test_deserialize(outfile)) {
+    if (!test_deserialize(outfile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Deserialize: %d ms", msec);
+    fclose(outfile);
 
+    extract_outfilename = argv[3];
+    extract_outfile = fopen(extract_outfilename, "w");
     start = clock();
-    if (test_project(extract_outfile)) {
+    if (!test_project(extract_outfile)) {
         exit(EXIT_FAILURE);
     }
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Extract: %d ms", msec);
-
-    fclose(infile);
-    fclose(outfile);
     fclose(extract_outfile);
 }
 
@@ -106,6 +106,8 @@ int test_deserialize(FILE *outfile) {
         fprintf(outfile, "%s\n", json);
         free(json);
     }
+
+    return 1;
 }
 
 /* See: http://dcreager.github.io/avro-examples/resolved-writer.html */
@@ -116,6 +118,8 @@ int test_project(FILE *outfile) {
     while (nb.ParseFromIstream(&input)) {
         fprintf(outfile, "%s\n", nb.sparse_987_str().c_str());
     }
+
+    return 1;
 }
 
 // NOTE: File must be \n terminated
@@ -139,6 +143,8 @@ int test_serialize(FILE* infile) {
         buffer = NULL;
         len = 0;
     }
+
+    return 1;
 }
 
 // Returns - how many tokens to advance
