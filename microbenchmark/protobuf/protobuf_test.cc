@@ -10,7 +10,9 @@
 #include "json.h"
 
 char dbname[] = "protobuf_test.db";
-char projected_key[] = "sparse_987_str";
+
+int num_dbfiles = 0;
+const int MAX_DB_SIZE = 100000;
 
 int test_serialize(FILE* infile);
 int test_deserialize(FILE *outfile);
@@ -74,28 +76,38 @@ int test_deserialize(FILE *outfile) {
     Database db;
     Database::NoBench *nb;
     char *json;
-    fstream input(dbname, ios::in | ios::binary);
 
     fprintf(stderr, "In test deser\n");
 
-    db.ParseFromIstream(&input);
-    for (int i = 0; i < db.nb_size(); ++i) {
-        nb = db.mutable_nb(i);
+    for (int j = 0; j < num_dbfiles; ++j) {
+        char dbname_full[200];
+        sprintf(dbname_full, "%s_%d", dbname, j);
+        fstream input(dbname_full, ios::in | ios::binary);
 
-        json = (char*)calloc(10000, 1);
-        sprintf(json, "{ \"ID\" : %d", i);
-        for (int j = 0; j < 5; ++j) {
-            // /Junk just for the sake of I/O
-            sprintf(json, "%s, \"%s\":\"%s\"", json, "str1", nb->str1_str().c_str());
-            sprintf(json, "%s, \"%s\":\"%s\"", json, "str2", nb->str2_str().c_str());
-            sprintf(json, "%s, \"%s\":%ld", json, "num", nb->num_int());
-            sprintf(json, "%s, \"%s\":%d", json, "bool", nb->bool_bool());
-            sprintf(json, "%s, \"%s\":\"%s\"", json, "dyn1", nb->dyn1_str().c_str());
-            sprintf(json, "%s, \"%s\":\"%s\"", json, "dyn2", nb->dyn2_str().c_str());
+        db.ParseFromIstream(&input);
+        // fprintf(stderr, "Parsing file %d of %d: name = %s db size = %d\n", j, num_dbfiles, dbname_full, db.nb_size());
+        for (int i = 0; i < db.nb_size(); ++i) {
+            nb = db.mutable_nb(i);
+
+            json = (char*)calloc(10000, 1);
+            sprintf(json, "{ \"ID\" : %d", i);
+            for (int j = 0; j < 5; ++j) {
+                // /Junk just for the sake of I/O
+                sprintf(json, "%s, \"%s\":\"%s\"", json, "str1", nb->str1_str().c_str());
+                sprintf(json, "%s, \"%s\":\"%s\"", json, "str2", nb->str2_str().c_str());
+                sprintf(json, "%s, \"%s\":%ld", json, "num", nb->num_int());
+                sprintf(json, "%s, \"%s\":%d", json, "bool", nb->bool_bool());
+                sprintf(json, "%s, \"%s\":\"%s\"", json, "dyn1", nb->dyn1_str().c_str());
+                sprintf(json, "%s, \"%s\":\"%s\"", json, "dyn2", nb->dyn2_str().c_str());
+            }
+
+            fprintf(outfile, "%s\n", json);
+            free(json);
         }
 
-        fprintf(outfile, "%s\n", json);
-        free(json);
+        fflush(outfile);
+        input.close();
+        db.Clear();
     }
 
     return 1;
@@ -105,14 +117,24 @@ int test_deserialize(FILE *outfile) {
 int test_project(FILE *outfile) {
     Database db;
     Database::NoBench *nb;
-    fstream input(dbname, ios::in | ios::binary);
 
-    db.ParseFromIstream(&input);
-    for (int i = 0; i < db.nb_size(); ++i) {
-        nb = db.mutable_nb(i);
-        if (nb->has_sparse_987_str()) {
-            fprintf(outfile, "%s\n", nb->sparse_987_str().c_str());
+    // TODO: DRY with deser
+    for (int j = 0; j < num_dbfiles; ++j) {
+        char dbname_full[200];
+        sprintf(dbname_full, "%s_%d", dbname, j);
+        fstream input(dbname_full, ios::in | ios::binary);
+
+        db.ParseFromIstream(&input);
+        for (int i = 0; i < db.nb_size(); ++i) {
+            nb = db.mutable_nb(i);
+            if (nb->has_sparse_987_str()) {
+                fprintf(outfile, "%s\n", nb->sparse_987_str().c_str());
+            }
         }
+
+        fflush(outfile);
+        input.close();
+        db.Clear();
     }
 
     return 1;
@@ -122,7 +144,6 @@ int test_project(FILE *outfile) {
 int test_serialize(FILE* infile) {
     char *buffer;
     size_t len, read;
-    fstream output(dbname, ios::out | ios::trunc | ios::binary);
     Database db;
 
     buffer = NULL;
@@ -136,12 +157,34 @@ int test_serialize(FILE* infile) {
         free(buffer);
         buffer = NULL;
         len = 0;
+
+        if (db.nb_size() >= MAX_DB_SIZE) {
+            char dbname_full[200];
+            sprintf(dbname_full, "%s_%d", dbname, num_dbfiles++);
+            fstream output(dbname_full, ios::out | ios::trunc | ios::binary);
+            // fprintf(stderr, "Outputting file %d : db size = %d\n", num_dbfiles, db.nb_size());
+            if (!db.SerializeToOstream(&output)) {
+                cerr << "Failed to write datum." << endl;
+                return -1;
+            }
+            output.close();
+            db.Clear();
+        }
     }
 
-    if (!db.SerializeToOstream(&output)) {
-        cerr << "Failed to write datum." << endl;
-        return -1;
+    if (db.nb_size() != 0) {
+        char dbname_full[200];
+        sprintf(dbname_full, "%s_%d", dbname, num_dbfiles++);
+        fstream output(dbname_full, ios::out | ios::trunc | ios::binary);
+        // fprintf(stderr, "Outputting file %d : db size = %d\n", num_dbfiles, db.nb_size());
+        if (!db.SerializeToOstream(&output)) {
+            cerr << "Failed to write datum." << endl;
+            return -1;
+        }
+        output.close();
+        db.Clear();
     }
+
     fprintf(stderr, "Finished serialize\n");
 
     return 1;

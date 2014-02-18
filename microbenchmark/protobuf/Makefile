@@ -20,4 +20,4 @@ clean-build:
 	rm -f *.o *.a protobuf_test
 
 clean-test:
-	rm -f *.out *.schema *.db
+	rm -f *.out *.schema protobuf_test.db_*
