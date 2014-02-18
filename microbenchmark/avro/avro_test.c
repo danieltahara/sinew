@@ -9,6 +9,7 @@
 
 char dbname[] = "avro_test.db";
 const char codec[] = "deflate"; // Compression?? = null, deflate
+
 char *to_avro_keyname(char *key, json_typeid type, char *value);
 int avro_record_value_fill(avro_value_t *avro_value, char *json);
 int test_serialize(FILE* infile);

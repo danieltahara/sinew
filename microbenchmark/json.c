@@ -84,7 +84,7 @@ jsmn_tokenize(char *json)
 
     jsmn_init(&parser);
     maxToks = 256;
-    tokens = calloc(sizeof(jsmntok_t), maxToks);
+    tokens = (jsmntok_t*)calloc(sizeof(jsmntok_t), maxToks);
     assert(tokens);
 
     if (json == NULL)
@@ -97,7 +97,7 @@ jsmn_tokenize(char *json)
     while (status == JSMN_ERROR_NOMEM)
     {
         maxToks = maxToks * 2 + 1;
-        tokens = realloc(tokens, sizeof(jsmntok_t) * maxToks);
+        tokens = (jsmntok_t*)realloc(tokens, sizeof(jsmntok_t) * maxToks);
         assert(tokens);
         status = jsmn_parse(&parser, json, tokens, maxToks);
     }
@@ -147,7 +147,7 @@ get_pg_type(json_typeid type, char *value)
             assert(tokens->type == JSMN_ARRAY);
             arr_elt_type = jsmn_get_type(tokens + 1, value);
             arr_elt_pg_type = get_pg_type(arr_elt_type, jsmntok_to_str(tokens + 1, value));
-            buffer = calloc(1, strlen(arr_elt_pg_type) + 2 + 1);
+            buffer = (char*)calloc(1, strlen(arr_elt_pg_type) + 2 + 1);
             /* NOTE: 'leaks' memory for nested arrays */
             sprintf(buffer, "%s%s", arr_elt_pg_type, ARRAY_TYPE);
             return buffer;
@@ -180,7 +180,7 @@ get_pg_type_for_path(char **path,
                                                  path_arr_index_map + 1,
                                                  --depth,
                                                  base_type);
-            buffer = calloc(1, strlen(array_pg_type) + 2 + 1);
+            buffer = (char*)calloc(1, strlen(array_pg_type) + 2 + 1);
             sprintf(buffer, "%s%s", array_pg_type, ARRAY_TYPE);
 
             // elog(WARNING, "type: %s", buffer);
