@@ -326,6 +326,78 @@ class Database_NoBench : public ::google::protobuf::Message {
   inline ::std::string* release_sparse_987_str();
   inline void set_allocated_sparse_987_str(::std::string* sparse_987_str);
 
+  // optional string sparse_123_str = 14;
+  inline bool has_sparse_123_str() const;
+  inline void clear_sparse_123_str();
+  static const int kSparse123StrFieldNumber = 14;
+  inline const ::std::string& sparse_123_str() const;
+  inline void set_sparse_123_str(const ::std::string& value);
+  inline void set_sparse_123_str(const char* value);
+  inline void set_sparse_123_str(const char* value, size_t size);
+  inline ::std::string* mutable_sparse_123_str();
+  inline ::std::string* release_sparse_123_str();
+  inline void set_allocated_sparse_123_str(::std::string* sparse_123_str);
+
+  // optional string sparse_234_str = 15;
+  inline bool has_sparse_234_str() const;
+  inline void clear_sparse_234_str();
+  static const int kSparse234StrFieldNumber = 15;
+  inline const ::std::string& sparse_234_str() const;
+  inline void set_sparse_234_str(const ::std::string& value);
+  inline void set_sparse_234_str(const char* value);
+  inline void set_sparse_234_str(const char* value, size_t size);
+  inline ::std::string* mutable_sparse_234_str();
+  inline ::std::string* release_sparse_234_str();
+  inline void set_allocated_sparse_234_str(::std::string* sparse_234_str);
+
+  // optional string sparse_345_str = 16;
+  inline bool has_sparse_345_str() const;
+  inline void clear_sparse_345_str();
+  static const int kSparse345StrFieldNumber = 16;
+  inline const ::std::string& sparse_345_str() const;
+  inline void set_sparse_345_str(const ::std::string& value);
+  inline void set_sparse_345_str(const char* value);
+  inline void set_sparse_345_str(const char* value, size_t size);
+  inline ::std::string* mutable_sparse_345_str();
+  inline ::std::string* release_sparse_345_str();
+  inline void set_allocated_sparse_345_str(::std::string* sparse_345_str);
+
+  // optional string sparse_456_str = 17;
+  inline bool has_sparse_456_str() const;
+  inline void clear_sparse_456_str();
+  static const int kSparse456StrFieldNumber = 17;
+  inline const ::std::string& sparse_456_str() const;
+  inline void set_sparse_456_str(const ::std::string& value);
+  inline void set_sparse_456_str(const char* value);
+  inline void set_sparse_456_str(const char* value, size_t size);
+  inline ::std::string* mutable_sparse_456_str();
+  inline ::std::string* release_sparse_456_str();
+  inline void set_allocated_sparse_456_str(::std::string* sparse_456_str);
+
+  // optional string sparse_567_str = 18;
+  inline bool has_sparse_567_str() const;
+  inline void clear_sparse_567_str();
+  static const int kSparse567StrFieldNumber = 18;
+  inline const ::std::string& sparse_567_str() const;
+  inline void set_sparse_567_str(const ::std::string& value);
+  inline void set_sparse_567_str(const char* value);
+  inline void set_sparse_567_str(const char* value, size_t size);
+  inline ::std::string* mutable_sparse_567_str();
+  inline ::std::string* release_sparse_567_str();
+  inline void set_allocated_sparse_567_str(::std::string* sparse_567_str);
+
+  // optional string sparse_789_str = 19;
+  inline bool has_sparse_789_str() const;
+  inline void clear_sparse_789_str();
+  static const int kSparse789StrFieldNumber = 19;
+  inline const ::std::string& sparse_789_str() const;
+  inline void set_sparse_789_str(const ::std::string& value);
+  inline void set_sparse_789_str(const char* value);
+  inline void set_sparse_789_str(const char* value, size_t size);
+  inline ::std::string* mutable_sparse_789_str();
+  inline ::std::string* release_sparse_789_str();
+  inline void set_allocated_sparse_789_str(::std::string* sparse_789_str);
+
   // optional int64 thousandth = 1012;
   inline bool has_thousandth() const;
   inline void clear_thousandth();
@@ -357,6 +429,18 @@ class Database_NoBench : public ::google::protobuf::Message {
   inline void clear_has_nested_obj_obj();
   inline void set_has_sparse_987_str();
   inline void clear_has_sparse_987_str();
+  inline void set_has_sparse_123_str();
+  inline void clear_has_sparse_123_str();
+  inline void set_has_sparse_234_str();
+  inline void clear_has_sparse_234_str();
+  inline void set_has_sparse_345_str();
+  inline void clear_has_sparse_345_str();
+  inline void set_has_sparse_456_str();
+  inline void clear_has_sparse_456_str();
+  inline void set_has_sparse_567_str();
+  inline void clear_has_sparse_567_str();
+  inline void set_has_sparse_789_str();
+  inline void clear_has_sparse_789_str();
   inline void set_has_thousandth();
   inline void clear_has_thousandth();
 
@@ -373,12 +457,18 @@ class Database_NoBench : public ::google::protobuf::Message {
   ::Database_NoBench_NestedObj* nested_obj_obj_;
   ::google::protobuf::RepeatedPtrField< ::std::string> sparse_str_;
   ::std::string* sparse_987_str_;
+  ::std::string* sparse_123_str_;
+  ::std::string* sparse_234_str_;
+  ::std::string* sparse_345_str_;
+  ::std::string* sparse_456_str_;
+  ::std::string* sparse_567_str_;
+  ::std::string* sparse_789_str_;
   ::google::protobuf::int64 thousandth_;
   bool bool_bool_;
   bool dyn2_bool_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(14 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(20 + 31) / 32];
 
   friend void  protobuf_AddDesc_nobench_2eproto();
   friend void protobuf_AssignDesc_nobench_2eproto();
@@ -1163,15 +1253,435 @@ inline void Database_NoBench::set_allocated_sparse_987_str(::std::string* sparse
   }
 }
 
-// optional int64 thousandth = 1012;
-inline bool Database_NoBench::has_thousandth() const {
+// optional string sparse_123_str = 14;
+inline bool Database_NoBench::has_sparse_123_str() const {
   return (_has_bits_[0] & 0x00002000u) != 0;
 }
-inline void Database_NoBench::set_has_thousandth() {
+inline void Database_NoBench::set_has_sparse_123_str() {
   _has_bits_[0] |= 0x00002000u;
 }
-inline void Database_NoBench::clear_has_thousandth() {
+inline void Database_NoBench::clear_has_sparse_123_str() {
   _has_bits_[0] &= ~0x00002000u;
+}
+inline void Database_NoBench::clear_sparse_123_str() {
+  if (sparse_123_str_ != &::google::protobuf::internal::kEmptyString) {
+    sparse_123_str_->clear();
+  }
+  clear_has_sparse_123_str();
+}
+inline const ::std::string& Database_NoBench::sparse_123_str() const {
+  return *sparse_123_str_;
+}
+inline void Database_NoBench::set_sparse_123_str(const ::std::string& value) {
+  set_has_sparse_123_str();
+  if (sparse_123_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_123_str_ = new ::std::string;
+  }
+  sparse_123_str_->assign(value);
+}
+inline void Database_NoBench::set_sparse_123_str(const char* value) {
+  set_has_sparse_123_str();
+  if (sparse_123_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_123_str_ = new ::std::string;
+  }
+  sparse_123_str_->assign(value);
+}
+inline void Database_NoBench::set_sparse_123_str(const char* value, size_t size) {
+  set_has_sparse_123_str();
+  if (sparse_123_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_123_str_ = new ::std::string;
+  }
+  sparse_123_str_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Database_NoBench::mutable_sparse_123_str() {
+  set_has_sparse_123_str();
+  if (sparse_123_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_123_str_ = new ::std::string;
+  }
+  return sparse_123_str_;
+}
+inline ::std::string* Database_NoBench::release_sparse_123_str() {
+  clear_has_sparse_123_str();
+  if (sparse_123_str_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = sparse_123_str_;
+    sparse_123_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Database_NoBench::set_allocated_sparse_123_str(::std::string* sparse_123_str) {
+  if (sparse_123_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete sparse_123_str_;
+  }
+  if (sparse_123_str) {
+    set_has_sparse_123_str();
+    sparse_123_str_ = sparse_123_str;
+  } else {
+    clear_has_sparse_123_str();
+    sparse_123_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string sparse_234_str = 15;
+inline bool Database_NoBench::has_sparse_234_str() const {
+  return (_has_bits_[0] & 0x00004000u) != 0;
+}
+inline void Database_NoBench::set_has_sparse_234_str() {
+  _has_bits_[0] |= 0x00004000u;
+}
+inline void Database_NoBench::clear_has_sparse_234_str() {
+  _has_bits_[0] &= ~0x00004000u;
+}
+inline void Database_NoBench::clear_sparse_234_str() {
+  if (sparse_234_str_ != &::google::protobuf::internal::kEmptyString) {
+    sparse_234_str_->clear();
+  }
+  clear_has_sparse_234_str();
+}
+inline const ::std::string& Database_NoBench::sparse_234_str() const {
+  return *sparse_234_str_;
+}
+inline void Database_NoBench::set_sparse_234_str(const ::std::string& value) {
+  set_has_sparse_234_str();
+  if (sparse_234_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_234_str_ = new ::std::string;
+  }
+  sparse_234_str_->assign(value);
+}
+inline void Database_NoBench::set_sparse_234_str(const char* value) {
+  set_has_sparse_234_str();
+  if (sparse_234_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_234_str_ = new ::std::string;
+  }
+  sparse_234_str_->assign(value);
+}
+inline void Database_NoBench::set_sparse_234_str(const char* value, size_t size) {
+  set_has_sparse_234_str();
+  if (sparse_234_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_234_str_ = new ::std::string;
+  }
+  sparse_234_str_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Database_NoBench::mutable_sparse_234_str() {
+  set_has_sparse_234_str();
+  if (sparse_234_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_234_str_ = new ::std::string;
+  }
+  return sparse_234_str_;
+}
+inline ::std::string* Database_NoBench::release_sparse_234_str() {
+  clear_has_sparse_234_str();
+  if (sparse_234_str_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = sparse_234_str_;
+    sparse_234_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Database_NoBench::set_allocated_sparse_234_str(::std::string* sparse_234_str) {
+  if (sparse_234_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete sparse_234_str_;
+  }
+  if (sparse_234_str) {
+    set_has_sparse_234_str();
+    sparse_234_str_ = sparse_234_str;
+  } else {
+    clear_has_sparse_234_str();
+    sparse_234_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string sparse_345_str = 16;
+inline bool Database_NoBench::has_sparse_345_str() const {
+  return (_has_bits_[0] & 0x00008000u) != 0;
+}
+inline void Database_NoBench::set_has_sparse_345_str() {
+  _has_bits_[0] |= 0x00008000u;
+}
+inline void Database_NoBench::clear_has_sparse_345_str() {
+  _has_bits_[0] &= ~0x00008000u;
+}
+inline void Database_NoBench::clear_sparse_345_str() {
+  if (sparse_345_str_ != &::google::protobuf::internal::kEmptyString) {
+    sparse_345_str_->clear();
+  }
+  clear_has_sparse_345_str();
+}
+inline const ::std::string& Database_NoBench::sparse_345_str() const {
+  return *sparse_345_str_;
+}
+inline void Database_NoBench::set_sparse_345_str(const ::std::string& value) {
+  set_has_sparse_345_str();
+  if (sparse_345_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_345_str_ = new ::std::string;
+  }
+  sparse_345_str_->assign(value);
+}
+inline void Database_NoBench::set_sparse_345_str(const char* value) {
+  set_has_sparse_345_str();
+  if (sparse_345_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_345_str_ = new ::std::string;
+  }
+  sparse_345_str_->assign(value);
+}
+inline void Database_NoBench::set_sparse_345_str(const char* value, size_t size) {
+  set_has_sparse_345_str();
+  if (sparse_345_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_345_str_ = new ::std::string;
+  }
+  sparse_345_str_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Database_NoBench::mutable_sparse_345_str() {
+  set_has_sparse_345_str();
+  if (sparse_345_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_345_str_ = new ::std::string;
+  }
+  return sparse_345_str_;
+}
+inline ::std::string* Database_NoBench::release_sparse_345_str() {
+  clear_has_sparse_345_str();
+  if (sparse_345_str_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = sparse_345_str_;
+    sparse_345_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Database_NoBench::set_allocated_sparse_345_str(::std::string* sparse_345_str) {
+  if (sparse_345_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete sparse_345_str_;
+  }
+  if (sparse_345_str) {
+    set_has_sparse_345_str();
+    sparse_345_str_ = sparse_345_str;
+  } else {
+    clear_has_sparse_345_str();
+    sparse_345_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string sparse_456_str = 17;
+inline bool Database_NoBench::has_sparse_456_str() const {
+  return (_has_bits_[0] & 0x00010000u) != 0;
+}
+inline void Database_NoBench::set_has_sparse_456_str() {
+  _has_bits_[0] |= 0x00010000u;
+}
+inline void Database_NoBench::clear_has_sparse_456_str() {
+  _has_bits_[0] &= ~0x00010000u;
+}
+inline void Database_NoBench::clear_sparse_456_str() {
+  if (sparse_456_str_ != &::google::protobuf::internal::kEmptyString) {
+    sparse_456_str_->clear();
+  }
+  clear_has_sparse_456_str();
+}
+inline const ::std::string& Database_NoBench::sparse_456_str() const {
+  return *sparse_456_str_;
+}
+inline void Database_NoBench::set_sparse_456_str(const ::std::string& value) {
+  set_has_sparse_456_str();
+  if (sparse_456_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_456_str_ = new ::std::string;
+  }
+  sparse_456_str_->assign(value);
+}
+inline void Database_NoBench::set_sparse_456_str(const char* value) {
+  set_has_sparse_456_str();
+  if (sparse_456_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_456_str_ = new ::std::string;
+  }
+  sparse_456_str_->assign(value);
+}
+inline void Database_NoBench::set_sparse_456_str(const char* value, size_t size) {
+  set_has_sparse_456_str();
+  if (sparse_456_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_456_str_ = new ::std::string;
+  }
+  sparse_456_str_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Database_NoBench::mutable_sparse_456_str() {
+  set_has_sparse_456_str();
+  if (sparse_456_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_456_str_ = new ::std::string;
+  }
+  return sparse_456_str_;
+}
+inline ::std::string* Database_NoBench::release_sparse_456_str() {
+  clear_has_sparse_456_str();
+  if (sparse_456_str_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = sparse_456_str_;
+    sparse_456_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Database_NoBench::set_allocated_sparse_456_str(::std::string* sparse_456_str) {
+  if (sparse_456_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete sparse_456_str_;
+  }
+  if (sparse_456_str) {
+    set_has_sparse_456_str();
+    sparse_456_str_ = sparse_456_str;
+  } else {
+    clear_has_sparse_456_str();
+    sparse_456_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string sparse_567_str = 18;
+inline bool Database_NoBench::has_sparse_567_str() const {
+  return (_has_bits_[0] & 0x00020000u) != 0;
+}
+inline void Database_NoBench::set_has_sparse_567_str() {
+  _has_bits_[0] |= 0x00020000u;
+}
+inline void Database_NoBench::clear_has_sparse_567_str() {
+  _has_bits_[0] &= ~0x00020000u;
+}
+inline void Database_NoBench::clear_sparse_567_str() {
+  if (sparse_567_str_ != &::google::protobuf::internal::kEmptyString) {
+    sparse_567_str_->clear();
+  }
+  clear_has_sparse_567_str();
+}
+inline const ::std::string& Database_NoBench::sparse_567_str() const {
+  return *sparse_567_str_;
+}
+inline void Database_NoBench::set_sparse_567_str(const ::std::string& value) {
+  set_has_sparse_567_str();
+  if (sparse_567_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_567_str_ = new ::std::string;
+  }
+  sparse_567_str_->assign(value);
+}
+inline void Database_NoBench::set_sparse_567_str(const char* value) {
+  set_has_sparse_567_str();
+  if (sparse_567_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_567_str_ = new ::std::string;
+  }
+  sparse_567_str_->assign(value);
+}
+inline void Database_NoBench::set_sparse_567_str(const char* value, size_t size) {
+  set_has_sparse_567_str();
+  if (sparse_567_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_567_str_ = new ::std::string;
+  }
+  sparse_567_str_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Database_NoBench::mutable_sparse_567_str() {
+  set_has_sparse_567_str();
+  if (sparse_567_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_567_str_ = new ::std::string;
+  }
+  return sparse_567_str_;
+}
+inline ::std::string* Database_NoBench::release_sparse_567_str() {
+  clear_has_sparse_567_str();
+  if (sparse_567_str_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = sparse_567_str_;
+    sparse_567_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Database_NoBench::set_allocated_sparse_567_str(::std::string* sparse_567_str) {
+  if (sparse_567_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete sparse_567_str_;
+  }
+  if (sparse_567_str) {
+    set_has_sparse_567_str();
+    sparse_567_str_ = sparse_567_str;
+  } else {
+    clear_has_sparse_567_str();
+    sparse_567_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string sparse_789_str = 19;
+inline bool Database_NoBench::has_sparse_789_str() const {
+  return (_has_bits_[0] & 0x00040000u) != 0;
+}
+inline void Database_NoBench::set_has_sparse_789_str() {
+  _has_bits_[0] |= 0x00040000u;
+}
+inline void Database_NoBench::clear_has_sparse_789_str() {
+  _has_bits_[0] &= ~0x00040000u;
+}
+inline void Database_NoBench::clear_sparse_789_str() {
+  if (sparse_789_str_ != &::google::protobuf::internal::kEmptyString) {
+    sparse_789_str_->clear();
+  }
+  clear_has_sparse_789_str();
+}
+inline const ::std::string& Database_NoBench::sparse_789_str() const {
+  return *sparse_789_str_;
+}
+inline void Database_NoBench::set_sparse_789_str(const ::std::string& value) {
+  set_has_sparse_789_str();
+  if (sparse_789_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_789_str_ = new ::std::string;
+  }
+  sparse_789_str_->assign(value);
+}
+inline void Database_NoBench::set_sparse_789_str(const char* value) {
+  set_has_sparse_789_str();
+  if (sparse_789_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_789_str_ = new ::std::string;
+  }
+  sparse_789_str_->assign(value);
+}
+inline void Database_NoBench::set_sparse_789_str(const char* value, size_t size) {
+  set_has_sparse_789_str();
+  if (sparse_789_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_789_str_ = new ::std::string;
+  }
+  sparse_789_str_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Database_NoBench::mutable_sparse_789_str() {
+  set_has_sparse_789_str();
+  if (sparse_789_str_ == &::google::protobuf::internal::kEmptyString) {
+    sparse_789_str_ = new ::std::string;
+  }
+  return sparse_789_str_;
+}
+inline ::std::string* Database_NoBench::release_sparse_789_str() {
+  clear_has_sparse_789_str();
+  if (sparse_789_str_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = sparse_789_str_;
+    sparse_789_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Database_NoBench::set_allocated_sparse_789_str(::std::string* sparse_789_str) {
+  if (sparse_789_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete sparse_789_str_;
+  }
+  if (sparse_789_str) {
+    set_has_sparse_789_str();
+    sparse_789_str_ = sparse_789_str;
+  } else {
+    clear_has_sparse_789_str();
+    sparse_789_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional int64 thousandth = 1012;
+inline bool Database_NoBench::has_thousandth() const {
+  return (_has_bits_[0] & 0x00080000u) != 0;
+}
+inline void Database_NoBench::set_has_thousandth() {
+  _has_bits_[0] |= 0x00080000u;
+}
+inline void Database_NoBench::clear_has_thousandth() {
+  _has_bits_[0] &= ~0x00080000u;
 }
 inline void Database_NoBench::clear_thousandth() {
   thousandth_ = GOOGLE_LONGLONG(0);

@@ -53,7 +53,7 @@ void protobuf_AssignDesc_nobench_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(Database));
   Database_NoBench_descriptor_ = Database_descriptor_->nested_type(0);
-  static const int Database_NoBench_offsets_[14] = {
+  static const int Database_NoBench_offsets_[20] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, str1_str_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, str2_str_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, num_int_),
@@ -67,6 +67,12 @@ void protobuf_AssignDesc_nobench_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, nested_obj_obj_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, sparse_str_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, sparse_987_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, sparse_123_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, sparse_234_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, sparse_345_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, sparse_456_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, sparse_567_str_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, sparse_789_str_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Database_NoBench, thousandth_),
   };
   Database_NoBench_reflection_ =
@@ -134,17 +140,21 @@ void protobuf_AddDesc_nobench_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\rnobench.proto\"\225\003\n\010Database\022\035\n\002nb\030\001 \003(\013"
-    "2\021.Database.NoBench\032\351\002\n\007NoBench\022\020\n\010str1_"
+    "\n\rnobench.proto\"\245\004\n\010Database\022\035\n\002nb\030\001 \003(\013"
+    "2\021.Database.NoBench\032\371\003\n\007NoBench\022\020\n\010str1_"
     "str\030\001 \001(\t\022\020\n\010str2_str\030\002 \001(\t\022\017\n\007num_int\030\003"
     " \001(\003\022\021\n\tbool_bool\030\004 \001(\010\022\020\n\010dyn1_int\030\005 \001("
     "\003\022\020\n\010dyn1_str\030\006 \001(\t\022\020\n\010dyn2_int\030\007 \001(\003\022\020\n"
     "\010dyn2_str\030\010 \001(\t\022\021\n\tdyn2_bool\030\t \001(\010\022\026\n\016ne"
     "sted_arr_str\030\n \003(\t\0223\n\016nested_obj_obj\030\013 \001"
     "(\0132\033.Database.NoBench.NestedObj\022\022\n\nspars"
-    "e_str\030\014 \003(\t\022\026\n\016sparse_987_str\030\r \001(\t\022\023\n\nt"
-    "housandth\030\364\007 \001(\003\032-\n\tNestedObj\022\017\n\007str_str"
-    "\030\001 \001(\t\022\017\n\007num_int\030\002 \001(\003", 423);
+    "e_str\030\014 \003(\t\022\026\n\016sparse_987_str\030\r \001(\t\022\026\n\016s"
+    "parse_123_str\030\016 \001(\t\022\026\n\016sparse_234_str\030\017 "
+    "\001(\t\022\026\n\016sparse_345_str\030\020 \001(\t\022\026\n\016sparse_45"
+    "6_str\030\021 \001(\t\022\026\n\016sparse_567_str\030\022 \001(\t\022\026\n\016s"
+    "parse_789_str\030\023 \001(\t\022\023\n\nthousandth\030\364\007 \001(\003"
+    "\032-\n\tNestedObj\022\017\n\007str_str\030\001 \001(\t\022\017\n\007num_in"
+    "t\030\002 \001(\003", 567);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "nobench.proto", &protobuf_RegisterTypes);
   Database::default_instance_ = new Database();
@@ -444,6 +454,12 @@ const int Database_NoBench::kNestedArrStrFieldNumber;
 const int Database_NoBench::kNestedObjObjFieldNumber;
 const int Database_NoBench::kSparseStrFieldNumber;
 const int Database_NoBench::kSparse987StrFieldNumber;
+const int Database_NoBench::kSparse123StrFieldNumber;
+const int Database_NoBench::kSparse234StrFieldNumber;
+const int Database_NoBench::kSparse345StrFieldNumber;
+const int Database_NoBench::kSparse456StrFieldNumber;
+const int Database_NoBench::kSparse567StrFieldNumber;
+const int Database_NoBench::kSparse789StrFieldNumber;
 const int Database_NoBench::kThousandthFieldNumber;
 #endif  // !_MSC_VER
 
@@ -475,6 +491,12 @@ void Database_NoBench::SharedCtor() {
   dyn2_bool_ = false;
   nested_obj_obj_ = NULL;
   sparse_987_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  sparse_123_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  sparse_234_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  sparse_345_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  sparse_456_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  sparse_567_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  sparse_789_str_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   thousandth_ = GOOGLE_LONGLONG(0);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
@@ -498,6 +520,24 @@ void Database_NoBench::SharedDtor() {
   }
   if (sparse_987_str_ != &::google::protobuf::internal::kEmptyString) {
     delete sparse_987_str_;
+  }
+  if (sparse_123_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete sparse_123_str_;
+  }
+  if (sparse_234_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete sparse_234_str_;
+  }
+  if (sparse_345_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete sparse_345_str_;
+  }
+  if (sparse_456_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete sparse_456_str_;
+  }
+  if (sparse_567_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete sparse_567_str_;
+  }
+  if (sparse_789_str_ != &::google::protobuf::internal::kEmptyString) {
+    delete sparse_789_str_;
   }
   if (this != default_instance_) {
     delete nested_obj_obj_;
@@ -560,6 +600,38 @@ void Database_NoBench::Clear() {
     if (has_sparse_987_str()) {
       if (sparse_987_str_ != &::google::protobuf::internal::kEmptyString) {
         sparse_987_str_->clear();
+      }
+    }
+    if (has_sparse_123_str()) {
+      if (sparse_123_str_ != &::google::protobuf::internal::kEmptyString) {
+        sparse_123_str_->clear();
+      }
+    }
+    if (has_sparse_234_str()) {
+      if (sparse_234_str_ != &::google::protobuf::internal::kEmptyString) {
+        sparse_234_str_->clear();
+      }
+    }
+    if (has_sparse_345_str()) {
+      if (sparse_345_str_ != &::google::protobuf::internal::kEmptyString) {
+        sparse_345_str_->clear();
+      }
+    }
+  }
+  if (_has_bits_[16 / 32] & (0xffu << (16 % 32))) {
+    if (has_sparse_456_str()) {
+      if (sparse_456_str_ != &::google::protobuf::internal::kEmptyString) {
+        sparse_456_str_->clear();
+      }
+    }
+    if (has_sparse_567_str()) {
+      if (sparse_567_str_ != &::google::protobuf::internal::kEmptyString) {
+        sparse_567_str_->clear();
+      }
+    }
+    if (has_sparse_789_str()) {
+      if (sparse_789_str_ != &::google::protobuf::internal::kEmptyString) {
+        sparse_789_str_->clear();
       }
     }
     thousandth_ = GOOGLE_LONGLONG(0);
@@ -788,6 +860,108 @@ bool Database_NoBench::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(114)) goto parse_sparse_123_str;
+        break;
+      }
+
+      // optional string sparse_123_str = 14;
+      case 14: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_sparse_123_str:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_sparse_123_str()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->sparse_123_str().data(), this->sparse_123_str().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(122)) goto parse_sparse_234_str;
+        break;
+      }
+
+      // optional string sparse_234_str = 15;
+      case 15: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_sparse_234_str:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_sparse_234_str()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->sparse_234_str().data(), this->sparse_234_str().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(130)) goto parse_sparse_345_str;
+        break;
+      }
+
+      // optional string sparse_345_str = 16;
+      case 16: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_sparse_345_str:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_sparse_345_str()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->sparse_345_str().data(), this->sparse_345_str().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(138)) goto parse_sparse_456_str;
+        break;
+      }
+
+      // optional string sparse_456_str = 17;
+      case 17: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_sparse_456_str:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_sparse_456_str()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->sparse_456_str().data(), this->sparse_456_str().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(146)) goto parse_sparse_567_str;
+        break;
+      }
+
+      // optional string sparse_567_str = 18;
+      case 18: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_sparse_567_str:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_sparse_567_str()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->sparse_567_str().data(), this->sparse_567_str().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(154)) goto parse_sparse_789_str;
+        break;
+      }
+
+      // optional string sparse_789_str = 19;
+      case 19: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_sparse_789_str:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_sparse_789_str()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->sparse_789_str().data(), this->sparse_789_str().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectTag(8096)) goto parse_thousandth;
         break;
       }
@@ -920,6 +1094,60 @@ void Database_NoBench::SerializeWithCachedSizes(
       13, this->sparse_987_str(), output);
   }
 
+  // optional string sparse_123_str = 14;
+  if (has_sparse_123_str()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->sparse_123_str().data(), this->sparse_123_str().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      14, this->sparse_123_str(), output);
+  }
+
+  // optional string sparse_234_str = 15;
+  if (has_sparse_234_str()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->sparse_234_str().data(), this->sparse_234_str().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      15, this->sparse_234_str(), output);
+  }
+
+  // optional string sparse_345_str = 16;
+  if (has_sparse_345_str()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->sparse_345_str().data(), this->sparse_345_str().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      16, this->sparse_345_str(), output);
+  }
+
+  // optional string sparse_456_str = 17;
+  if (has_sparse_456_str()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->sparse_456_str().data(), this->sparse_456_str().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      17, this->sparse_456_str(), output);
+  }
+
+  // optional string sparse_567_str = 18;
+  if (has_sparse_567_str()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->sparse_567_str().data(), this->sparse_567_str().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      18, this->sparse_567_str(), output);
+  }
+
+  // optional string sparse_789_str = 19;
+  if (has_sparse_789_str()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->sparse_789_str().data(), this->sparse_789_str().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      19, this->sparse_789_str(), output);
+  }
+
   // optional int64 thousandth = 1012;
   if (has_thousandth()) {
     ::google::protobuf::internal::WireFormatLite::WriteInt64(1012, this->thousandth(), output);
@@ -1033,6 +1261,66 @@ void Database_NoBench::SerializeWithCachedSizes(
         13, this->sparse_987_str(), target);
   }
 
+  // optional string sparse_123_str = 14;
+  if (has_sparse_123_str()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->sparse_123_str().data(), this->sparse_123_str().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        14, this->sparse_123_str(), target);
+  }
+
+  // optional string sparse_234_str = 15;
+  if (has_sparse_234_str()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->sparse_234_str().data(), this->sparse_234_str().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        15, this->sparse_234_str(), target);
+  }
+
+  // optional string sparse_345_str = 16;
+  if (has_sparse_345_str()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->sparse_345_str().data(), this->sparse_345_str().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        16, this->sparse_345_str(), target);
+  }
+
+  // optional string sparse_456_str = 17;
+  if (has_sparse_456_str()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->sparse_456_str().data(), this->sparse_456_str().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        17, this->sparse_456_str(), target);
+  }
+
+  // optional string sparse_567_str = 18;
+  if (has_sparse_567_str()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->sparse_567_str().data(), this->sparse_567_str().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        18, this->sparse_567_str(), target);
+  }
+
+  // optional string sparse_789_str = 19;
+  if (has_sparse_789_str()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->sparse_789_str().data(), this->sparse_789_str().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        19, this->sparse_789_str(), target);
+  }
+
   // optional int64 thousandth = 1012;
   if (has_thousandth()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1012, this->thousandth(), target);
@@ -1124,6 +1412,50 @@ int Database_NoBench::ByteSize() const {
           this->sparse_987_str());
     }
 
+    // optional string sparse_123_str = 14;
+    if (has_sparse_123_str()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->sparse_123_str());
+    }
+
+    // optional string sparse_234_str = 15;
+    if (has_sparse_234_str()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->sparse_234_str());
+    }
+
+    // optional string sparse_345_str = 16;
+    if (has_sparse_345_str()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->sparse_345_str());
+    }
+
+  }
+  if (_has_bits_[16 / 32] & (0xffu << (16 % 32))) {
+    // optional string sparse_456_str = 17;
+    if (has_sparse_456_str()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->sparse_456_str());
+    }
+
+    // optional string sparse_567_str = 18;
+    if (has_sparse_567_str()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->sparse_567_str());
+    }
+
+    // optional string sparse_789_str = 19;
+    if (has_sparse_789_str()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->sparse_789_str());
+    }
+
     // optional int64 thousandth = 1012;
     if (has_thousandth()) {
       total_size += 2 +
@@ -1209,6 +1541,26 @@ void Database_NoBench::MergeFrom(const Database_NoBench& from) {
     if (from.has_sparse_987_str()) {
       set_sparse_987_str(from.sparse_987_str());
     }
+    if (from.has_sparse_123_str()) {
+      set_sparse_123_str(from.sparse_123_str());
+    }
+    if (from.has_sparse_234_str()) {
+      set_sparse_234_str(from.sparse_234_str());
+    }
+    if (from.has_sparse_345_str()) {
+      set_sparse_345_str(from.sparse_345_str());
+    }
+  }
+  if (from._has_bits_[16 / 32] & (0xffu << (16 % 32))) {
+    if (from.has_sparse_456_str()) {
+      set_sparse_456_str(from.sparse_456_str());
+    }
+    if (from.has_sparse_567_str()) {
+      set_sparse_567_str(from.sparse_567_str());
+    }
+    if (from.has_sparse_789_str()) {
+      set_sparse_789_str(from.sparse_789_str());
+    }
     if (from.has_thousandth()) {
       set_thousandth(from.thousandth());
     }
@@ -1248,6 +1600,12 @@ void Database_NoBench::Swap(Database_NoBench* other) {
     std::swap(nested_obj_obj_, other->nested_obj_obj_);
     sparse_str_.Swap(&other->sparse_str_);
     std::swap(sparse_987_str_, other->sparse_987_str_);
+    std::swap(sparse_123_str_, other->sparse_123_str_);
+    std::swap(sparse_234_str_, other->sparse_234_str_);
+    std::swap(sparse_345_str_, other->sparse_345_str_);
+    std::swap(sparse_456_str_, other->sparse_456_str_);
+    std::swap(sparse_567_str_, other->sparse_567_str_);
+    std::swap(sparse_789_str_, other->sparse_789_str_);
     std::swap(thousandth_, other->thousandth_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);

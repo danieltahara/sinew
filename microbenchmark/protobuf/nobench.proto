@@ -21,7 +21,14 @@ message Database {
         optional NestedObj nested_obj_obj = 11;
 
         repeated string sparse_str = 12;
+
         optional string sparse_987_str = 13;
+        optional string sparse_123_str = 14;
+        optional string sparse_234_str = 15;
+        optional string sparse_345_str = 16;
+        optional string sparse_456_str = 17;
+        optional string sparse_567_str = 18;
+        optional string sparse_789_str = 19;
 
         optional int64 thousandth = 1012;
     }

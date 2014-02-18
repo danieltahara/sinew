@@ -17,13 +17,14 @@ const int MAX_DB_SIZE = 100000;
 int test_serialize(FILE* infile);
 int test_deserialize(FILE *outfile);
 int test_project(FILE *outfile);
+int test_multiple_project(FILE *outfile);
 int protobuf_fill(Database::NoBench *protobuf, char *json);
 
 using namespace std;
 
 int main(int argc, char** argv) {
-    char *infilename, *outfilename, *extract_outfilename;
-    FILE *infile, *outfile, *extract_outfile;
+    char *infilename, *outfilename, *extract_outfilename, *multiple_extract_outfilename;
+    FILE *infile, *outfile, *extract_outfile, *multiple_extract_outfile;
     int rval; // Function status codes
     clock_t start, diff;
     int msec;
@@ -69,6 +70,18 @@ int main(int argc, char** argv) {
     printf("Extract: %d ms\n", msec);
     fflush(stdout);
     fclose(extract_outfile);
+
+    multiple_extract_outfilename = argv[4];
+    multiple_extract_outfile = fopen(multiple_extract_outfilename, "w");
+    start = clock();
+    if (!test_multiple_project(multiple_extract_outfile)) {
+        exit(EXIT_FAILURE);
+    }
+    diff = clock() - start;
+    msec = diff * 1000 / CLOCKS_PER_SEC;
+    printf("Multiple Extract: %d ms\n", msec);
+    fflush(stdout);
+    fclose(multiple_extract_outfile);
 }
 
 /* Read all the records and print them */
@@ -113,7 +126,6 @@ int test_deserialize(FILE *outfile) {
     return 1;
 }
 
-/* See: http://dcreager.github.io/avro-examples/resolved-writer.html */
 int test_project(FILE *outfile) {
     Database db;
     Database::NoBench *nb;
@@ -130,6 +142,76 @@ int test_project(FILE *outfile) {
             if (nb->has_sparse_987_str()) {
                 fprintf(outfile, "%s\n", nb->sparse_987_str().c_str());
             }
+        }
+
+        fflush(outfile);
+        input.close();
+        db.Clear();
+    }
+
+    return 1;
+}
+
+int test_multiple_project(FILE *outfile) {
+    Database db;
+    Database::NoBench *nb;
+
+    // TODO: DRY with deser
+    for (int j = 0; j < num_dbfiles; ++j) {
+        char dbname_full[200];
+        sprintf(dbname_full, "%s_%d", dbname, j);
+        fstream input(dbname_full, ios::in | ios::binary);
+
+        db.ParseFromIstream(&input);
+        for (int i = 0; i < db.nb_size(); ++i) {
+            char buffer[1000];
+            sprintf(buffer, "");
+
+            nb = db.mutable_nb(i);
+            if (nb->has_sparse_987_str()) {
+                sprintf(buffer, "%s%s, ", buffer, nb->sparse_987_str().c_str());
+            } else {
+                sprintf(buffer, "%s%s, ", buffer, "");
+            }
+            if (nb->has_sparse_123_str()) {
+                sprintf(buffer, "%s%s, ", buffer, nb->sparse_123_str().c_str());
+            } else {
+                sprintf(buffer, "%s%s, ", buffer, "");
+            }
+            if (nb->has_sparse_234_str()) {
+                sprintf(buffer, "%s%s, ", buffer, nb->sparse_234_str().c_str());
+            } else {
+                sprintf(buffer, "%s%s, ", buffer, "");
+            }
+            if (nb->has_sparse_345_str()) {
+                sprintf(buffer, "%s%s, ", buffer, nb->sparse_345_str().c_str());
+            } else {
+                sprintf(buffer, "%s%s, ", buffer, "");
+            }
+            if (nb->has_sparse_456_str()) {
+                sprintf(buffer, "%s%s, ", buffer, nb->sparse_456_str().c_str());
+            } else {
+                sprintf(buffer, "%s%s, ", buffer, "");
+            }
+            if (nb->has_sparse_567_str()) {
+                sprintf(buffer, "%s%s, ", buffer, nb->sparse_567_str().c_str());
+            } else {
+                sprintf(buffer, "%s%s, ", buffer, "");
+            }
+            if (nb->has_sparse_789_str()) {
+                sprintf(buffer, "%s%s, ", buffer, nb->sparse_789_str().c_str());
+            } else {
+                sprintf(buffer, "%s%s, ", buffer, "");
+            }
+            if (nb->has_dyn1_str()) {
+                sprintf(buffer, "%s%s, ", buffer, nb->dyn1_str().c_str());
+            } else {
+                sprintf(buffer, "%s%s, ", buffer, "");
+            }
+            sprintf(buffer, "%s%s, ", buffer, nb->str1_str().c_str());
+            sprintf(buffer, "%s%s, ", buffer, nb->str2_str().c_str());
+
+            fprintf(outfile, "%s\n", buffer);
         }
 
         fflush(outfile);
@@ -222,6 +304,18 @@ int protobuf_fill(Database::NoBench *protobuf, char *json) {
             case STRING:
                 if (!strcmp(key, "sparse_987")) {
                     protobuf->set_sparse_987_str(value);
+                } else if (!strcmp(key, "sparse_123")) {
+                    protobuf->set_sparse_123_str(value);
+                } else if (!strcmp(key, "sparse_234")) {
+                    protobuf->set_sparse_234_str(value);
+                } else if (!strcmp(key, "sparse_345")) {
+                    protobuf->set_sparse_345_str(value);
+                } else if (!strcmp(key, "sparse_456")) {
+                    protobuf->set_sparse_456_str(value);
+                } else if (!strcmp(key, "sparse_567")) {
+                    protobuf->set_sparse_567_str(value);
+                } else if (!strcmp(key, "sparse_789")) {
+                    protobuf->set_sparse_789_str(value);
                 } else if (!strcmp(key, "str1")) {
                     protobuf->set_str1_str(value);
                 } else if (!strcmp(key, "str2")) {
