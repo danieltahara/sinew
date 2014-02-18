@@ -12,7 +12,7 @@ avro_test.o: avro_test.c nobench_schema.h
 # 	$(CC) -c $(CFLAGS) $^ -o $@
 
 test: clean-test
-	./avro_test ~/Downloads/nobench/nb.out deser.out project.out
+	./avro_test ~/Downloads/nobench/nb_16000.out deser.out project.out mproject.out
 
 clean: clean-build clean-test
 

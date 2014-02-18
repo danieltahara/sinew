@@ -8,6 +8,30 @@ const char PROJECTED_SCHEMA[] = "{ \
     ] \
 }";
 
+const int num_projected_keys = 10;
+
+const char *MULTIPLE_PROJECTED_KEY[] = { "sparse_987_str", "str1_str", "dyn1_str",
+                                          "sparse_567_str", "str2_str",
+                                          "sparse_123_str", "sparse_234_str",
+                                          "sparse_345_str", "sparse_456_str", "sparse_789_str" };
+
+const char MULTIPLE_PROJECTED_SCHEMA[] = "{ \
+  \"type\": \"record\", \
+  \"name\": \"NoBench\", \
+  \"fields\" : [ \
+      {\"name\": \"sparse_987_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"sparse_123_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"sparse_234_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"sparse_345_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"sparse_456_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"sparse_567_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"sparse_789_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"str1_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"str2_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"dyn1_str\", \"type\": [\"string\", \"null\"]} \
+    ] \
+}";
+
 const char NOBENCH_SCHEMA[] = "{ \
   \"type\": \"record\", \
   \"name\": \"NoBench\", \
@@ -39,6 +63,12 @@ const char NOBENCH_SCHEMA[] = "{ \
        \"type\":[{\"type\": \"array\", \"items\": \"string\"}, \"null\"]}, \
  \
       {\"name\": \"sparse_987_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"sparse_123_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"sparse_234_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"sparse_345_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"sparse_456_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"sparse_567_str\", \"type\": [\"string\", \"null\"]}, \
+      {\"name\": \"sparse_789_str\", \"type\": [\"string\", \"null\"]}, \
       {\"name\": \"thousandth_int\", \"type\": [\"int\", \"null\"]} \
   ] \
 }";

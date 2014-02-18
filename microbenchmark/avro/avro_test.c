@@ -15,10 +15,11 @@ int avro_record_value_fill(avro_value_t *avro_value, char *json);
 int test_serialize(FILE* infile);
 int test_deserialize(FILE *outfile);
 int test_project(FILE *outfile);
+int test_multiple_project(FILE *outfile);
 
 int main(int argc, char** argv) {
-    char *infilename, *outfilename, *extract_outfilename;
-    FILE *infile, *outfile, *extract_outfile;
+    char *infilename, *outfilename, *extract_outfilename, *multiple_extract_outfilename;
+    FILE *infile, *outfile, *extract_outfile, *multiple_extract_outfile;
     int rval; // Function status codes
     clock_t start, diff;
     int msec;
@@ -60,6 +61,18 @@ int main(int argc, char** argv) {
     printf("Extract: %d ms\n", msec);
     fflush(stdout);
     fclose(extract_outfile);
+
+    multiple_extract_outfilename = argv[4];
+    multiple_extract_outfile = fopen(multiple_extract_outfilename, "w");
+    start = clock();
+    if (!test_multiple_project(multiple_extract_outfile)) {
+        exit(EXIT_FAILURE);
+    }
+    diff = clock() - start;
+    msec = diff * 1000 / CLOCKS_PER_SEC;
+    printf("Multiple Extract: %d ms\n", msec);
+    fflush(stdout);
+    fclose(multiple_extract_outfile);
 }
 
 /* Read all the records and print them */
@@ -99,6 +112,78 @@ int test_deserialize(FILE *outfile) {
     return 1;
 }
 
+/* See: http://dcreager.github.io/avro-examples/resolved-writer.html */
+int test_multiple_project(FILE *outfile) {
+    avro_file_reader_t dbreader;
+    avro_schema_error_t error;
+    avro_schema_t  reader_schema;
+    avro_schema_t  writer_schema;
+    avro_value_iface_t  *writer_iface;
+    avro_value_iface_t  *reader_iface;
+    avro_value_t  writer_value;
+    avro_value_t  reader_value;
+    int rval;
+    // Parse schema into a schema data structure
+    if ((rval = avro_schema_from_json(MULTIPLE_PROJECTED_SCHEMA, 0, &reader_schema, &error))) {
+        fprintf(stderr, "Unable to parse nobench schema\n");
+        return rval;
+    }
+
+    rval = avro_file_reader(dbname, &dbreader);
+    if (rval) {
+        fprintf(stderr, "Error opening file: %s\n", avro_strerror());
+        return rval;
+    }
+
+    writer_schema = avro_file_reader_get_writer_schema(dbreader);
+    reader_iface = avro_generic_class_from_schema(reader_schema);
+    avro_generic_value_new(reader_iface, &reader_value);
+    writer_iface = avro_resolved_writer_new(writer_schema, reader_schema);
+    avro_resolved_writer_new_value(writer_iface, &writer_value);
+    avro_resolved_writer_set_dest(&writer_value, &reader_value);
+
+    while (avro_file_reader_read_value(dbreader, &writer_value) == 0) {
+        avro_value_t field, subfield;
+        int branch;
+        const char *value;
+        size_t size;
+
+        char buffer[1000];
+        sprintf(buffer, "");
+
+        for (int i = 0; i < num_projected_keys; ++i) {
+            avro_value_get_by_name(&reader_value, MULTIPLE_PROJECTED_KEY[i], &field, NULL);
+            if (rval) {
+                fprintf(stderr, "Error reading: %s\n", avro_strerror());
+                return rval;
+            }
+
+            avro_value_get_discriminant(&field, &branch);
+            if (branch == 0) {
+                avro_value_get_current_branch(&field, &subfield);
+                rval = avro_value_get_string(&subfield, &value, &size);
+                if (rval) {
+                    fprintf(stderr, "Error converting to string: %s\n", avro_strerror());
+                    return rval;
+                }
+                sprintf(buffer, "%s, %s", buffer, value);
+            } else if (branch == 1) {
+                sprintf(buffer, "%s, %s", buffer, "");
+            }
+        }
+        fprintf(outfile, "%s\n", buffer);
+    }
+
+    avro_file_reader_close(dbreader);
+    avro_value_decref(&writer_value);
+    avro_value_iface_decref(writer_iface);
+    avro_schema_decref(writer_schema);
+    avro_value_decref(&reader_value);
+    avro_value_iface_decref(reader_iface);
+    avro_schema_decref(reader_schema);
+
+    return 1;
+}
 /* See: http://dcreager.github.io/avro-examples/resolved-writer.html */
 int test_project(FILE *outfile) {
     avro_file_reader_t dbreader;
@@ -216,6 +301,24 @@ int test_serialize(FILE* infile) {
         avro_value_set_branch(&field, 1, &subfield);
         avro_value_set_null(&subfield);
         avro_value_get_by_name(&avro_value, "sparse_987_str", &field, NULL);
+        avro_value_set_branch(&field, 1, &subfield);
+        avro_value_set_null(&subfield);
+        avro_value_get_by_name(&avro_value, "sparse_123_str", &field, NULL);
+        avro_value_set_branch(&field, 1, &subfield);
+        avro_value_set_null(&subfield);
+        avro_value_get_by_name(&avro_value, "sparse_234_str", &field, NULL);
+        avro_value_set_branch(&field, 1, &subfield);
+        avro_value_set_null(&subfield);
+        avro_value_get_by_name(&avro_value, "sparse_345_str", &field, NULL);
+        avro_value_set_branch(&field, 1, &subfield);
+        avro_value_set_null(&subfield);
+        avro_value_get_by_name(&avro_value, "sparse_456_str", &field, NULL);
+        avro_value_set_branch(&field, 1, &subfield);
+        avro_value_set_null(&subfield);
+        avro_value_get_by_name(&avro_value, "sparse_567_str", &field, NULL);
+        avro_value_set_branch(&field, 1, &subfield);
+        avro_value_set_null(&subfield);
+        avro_value_get_by_name(&avro_value, "sparse_789_str", &field, NULL);
         avro_value_set_branch(&field, 1, &subfield);
         avro_value_set_null(&subfield);
 
@@ -369,7 +472,14 @@ char *to_avro_keyname(char *key, json_typeid type, char *value) {
     pg_type = get_pg_type(type, value);
     if (type == ARRAY) {
         pg_type = strtok(pg_type, "[");
-    } else if (strcmp(key, "sparse_987") && strstr(key, "sparse")) {
+    } else if (strcmp(key, "sparse_987") &&
+               strcmp(key, "sparse_123") &&
+               strcmp(key, "sparse_234") &&
+               strcmp(key, "sparse_345") &&
+               strcmp(key, "sparse_456") &&
+               strcmp(key, "sparse_567") &&
+               strcmp(key, "sparse_789") &&
+               strstr(key, "sparse")) {
         key = "sparse";
     }
     avro_keyname = malloc(sizeof(key) + 1 + sizeof(pg_type) + 1);
