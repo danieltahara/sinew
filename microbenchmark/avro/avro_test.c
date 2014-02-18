@@ -8,7 +8,7 @@
 #include "../json.h"
 
 char dbname[] = "avro_test.db";
-const char codec[] = "deflate"; // Compression?? = null, deflate
+const char codec[] = "null";
 
 char *to_avro_keyname(char *key, json_typeid type, char *value);
 int avro_record_value_fill(avro_value_t *avro_value, char *json);
