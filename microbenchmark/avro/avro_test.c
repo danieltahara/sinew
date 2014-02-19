@@ -1,7 +1,10 @@
+#define _GNU_SOURCE
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 #include "avro.h"
 #include "nobench_schema.h"

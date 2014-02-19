@@ -1,9 +1,12 @@
+#define _GNU_SOURCE
+
 #include <iostream>
 #include <fstream>
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "nobench.pb.h"
@@ -112,6 +115,10 @@ int test_deserialize(FILE *outfile) {
                 sprintf(json, "%s, \"%s\":%d", json, "bool", nb->bool_bool());
                 sprintf(json, "%s, \"%s\":\"%s\"", json, "dyn1", nb->dyn1_str().c_str());
                 sprintf(json, "%s, \"%s\":\"%s\"", json, "dyn2", nb->dyn2_str().c_str());
+            }
+            for (int j = 0; j < 1000; ++j) {
+                // Junk for the sake of memory dereferences
+                if (nb->has_dyn1_str()) {};
             }
 
             fprintf(outfile, "%s\n", json);
