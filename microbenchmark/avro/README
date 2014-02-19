@@ -1,0 +1,1 @@
+Need to modify avro-c-src/src/datafile.c - schema_buffer -> 64 * 1024 to something larger (I did 640 * 1024)
