@@ -119,13 +119,11 @@ read_schema(FILE* infile)
         key_names[i] = strndup(keyname, strlen(keyname));
         key_types[i] = strndup(typename, strlen(typename));
         // Add to hash table
-        free(attr);
         // FIXME: this is a bit hacky but w/e
         attr = malloc(strlen(keyname) + strlen(typename) + 2);
         sprintf(attr, "%s %s", keyname, typename);
 
         put(attr_table, attr, i);
-
 
         free(attr);
         attr = NULL;
