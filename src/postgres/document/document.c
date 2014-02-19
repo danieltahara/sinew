@@ -549,8 +549,8 @@ binary_to_string(json_typeid type, char *binary, int datum_len)
     {
         case STRING:
             temp = pstrndup(binary, datum_len);
-            pfree(temp);
             sprintf(result, "\"%s\"", temp);
+            pfree(temp);
             // elog(WARNING, "%s", result);
             return result;
         case INTEGER:
