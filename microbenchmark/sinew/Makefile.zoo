@@ -1,0 +1,24 @@
+CFLAGS=-std=c99
+
+all: sinew_test
+
+sinew_test: ../json.o sinew_test.o document.o schema.o hash_table.o \
+	../lib/jsmn/libjsmn.a
+
+%.o: %.c
+	$(CC) -c $(CFLAGS) $^ -o $@
+
+test-small: clean-test
+	./sinew_test ~/Downloads/nobench/nb_small.out deser.out project.out mproject.out
+
+test: clean-test
+	./sinew_test /tmp/dtahara/nb.out /tmp/dtahara/sinew/deser.out \
+		/tmp/dtahara/sinew/project.out /tmp/dtahara/sinew/mproject.out
+
+clean: clean-build clean-test
+
+clean-build:
+	rm -f *.o *.a sinew_test
+
+clean-test:
+	rm -f *.out *.schema *.db

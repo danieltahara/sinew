@@ -1,0 +1,30 @@
+CC=g++
+
+all: protobuf_test
+
+protobuf_test: json.o lib/jsmn/libjsmn.a nobench.pb.o protobuf_test.o
+	$(CC) $(CFLAGS) $^ -L/home/accts/dkt2/usr/local/lib -lprotobuf -lpthread -o $@
+
+protobuf_test.o: protobuf_test.cc nobench.pb.h
+	$(CC) -I/home/accts/dkt2/usr/local/include -c $(CFLAGS) $< -o $@
+
+nobench.pb.o: nobench.pb.cc nobench.pb.h
+	$(CC) -I/home/accts/dkt2/usr/local/include -c $(CFLAGS) $< -o $@
+
+%.o: %.cc
+	$(CC) -c $(CFLAGS) $< -o $@
+
+test: clean-test
+	./protobuf_test /tmp/dtahara/nb.out /tmp/dtahara/protobuf/deser.out \
+		/tmp/dtahara/protobuf/project.out /tmp/dtahara/protobuf/mproject.out
+
+test-small: clean-test
+	./protobuf_test ~/Downloads/nobench/nb_small.out deser.out project.out mproject.out
+
+clean: clean-build clean-test
+
+clean-build:
+	rm -f *.o *.a protobuf_test
+
+clean-test:
+	rm -f *.out *.schema protobuf_test.db_*
