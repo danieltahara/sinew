@@ -1,0 +1,65 @@
+0: jdbc:drill:schema=parquet-local> select * from "/path/to/file.parquet";
+
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+Query failed: org.apache.drill.exec.rpc.RpcException: Remote failure while running query.[error_id: "d03d2c0c-fd99-46f9-9ca6-2808bacba068"
+endpoint {
+  address: "XXXXXX"
+  user_port: 31011
+  bit_port: 32012
+}
+error_type: 0
+message: "Failure while running fragment. < IndexOutOfBoundsException:[ readerIndex: 0, writerIndex: 20084 (expected: 0 <= readerIndex <= writerIndex <= capacity(20000)) ]"
+]
+java.lang.RuntimeException: org.apache.drill.exec.rpc.RpcException: Remote failure while running query.[error_id: "d03d2c0c-fd99-46f9-9ca6-2808bacba068"
+endpoint {
+  address: "XXXXXX"
+  user_port: 31011
+  bit_port: 32012
+}
+error_type: 0
+message: "Failure while running fragment. < IndexOutOfBoundsException:[ readerIndex: 0, writerIndex: 20084 (expected: 0 <= readerIndex <= writerIndex <= capacity(20000)) ]"
+]
+	at org.apache.drill.sql.client.full.ResultEnumerator.moveNext(ResultEnumerator.java:44)
+	at net.hydromatic.optiq.runtime.ObjectEnumeratorCursor.next(ObjectEnumeratorCursor.java:44)
+	at net.hydromatic.optiq.jdbc.OptiqResultSet.next(OptiqResultSet.java:162)
+	at sqlline.SqlLine$BufferedRows.<init>(SqlLine.java:2499)
+	at sqlline.SqlLine.print(SqlLine.java:1886)
+	at sqlline.SqlLine$Commands.execute(SqlLine.java:3835)
+	at sqlline.SqlLine$Commands.sql(SqlLine.java:3738)
+	at sqlline.SqlLine.dispatch(SqlLine.java:882)
+	at sqlline.SqlLine.begin(SqlLine.java:717)
+	at sqlline.SqlLine.mainWithInputRedirection(SqlLine.java:460)
+	at sqlline.SqlLine.main(SqlLine.java:443)
+Caused by: org.apache.drill.exec.rpc.RpcException: Remote failure while running query.[error_id: "d03d2c0c-fd99-46f9-9ca6-2808bacba068"
+endpoint {
+  address: "XXXXXXX"
+  user_port: 31011
+  bit_port: 32012
+}
+error_type: 0
+message: "Failure while running fragment. < IndexOutOfBoundsException:[ readerIndex: 0, writerIndex: 20084 (expected: 0 <= readerIndex <= writerIndex <= capacity(20000)) ]"
+]
+	at org.apache.drill.exec.rpc.user.QueryResultHandler.batchArrived(QueryResultHandler.java:72)
+	at org.apache.drill.exec.rpc.user.UserClient.handle(UserClient.java:79)
+	at org.apache.drill.exec.rpc.BasicClientWithConnection.handle(BasicClientWithConnection.java:48)
+	at org.apache.drill.exec.rpc.BasicClientWithConnection.handle(BasicClientWithConnection.java:33)
+	at org.apache.drill.exec.rpc.RpcBus$InboundHandler.decode(RpcBus.java:142)
+	at org.apache.drill.exec.rpc.RpcBus$InboundHandler.decode(RpcBus.java:127)
+	at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:89)
+	at io.netty.channel.DefaultChannelHandlerContext.invokeChannelRead(DefaultChannelHandlerContext.java:334)
+	at io.netty.channel.DefaultChannelHandlerContext.fireChannelRead(DefaultChannelHandlerContext.java:320)
+	at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:102)
+	at io.netty.channel.DefaultChannelHandlerContext.invokeChannelRead(DefaultChannelHandlerContext.java:334)
+	at io.netty.channel.DefaultChannelHandlerContext.fireChannelRead(DefaultChannelHandlerContext.java:320)
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:173)
+	at io.netty.channel.DefaultChannelHandlerContext.invokeChannelRead(DefaultChannelHandlerContext.java:334)
+	at io.netty.channel.DefaultChannelHandlerContext.fireChannelRead(DefaultChannelHandlerContext.java:320)
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:785)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:100)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:497)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:465)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:359)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:101)
+	at java.lang.Thread.run(Thread.java:744)

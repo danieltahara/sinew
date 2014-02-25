@@ -1,0 +1,262 @@
+➜  apache-drill  bin/sqlline -u jdbc:drill:schema=jsonl -n admin -p admin
+
+0
+Loaded singnal handler: SunSignalHandler
+/home/accts/dkt2/.sqlline/sqlline.properties (No such file or directory)
+[INFO] Unable to bind key for unsupported operation: backward-delete-word
+[INFO] Unable to bind key for unsupported operation: backward-delete-word
+[INFO] Unable to bind key for unsupported operation: down-history
+[INFO] Unable to bind key for unsupported operation: up-history
+[INFO] Unable to bind key for unsupported operation: up-history
+[INFO] Unable to bind key for unsupported operation: down-history
+[INFO] Unable to bind key for unsupported operation: up-history
+[INFO] Unable to bind key for unsupported operation: down-history
+[INFO] Unable to bind key for unsupported operation: up-history
+[INFO] Unable to bind key for unsupported operation: down-history
+[INFO] Unable to bind key for unsupported operation: up-history
+[INFO] Unable to bind key for unsupported operation: down-history
+[INFO] Unable to bind key for unsupported operation: up-history
+[INFO] Unable to bind key for unsupported operation: down-history
+[INFO] Unable to bind key for unsupported operation: up-history
+[INFO] Unable to bind key for unsupported operation: down-history
+[INFO] Unable to bind key for unsupported operation: up-history
+[INFO] Unable to bind key for unsupported operation: down-history
+scan complete in 27ms
+18:14:24,673 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback.groovy]
+18:14:24,673 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback-test.xml]
+18:14:24,673 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Found resource [logback.xml] at [file:/home/accts/dkt2/apache-drill/conf/logback.xml]
+18:14:24,800 |-INFO in ch.qos.logback.classic.joran.action.ConfigurationAction - debug attribute not set
+18:14:24,810 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - About to instantiate appender of type [de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender]
+18:14:24,826 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - Naming appender as [SOCKET]
+18:14:24,856 |-INFO in de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender[SOCKET] - Waiting 1s to establish connections.
+18:14:25,857 |-INFO in de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender[SOCKET] - Started de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender[SOCKET]
+18:14:25,857 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - About to instantiate appender of type [ch.qos.logback.core.ConsoleAppender]
+18:14:25,864 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - Naming appender as [STDOUT]
+18:14:25,870 |-INFO in ch.qos.logback.core.joran.action.NestedComplexPropertyIA - Assuming default type [ch.qos.logback.classic.encoder.PatternLayoutEncoder] for [encoder] property
+18:14:25,922 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - About to instantiate appender of type [ch.qos.logback.core.rolling.RollingFileAppender]
+18:14:25,924 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - Naming appender as [FILE]
+18:14:25,937 |-INFO in ch.qos.logback.core.rolling.FixedWindowRollingPolicy@45b44df2 - No compression will be used
+18:14:25,943 |-INFO in ch.qos.logback.core.joran.action.NestedComplexPropertyIA - Assuming default type [ch.qos.logback.classic.encoder.PatternLayoutEncoder] for [encoder] property
+18:14:25,944 |-INFO in ch.qos.logback.core.rolling.RollingFileAppender[FILE] - Active log file name: /var/log/drill/sqlline.log
+18:14:25,944 |-INFO in ch.qos.logback.core.rolling.RollingFileAppender[FILE] - File property is set to [/var/log/drill/sqlline.log]
+18:14:25,944 |-ERROR in ch.qos.logback.core.rolling.RollingFileAppender[FILE] - Failed to create parent directories for [/var/log/drill/sqlline.log]
+18:14:25,945 |-ERROR in ch.qos.logback.core.rolling.RollingFileAppender[FILE] - openFile(/var/log/drill/sqlline.log,true) call failed. java.io.FileNotFoundException: /var/log/drill/sqlline.log (No such file or directory)
+	at java.io.FileNotFoundException: /var/log/drill/sqlline.log (No such file or directory)
+	at 	at java.io.FileOutputStream.open(Native Method)
+	at 	at java.io.FileOutputStream.<init>(FileOutputStream.java:221)
+	at 	at ch.qos.logback.core.recovery.ResilientFileOutputStream.<init>(ResilientFileOutputStream.java:28)
+	at 	at ch.qos.logback.core.FileAppender.openFile(FileAppender.java:149)
+	at 	at ch.qos.logback.core.FileAppender.start(FileAppender.java:108)
+	at 	at ch.qos.logback.core.rolling.RollingFileAppender.start(RollingFileAppender.java:86)
+	at 	at ch.qos.logback.core.joran.action.AppenderAction.end(AppenderAction.java:96)
+	at 	at ch.qos.logback.core.joran.spi.Interpreter.callEndAction(Interpreter.java:317)
+	at 	at ch.qos.logback.core.joran.spi.Interpreter.endElement(Interpreter.java:196)
+	at 	at ch.qos.logback.core.joran.spi.Interpreter.endElement(Interpreter.java:182)
+	at 	at ch.qos.logback.core.joran.spi.EventPlayer.play(EventPlayer.java:62)
+	at 	at ch.qos.logback.core.joran.GenericConfigurator.doConfigure(GenericConfigurator.java:149)
+	at 	at ch.qos.logback.core.joran.GenericConfigurator.doConfigure(GenericConfigurator.java:135)
+	at 	at ch.qos.logback.core.joran.GenericConfigurator.doConfigure(GenericConfigurator.java:99)
+	at 	at ch.qos.logback.core.joran.GenericConfigurator.doConfigure(GenericConfigurator.java:49)
+	at 	at ch.qos.logback.classic.util.ContextInitializer.configureByResource(ContextInitializer.java:75)
+	at 	at ch.qos.logback.classic.util.ContextInitializer.autoConfig(ContextInitializer.java:148)
+	at 	at org.slf4j.impl.StaticLoggerBinder.init(StaticLoggerBinder.java:85)
+	at 	at org.slf4j.impl.StaticLoggerBinder.<clinit>(StaticLoggerBinder.java:55)
+	at 	at org.slf4j.LoggerFactory.bind(LoggerFactory.java:128)
+	at 	at org.slf4j.LoggerFactory.performInitialization(LoggerFactory.java:107)
+	at 	at org.slf4j.LoggerFactory.getILoggerFactory(LoggerFactory.java:295)
+	at 	at org.slf4j.LoggerFactory.getLogger(LoggerFactory.java:269)
+	at 	at org.slf4j.LoggerFactory.getLogger(LoggerFactory.java:281)
+	at 	at org.apache.drill.jdbc.DrillHandler.<clinit>(DrillHandler.java:34)
+	at 	at org.apache.drill.jdbc.RefDriver.createHandler(RefDriver.java:65)
+	at 	at net.hydromatic.optiq.jdbc.UnregisteredDriver.<init>(UnregisteredDriver.java:52)
+	at 	at org.apache.drill.jdbc.RefDriver.<init>(RefDriver.java:32)
+	at 	at org.apache.drill.jdbc.RefDriver.<clinit>(RefDriver.java:38)
+	at 	at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+	at 	at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:57)
+	at 	at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+	at 	at java.lang.reflect.Constructor.newInstance(Constructor.java:526)
+	at 	at java.lang.Class.newInstance(Class.java:374)
+	at 	at sqlline.SqlLine.scanDrivers(SqlLine.java:1763)
+	at 	at sqlline.SqlLine.scanForDriver(SqlLine.java:1687)
+	at 	at sqlline.SqlLine.access$2300(SqlLine.java:58)
+	at 	at sqlline.SqlLine$Commands.connect(SqlLine.java:4069)
+	at 	at sqlline.SqlLine$Commands.connect(SqlLine.java:4003)
+	at 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at 	at java.lang.reflect.Method.invoke(Method.java:606)
+	at 	at sqlline.SqlLine$ReflectiveCommandHandler.execute(SqlLine.java:2964)
+	at 	at sqlline.SqlLine.dispatch(SqlLine.java:878)
+	at 	at sqlline.SqlLine.initArgs(SqlLine.java:652)
+	at 	at sqlline.SqlLine.begin(SqlLine.java:699)
+	at 	at sqlline.SqlLine.mainWithInputRedirection(SqlLine.java:460)
+	at 	at sqlline.SqlLine.main(SqlLine.java:443)
+18:14:25,945 |-INFO in ch.qos.logback.classic.joran.action.LoggerAction - Setting additivity of logger [org.apache.drill] to false
+18:14:25,945 |-INFO in ch.qos.logback.classic.joran.action.LevelAction - org.apache.drill level set to INFO
+18:14:25,945 |-INFO in ch.qos.logback.core.joran.action.AppenderRefAction - Attaching appender named [FILE] to Logger[org.apache.drill]
+18:14:25,946 |-INFO in ch.qos.logback.classic.joran.action.LoggerAction - Setting additivity of logger [org.apache.drill] to false
+18:14:25,946 |-INFO in ch.qos.logback.classic.joran.action.LevelAction - org.apache.drill level set to DEBUG
+18:14:25,946 |-INFO in ch.qos.logback.core.joran.action.AppenderRefAction - Attaching appender named [SOCKET] to Logger[org.apache.drill]
+18:14:25,946 |-INFO in ch.qos.logback.classic.joran.action.LevelAction - ROOT level set to ERROR
+18:14:25,946 |-INFO in ch.qos.logback.core.joran.action.AppenderRefAction - Attaching appender named [STDOUT] to Logger[ROOT]
+18:14:25,946 |-INFO in ch.qos.logback.classic.joran.action.ConfigurationAction - End of configuration.
+18:14:25,947 |-INFO in ch.qos.logback.classic.joran.JoranConfigurator@7776bdc9 - Registering current configuration as safe fallback point
+
+scan complete in 2538ms
+Connecting to jdbc:drill:schema=jsonl
+Connected to: Drill (version 1.0)
+Driver: Apache Drill JDBC Driver (version 1.0)
+Autocommit status: true
+Transaction isolation: TRANSACTION_REPEATABLE_READ
+sqlline version ??? by Marc Prud'hommeaux
+0: jdbc:drill:schema=jsonl> select count(*) from "/tmp/dtahara/nb_test.out";
++---------+
+| EXPR$0  |
++---------+
+| 10      |
++---------+
+1 row selected (2.714 seconds)
+0: jdbc:drill:schema=jsonl> select count(*) from "/tmp/dtahara/nb_test.out";
++---------+
+| EXPR$0  |
++---------+
+| 10      |
++---------+
+1 row selected (1.385 seconds)
+0: jdbc:drill:schema=jsonl> select count(*) from "/tmp/dtahara/nb_test.out";
+Query failed: org.apache.drill.exec.rpc.RpcException: Remote failure while running query.[error_id: "e4b7c637-4d60-47b8-99b1-e4a0c96beb17"
+endpoint {
+  address: "termite.zoo.cs.yale.edu"
+  user_port: 31011
+  bit_port: 32012
+}
+error_type: 0
+message: "Failure while running fragment. < IndexOutOfBoundsException:[ index: 1027423549, length: 8 (expected: range(0, 13107200)) ]"
+]
+java.lang.RuntimeException: org.apache.drill.exec.rpc.RpcException: Remote failure while running query.[error_id: "e4b7c637-4d60-47b8-99b1-e4a0c96beb17"
+endpoint {
+  address: "termite.zoo.cs.yale.edu"
+  user_port: 31011
+  bit_port: 32012
+}
+error_type: 0
+message: "Failure while running fragment. < IndexOutOfBoundsException:[ index: 1027423549, length: 8 (expected: range(0, 13107200)) ]"
+]
+	at org.apache.drill.sql.client.full.ResultEnumerator.moveNext(ResultEnumerator.java:44)
+	at net.hydromatic.optiq.runtime.ObjectEnumeratorCursor.next(ObjectEnumeratorCursor.java:44)
+	at net.hydromatic.optiq.jdbc.OptiqResultSet.next(OptiqResultSet.java:162)
+	at sqlline.SqlLine$BufferedRows.<init>(SqlLine.java:2499)
+	at sqlline.SqlLine.print(SqlLine.java:1886)
+	at sqlline.SqlLine$Commands.execute(SqlLine.java:3835)
+	at sqlline.SqlLine$Commands.sql(SqlLine.java:3738)
+	at sqlline.SqlLine.dispatch(SqlLine.java:882)
+	at sqlline.SqlLine.begin(SqlLine.java:717)
+	at sqlline.SqlLine.mainWithInputRedirection(SqlLine.java:460)
+	at sqlline.SqlLine.main(SqlLine.java:443)
+Caused by: org.apache.drill.exec.rpc.RpcException: Remote failure while running query.[error_id: "e4b7c637-4d60-47b8-99b1-e4a0c96beb17"
+endpoint {
+  address: "termite.zoo.cs.yale.edu"
+  user_port: 31011
+  bit_port: 32012
+}
+error_type: 0
+message: "Failure while running fragment. < IndexOutOfBoundsException:[ index: 1027423549, length: 8 (expected: range(0, 13107200)) ]"
+]
+	at org.apache.drill.exec.rpc.user.QueryResultHandler.batchArrived(QueryResultHandler.java:72)
+	at org.apache.drill.exec.rpc.user.UserClient.handle(UserClient.java:79)
+	at org.apache.drill.exec.rpc.BasicClientWithConnection.handle(BasicClientWithConnection.java:48)
+	at org.apache.drill.exec.rpc.BasicClientWithConnection.handle(BasicClientWithConnection.java:33)
+	at org.apache.drill.exec.rpc.RpcBus$InboundHandler.decode(RpcBus.java:142)
+	at org.apache.drill.exec.rpc.RpcBus$InboundHandler.decode(RpcBus.java:127)
+	at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:89)
+	at io.netty.channel.DefaultChannelHandlerContext.invokeChannelRead(DefaultChannelHandlerContext.java:334)
+	at io.netty.channel.DefaultChannelHandlerContext.fireChannelRead(DefaultChannelHandlerContext.java:320)
+	at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:102)
+	at io.netty.channel.DefaultChannelHandlerContext.invokeChannelRead(DefaultChannelHandlerContext.java:334)
+	at io.netty.channel.DefaultChannelHandlerContext.fireChannelRead(DefaultChannelHandlerContext.java:320)
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:173)
+	at io.netty.channel.DefaultChannelHandlerContext.invokeChannelRead(DefaultChannelHandlerContext.java:334)
+	at io.netty.channel.DefaultChannelHandlerContext.fireChannelRead(DefaultChannelHandlerContext.java:320)
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:785)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:100)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:497)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:465)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:359)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:101)
+	at java.lang.Thread.run(Thread.java:744)
+0: jdbc:drill:schema=jsonl> select count(*) from "/tmp/dtahara/nb_test.out";
+Query failed: org.apache.drill.exec.rpc.RpcException: Remote failure while running query.[error_id: "f1ab9f2f-5fdf-4cc0-a143-fe8f822df766"
+endpoint {
+  address: "termite.zoo.cs.yale.edu"
+  user_port: 31011
+  bit_port: 32012
+}
+error_type: 0
+message: "Failure while running fragment. < IndexOutOfBoundsException:[ writerIndex: 1363299651 (expected: readerIndex(0) <= writerIndex <= capacity(13107200)) ]"
+]
+java.lang.RuntimeException: org.apache.drill.exec.rpc.RpcException: Remote failure while running query.[error_id: "f1ab9f2f-5fdf-4cc0-a143-fe8f822df766"
+endpoint {
+  address: "termite.zoo.cs.yale.edu"
+  user_port: 31011
+  bit_port: 32012
+}
+error_type: 0
+message: "Failure while running fragment. < IndexOutOfBoundsException:[ writerIndex: 1363299651 (expected: readerIndex(0) <= writerIndex <= capacity(13107200)) ]"
+]
+	at org.apache.drill.sql.client.full.ResultEnumerator.moveNext(ResultEnumerator.java:44)
+	at net.hydromatic.optiq.runtime.ObjectEnumeratorCursor.next(ObjectEnumeratorCursor.java:44)
+	at net.hydromatic.optiq.jdbc.OptiqResultSet.next(OptiqResultSet.java:162)
+	at sqlline.SqlLine$BufferedRows.<init>(SqlLine.java:2499)
+	at sqlline.SqlLine.print(SqlLine.java:1886)
+	at sqlline.SqlLine$Commands.execute(SqlLine.java:3835)
+	at sqlline.SqlLine$Commands.sql(SqlLine.java:3738)
+	at sqlline.SqlLine.dispatch(SqlLine.java:882)
+	at sqlline.SqlLine.begin(SqlLine.java:717)
+	at sqlline.SqlLine.mainWithInputRedirection(SqlLine.java:460)
+	at sqlline.SqlLine.main(SqlLine.java:443)
+Caused by: org.apache.drill.exec.rpc.RpcException: Remote failure while running query.[error_id: "f1ab9f2f-5fdf-4cc0-a143-fe8f822df766"
+endpoint {
+  address: "termite.zoo.cs.yale.edu"
+  user_port: 31011
+  bit_port: 32012
+}
+error_type: 0
+message: "Failure while running fragment. < IndexOutOfBoundsException:[ writerIndex: 1363299651 (expected: readerIndex(0) <= writerIndex <= capacity(13107200)) ]"
+]
+	at org.apache.drill.exec.rpc.user.QueryResultHandler.batchArrived(QueryResultHandler.java:72)
+	at org.apache.drill.exec.rpc.user.UserClient.handle(UserClient.java:79)
+	at org.apache.drill.exec.rpc.BasicClientWithConnection.handle(BasicClientWithConnection.java:48)
+	at org.apache.drill.exec.rpc.BasicClientWithConnection.handle(BasicClientWithConnection.java:33)
+	at org.apache.drill.exec.rpc.RpcBus$InboundHandler.decode(RpcBus.java:142)
+	at org.apache.drill.exec.rpc.RpcBus$InboundHandler.decode(RpcBus.java:127)
+	at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:89)
+	at io.netty.channel.DefaultChannelHandlerContext.invokeChannelRead(DefaultChannelHandlerContext.java:334)
+	at io.netty.channel.DefaultChannelHandlerContext.fireChannelRead(DefaultChannelHandlerContext.java:320)
+	at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:102)
+	at io.netty.channel.DefaultChannelHandlerContext.invokeChannelRead(DefaultChannelHandlerContext.java:334)
+	at io.netty.channel.DefaultChannelHandlerContext.fireChannelRead(DefaultChannelHandlerContext.java:320)
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:173)
+	at io.netty.channel.DefaultChannelHandlerContext.invokeChannelRead(DefaultChannelHandlerContext.java:334)
+	at io.netty.channel.DefaultChannelHandlerContext.fireChannelRead(DefaultChannelHandlerContext.java:320)
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:785)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:100)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:497)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:465)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:359)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:101)
+	at java.lang.Thread.run(Thread.java:744)
+0: jdbc:drill:schema=jsonl> select count(*) from "/tmp/dtahara/nb_test.out";
++---------+
+| EXPR$0  |
++---------+
+| 10      |
++---------+
+1 row selected (1.316 seconds)
+0: jdbc:drill:schema=jsonl> select count(*) from "/tmp/dtahara/nb_test.out";
++---------+
+| EXPR$0  |
++---------+
+| 10      |
++---------+
+1 row selected (1.808 seconds)
+0: jdbc:drill:schema=jsonl>
