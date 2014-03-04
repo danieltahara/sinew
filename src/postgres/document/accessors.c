@@ -79,8 +79,8 @@ make_datum(char *attr_data, int len, json_typeid type, bool *is_null)
     switch (type)
     {
     case STRING:
-         t = palloc0(VARHDRSZ + len + 1);
-         SET_VARSIZE(t, VARHDRSZ + len + 1);
+         t = palloc0(VARHDRSZ + len);
+         SET_VARSIZE(t, VARHDRSZ + len);
          memcpy(t->vl_dat, attr_data, len);
          t->vl_dat[len] = '\0'; /* Not necessary b/c palloc0 */
          return PointerGetDatum(t);
