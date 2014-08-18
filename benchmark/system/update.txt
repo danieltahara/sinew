@@ -1,0 +1,38 @@
+QUERY
+UPDATE test SET sparse_588 = 'DUMMY' WHERE sparse_589 = 'GBRDCMBQGA======';
+
+Selectivity:
+14545/16mil = 0.09%
+58182/64mil = 0.09%
+
+Argo:
+
+UPDATE test SET valstr = 'dummy'
+WHERE key = 'sparse_588' AND
+    id IN (
+      SELECT id
+      FROM test
+      WHERE key = 'sparse_589' AND
+        valstr = 'GBRDCMBQGA======'
+    );
+
+Sinew:
+
+UPDATE test
+SET data = document_put_text(data, 'sparse_588', 'dummy')
+WHERE document_get_text(data, 'sparse_589') = 'GBRDCMBQGA======';
+
+MongoDB:
+
+var start = Date.now();
+db.test.update({ sparse_589 : 'GBRDCMBQGA======' },
+               { $set : { sparse_588 : 'dummy' }},
+               { multi : true });
+var end = Date.now() - start;
+end;
+
+PG JSON:
+
+UPDATE test
+SET data = json_put(data::text::cstring, 'sparse_588', 'dummy')::json
+WHERE data->>'sparse_589' = 'GBRDCMBQGA======';
